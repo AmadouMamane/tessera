@@ -1,0 +1,74 @@
+[
+  {
+    "source": "CNIL/deliberation-scoring-bancaire",
+    "text": "La CNIL encadre de longue date les traitements de scoring mis en œuvre par les établissements de crédit pour évaluer le risque de défaut de paiement et décider de l'octroi d'un financement. Dans ses délibérations relatives au secteur bancaire, l'autorité rappelle que le scoring constitue un traitement de données à caractère personnel soumis au RGPD et, lorsqu'il fonde une décision produisant des effets juridiques ou affectant significativement la personne, à l'article 22 du RGPD relatif à la décision automatisée. La CNIL exige que les variables utilisées soient pertinentes, adéquates et limitées à ce qui est nécessaire à la finalité d'évaluation de la solvabilité, à l'exclusion de données sans lien avec la capacité de remboursement, et proscrit l'usage de données sensibles telles que l'origine, les opinions ou la santé, sauf base légale spécifique. Elle impose une information claire de la personne sur l'existence et la logique du scoring, le droit d'obtenir une intervention humaine, d'exprimer son point de vue et de contester la décision. L'établissement doit pouvoir justifier la cohérence statistique du modèle, surveiller les biais discriminatoires et documenter les durées de conservation des scores. La consultation du Fichier des incidents de remboursement des crédits aux particuliers (FICP) géré par la Banque de France est strictement encadrée et limitée à l'examen des demandes de crédit. La CNIL recommande la réalisation d'une analyse d'impact relative à la protection des données préalablement à la mise en œuvre d'un dispositif de scoring crédit.",
+    "metadata": {
+      "category": "cnil",
+      "language": "fr",
+      "locator": "CNIL - Délibération sur le scoring bancaire"
+    }
+  },
+  {
+    "source": "CNIL/recommandation-conservation-donnees",
+    "text": "La CNIL a publié des recommandations précises sur les durées de conservation des données des clients dans le secteur bancaire, articulées autour du principe de limitation de la conservation posé par l'article 5 du RGPD. L'autorité distingue trois phases : la base active, pendant laquelle les données sont utilisées pour la relation contractuelle ; l'archivage intermédiaire, pendant lequel les données ne sont conservées que pour répondre à des obligations légales ou à des fins probatoires en cas de contentieux ; puis la suppression ou l'anonymisation définitive. Les données d'identification et les pièces justificatives recueillies au titre de la lutte contre le blanchiment et le financement du terrorisme doivent être conservées cinq ans à compter de la clôture du compte ou de la fin de la relation d'affaires, conformément au Code monétaire et financier. Les données relatives aux opérations de paiement et les justificatifs comptables relèvent d'une conservation de cinq à dix ans selon leur nature. Les données de prospection commerciale d'un client sont conservées trois ans à compter du dernier contact pour un prospect. La CNIL insiste sur la définition d'une politique de durées de conservation documentée, la mise en place de purges automatisées et la séparation logique des archives intermédiaires avec un accès restreint. À l'expiration des délais, les données doivent être effacées ou anonymisées de manière irréversible.",
+    "metadata": {
+      "category": "cnil",
+      "language": "fr",
+      "locator": "CNIL - Recommandations sur la conservation des données clients"
+    }
+  },
+  {
+    "source": "CNIL/fiche-droit-acces-banque",
+    "text": "La fiche pratique de la CNIL sur le droit d'accès en banque précise les modalités d'exercice du droit prévu à l'article 15 du RGPD pour les clients d'un établissement bancaire. Toute personne peut obtenir la confirmation que des données la concernant sont traitées et, le cas échéant, l'accès à ces données ainsi qu'aux informations sur les finalités, les catégories de données, les destinataires, la durée de conservation et l'origine des données. En banque, le droit d'accès porte notamment sur les données d'identification, l'historique des opérations, les éléments de scoring et les échanges enregistrés. La CNIL rappelle que l'établissement doit répondre dans un délai d'un mois, prolongeable de deux mois en cas de demande complexe, et fournir une copie gratuite des données, des copies supplémentaires pouvant donner lieu à des frais raisonnables. L'autorité précise que le droit d'accès ne doit pas porter atteinte aux droits des tiers, ce qui peut justifier l'occultation de certaines informations relatives à d'autres personnes apparaissant dans des relevés. L'établissement doit vérifier l'identité du demandeur de manière proportionnée, sans exiger de pièces excessives. La CNIL souligne que le refus de répondre ou une réponse incomplète peut donner lieu à une plainte et à une sanction. Elle recommande de tracer les demandes d'accès et de mettre à disposition un canal clair pour leur exercice.",
+    "metadata": {
+      "category": "cnil",
+      "language": "fr",
+      "locator": "CNIL - Fiche pratique sur le droit d'accès en banque"
+    }
+  },
+  {
+    "source": "CNIL/sanctions-secteur-bancaire",
+    "text": "La CNIL exerce un pouvoir de sanction à l'encontre des établissements du secteur bancaire et financier qui méconnaissent leurs obligations en matière de protection des données. Sur le fondement de l'article 83 du RGPD, l'autorité peut prononcer des amendes administratives pouvant atteindre 20 millions d'euros ou 4 pour cent du chiffre d'affaires annuel mondial pour les manquements les plus graves. Dans le secteur financier, les manquements les plus fréquemment relevés concernent la sécurité insuffisante des données entraînant des violations, la conservation excessive des données au-delà des durées nécessaires, le défaut d'information des personnes, la prospection commerciale sans base légale valable et le non-respect des droits des personnes, notamment le droit d'accès et le droit d'opposition. La CNIL prend en compte, pour fixer le montant, la gravité et la durée du manquement, le nombre de personnes concernées, le caractère intentionnel ou négligent, les mesures prises pour atténuer le dommage et le degré de coopération. Outre les amendes, elle peut prononcer des mises en demeure, des injonctions sous astreinte et, le cas échéant, rendre publiques ses décisions, ce qui emporte un effet réputationnel significatif. La CNIL contrôle également la sous-traitance et les transferts de données hors Union européenne. Les établissements doivent documenter leur conformité afin de pouvoir en justifier en cas de contrôle, conformément au principe de responsabilité.",
+    "metadata": {
+      "category": "cnil",
+      "language": "fr",
+      "locator": "CNIL - Sanctions prononcées dans le secteur bancaire"
+    }
+  },
+  {
+    "source": "CNIL/guide-cookies-bancaires",
+    "text": "La CNIL a publié des lignes directrices et des recommandations sur les cookies et autres traceurs, pleinement applicables aux sites et applications des établissements bancaires. L'autorité rappelle que le dépôt de traceurs non strictement nécessaires à la fourniture du service requiert le consentement préalable, libre, spécifique, éclairé et univoque de l'internaute, recueilli avant tout dépôt. Les traceurs nécessaires au fonctionnement du site, à la sécurité, à l'authentification du client ou à la mémorisation d'un panier sont en revanche exemptés de consentement. La CNIL exige que l'utilisateur puisse refuser les traceurs aussi facilement qu'il peut les accepter, ce qui implique la présence d'un bouton refuser au même niveau que le bouton accepter, et proscrit les pratiques de design trompeur qui orienteraient le choix. Le consentement doit pouvoir être retiré à tout moment et sa durée de validité ne devrait pas excéder six mois en pratique avant un nouveau recueil. Pour une banque, cela vise notamment les cookies de mesure d'audience, qui peuvent être exemptés sous conditions strictes, et les cookies publicitaires et de partage avec des tiers, qui requièrent le consentement. L'établissement doit conserver la preuve du consentement et tenir un registre des traceurs déposés, leurs finalités et leur durée de vie. Le manquement aux règles sur les cookies a donné lieu à des sanctions importantes, fondées sur l'article 82 de la loi Informatique et Libertés transposant la directive ePrivacy.",
+    "metadata": {
+      "category": "cnil",
+      "language": "fr",
+      "locator": "CNIL - Lignes directrices sur les cookies et traceurs"
+    }
+  },
+  {
+    "source": "CNIL/recommandation-authentification-forte-dsp2",
+    "text": "La CNIL s'est prononcée sur l'authentification forte des clients dans le cadre de la deuxième directive sur les services de paiement (DSP2) et de ses normes techniques de réglementation. L'authentification forte repose sur la combinaison d'au moins deux éléments parmi la connaissance (un mot de passe ou un code), la possession (un appareil ou un dispositif) et l'inhérence (une donnée biométrique), de manière indépendante afin que la compromission d'un facteur ne compromette pas les autres. La CNIL souligne que la mise en œuvre de cette authentification doit respecter les principes de protection des données, en particulier lorsque l'inhérence repose sur des données biométriques. Elle recommande de privilégier les solutions de biométrie locale, dans lesquelles le gabarit biométrique reste stocké et comparé sur le terminal de l'utilisateur, par exemple via la reconnaissance faciale ou l'empreinte du smartphone, plutôt qu'une base centralisée. L'autorité rappelle que le traitement de données biométriques aux fins d'identification unique relève des données sensibles de l'article 9 du RGPD et nécessite une base légale appropriée et des garanties renforcées. Elle insiste sur la nécessité de proposer des solutions alternatives accessibles aux personnes ne pouvant recourir à la biométrie, sur l'information claire des clients et sur la réalisation d'une analyse d'impact. La sécurité des dispositifs d'authentification et la minimisation des données échangées au cours du processus sont également exigées.",
+    "metadata": {
+      "category": "cnil",
+      "language": "fr",
+      "locator": "CNIL - Recommandations sur l'authentification forte (DSP2)"
+    }
+  },
+  {
+    "source": "CNIL/deliberation-donnees-biometriques",
+    "text": "La CNIL encadre strictement le recours aux données biométriques par les établissements bancaires, qui constituent des données sensibles au sens de l'article 9 du RGPD dont le traitement est en principe interdit sauf exception applicable. Dans ses délibérations, l'autorité rappelle que l'utilisation de la biométrie à des fins d'authentification d'un client, par exemple pour accéder à un service de banque en ligne ou valider un paiement, doit reposer sur le consentement explicite de la personne et s'accompagner de garanties techniques fortes. La CNIL privilégie nettement les dispositifs sous contrôle exclusif de la personne, dans lesquels le gabarit biométrique est stocké localement sur un support individuel ou sur le terminal de l'utilisateur, par opposition aux bases biométriques centralisées qui présentent un risque accru en cas de violation. Le traitement biométrique doit répondre à un besoin spécifique justifié, ne pas être imposé sans alternative, et faire l'objet d'une analyse d'impact relative à la protection des données compte tenu du risque élevé qu'il présente. L'autorité exige la minimisation, la sécurisation par chiffrement, la limitation de la durée de conservation des gabarits et l'absence de détournement de finalité, notamment l'interdiction d'utiliser les données biométriques à des fins de surveillance ou de profilage. Le caractère non révocable d'une donnée biométrique compromise renforce l'exigence de proportionnalité. La CNIL contrôle le respect de ces exigences et peut sanctionner les usages disproportionnés.",
+    "metadata": {
+      "category": "cnil",
+      "language": "fr",
+      "locator": "CNIL - Délibération sur les données biométriques"
+    }
+  },
+  {
+    "source": "CNIL/referentiel-organismes-credit",
+    "text": "La CNIL a élaboré un référentiel relatif aux traitements de données mis en œuvre par les organismes de gestion de crédit, destiné à guider les établissements dans leur conformité au RGPD. Ce référentiel précise les finalités admissibles, parmi lesquelles l'instruction et la gestion des demandes de crédit, l'évaluation de la solvabilité, la gestion du recouvrement et la lutte contre la fraude. Il détaille les catégories de données pouvant être traitées pour chaque finalité, en application du principe de minimisation, et identifie les bases légales pertinentes, principalement l'exécution du contrat, le respect d'une obligation légale et l'intérêt légitime. Le référentiel encadre les durées de conservation, en distinguant la base active, l'archivage intermédiaire pour les besoins probatoires et les obligations légales, et la suppression. Il rappelle les obligations d'information des personnes, les modalités d'exercice de leurs droits, et les mesures de sécurité attendues, telles que la traçabilité des accès, le cloisonnement et le chiffrement. Le référentiel aborde spécifiquement la consultation des fichiers d'incidents de paiement gérés par la Banque de France, dont l'accès est réservé aux finalités prévues par la loi. Bien que non contraignant en tant que tel, le référentiel constitue un cadre de référence : un organisme qui s'en écarte doit pouvoir justifier ses choix, et le respect du référentiel facilite la démonstration de conformité en cas de contrôle. La CNIL invite les organismes de crédit à s'appuyer sur ce document pour structurer leur registre des traitements et leurs analyses d'impact.",
+    "metadata": {
+      "category": "cnil",
+      "language": "fr",
+      "locator": "CNIL - Référentiel pour les organismes de crédit"
+    }
+  }
+]

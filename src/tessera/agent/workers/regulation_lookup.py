@@ -37,12 +37,12 @@ async def run(state: AgentState) -> dict[str, object]:
     try:
         documents = await hybrid_search.search(
             query=state["user_input"],
-            language=state["language"],
+            language=None,  # regulations are stored in their source language; search cross-lingual
             corpus=_CORPUS,
             top_k=_TOP_K,
         )
     except Exception as exc:
-        return {"error": f"regulation_lookup failed: {exc}"}
+        return {"errors": [f"regulation_lookup failed: {exc}"]}
 
     citations = [c for c in (_to_citation(doc) for doc in documents) if c is not None]
     update: dict[str, object] = {"retrieved_documents": documents}

@@ -56,9 +56,13 @@ class TestPlanner:
         assert expected_worker in plan
         assert "ACCOUNT_LOOKUP" in rationale or "balance" in rationale.lower()
 
-    def test_card_block_routes_through_escalation(self) -> None:
+    def test_card_block_routes_to_account_lookup(self) -> None:
+        # Escalation is decided by the reviewer, not pre-planned by the planner.
+        # card_block only dispatches ACCOUNT_LOOKUP; the graph routes to
+        # escalation_worker when the reviewer's confidence falls below threshold.
         plan, _ = plan_for("Bloquer ma carte", LanguageCode.FR)
-        assert WorkerName.ESCALATION in plan
+        assert WorkerName.ACCOUNT_LOOKUP in plan
+        assert WorkerName.ESCALATION not in plan
 
     def test_no_match_falls_back_to_default(self) -> None:
         intent = classify_intent("Lorem ipsum sit dolor", LanguageCode.EN)

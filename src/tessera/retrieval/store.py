@@ -12,6 +12,7 @@ and depends on ``pgvector`` being installed in the target database — see
 
 from __future__ import annotations
 
+import json
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
@@ -140,7 +141,7 @@ async def insert_documents(records: Sequence[DocumentRecord]) -> int:
                 r.language.value,
                 r.text,
                 r.embedding,
-                r.metadata,
+                json.dumps(r.metadata),
             )
             for r in records
         ]
@@ -161,30 +162,43 @@ async def knn_search(
     *,
     query_embedding: list[float],
     corpus: str,
-    language: LanguageCode,
+    language: LanguageCode | None,
     top_k: int = 10,
 ) -> list[VectorHit]:
-    """Return the ``top_k`` nearest chunks in ``corpus`` for ``language``."""
+    """Return the ``top_k`` nearest chunks in ``corpus``.
+
+    When ``language`` is ``None`` the search spans all languages — used by
+    the regulation lookup where EU texts are stored in their source language
+    regardless of the active conversation language.
+    """
     table = get_settings().postgres.vector_table
     async with _connection() as conn:
         conn.row_factory = dict_row
         async with conn.cursor() as cur:
-            await cur.execute(
-                f"""
-                SELECT
-                    source,
-                    chunk_id,
-                    language,
-                    text,
-                    metadata,
-                    1 - (embedding <=> %s::vector) AS score
-                FROM {table}
-                WHERE corpus = %s AND language = %s
-                ORDER BY embedding <=> %s::vector
-                LIMIT %s;
-                """,
-                (query_embedding, corpus, language.value, query_embedding, top_k),
-            )
+            if language is not None:
+                await cur.execute(
+                    f"""
+                    SELECT source, chunk_id, language, text, metadata,
+                           1 - (embedding <=> %s::vector) AS score
+                    FROM {table}
+                    WHERE corpus = %s AND language = %s
+                    ORDER BY embedding <=> %s::vector
+                    LIMIT %s;
+                    """,
+                    (query_embedding, corpus, language.value, query_embedding, top_k),
+                )
+            else:
+                await cur.execute(
+                    f"""
+                    SELECT source, chunk_id, language, text, metadata,
+                           1 - (embedding <=> %s::vector) AS score
+                    FROM {table}
+                    WHERE corpus = %s
+                    ORDER BY embedding <=> %s::vector
+                    LIMIT %s;
+                    """,
+                    (query_embedding, corpus, query_embedding, top_k),
+                )
             rows = await cur.fetchall()
     return [
         VectorHit(

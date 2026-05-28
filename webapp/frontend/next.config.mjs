@@ -20,7 +20,7 @@ const nextConfig = {
   async rewrites() {
     const apiBase = process.env.TESSERA_BACKEND_URL ?? "http://localhost:8080";
     return [
-      { source: "/api/chat", destination: `${apiBase}/chat` },
+      // /api/chat is handled by app/api/chat/route.ts (SSE streaming requires a route handler, not a rewrite).
       { source: "/api/audit/:path*", destination: `${apiBase}/audit/:path*` },
       { source: "/api/audit", destination: `${apiBase}/audit` },
       { source: "/api/healthz", destination: `${apiBase}/healthz` },

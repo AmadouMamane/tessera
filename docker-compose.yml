@@ -20,6 +20,23 @@ services:
       timeout: 5s
       retries: 10
 
+  # ---------------------------------------------------------------------------
+  # Ollama (containerised — CPU only on Mac, no Metal GPU access).
+  # Use this for fully reproducible dev environments or CI.
+  # For GPU-accelerated inference on Apple Silicon, run Ollama natively:
+  #   brew install ollama && ollama serve && ollama pull llama3.3:70b
+  # ---------------------------------------------------------------------------
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: tessera-ollama
+  #   restart: unless-stopped
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - tessera_ollama:/root/.ollama
+  #   entrypoint: ["/bin/sh", "-c", "ollama serve & sleep 5 && ollama pull llama3.3:70b && wait"]
+  #   profiles: ["full", "cpu-only"]
+
   agent:
     build:
       context: .
@@ -40,3 +57,4 @@ services:
 
 volumes:
   tessera_pgdata:
+  # tessera_ollama:  # uncomment when using the containerised Ollama service

@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Final
 import yaml
 
 from tessera.agent.state import AgentState, Citation, ConversationMessage
+from tessera.llm.router import ChatMessage, get_chat_backend
 from tessera.settings import LanguageCode
 
 if TYPE_CHECKING:
@@ -84,8 +85,35 @@ def _format_citations(citations: Iterable[Citation], language: LanguageCode) -> 
     return "\n".join(lines)
 
 
+async def _synthesise(state: AgentState) -> str:
+    """Call the LLM to produce a grounded answer from retrieved documents."""
+    language = state["language"]
+    prompts = load_prompts(language)
+    system_prompt = prompts.get("system", "You are a helpful banking assistant.")
+
+    docs = state.get("retrieved_documents", [])
+    context = "\n\n".join(
+        f"[{doc.source}]\n{doc.text}" for doc in docs[:6]
+    )
+    user_message = (
+        f"Question du client : {state['user_input']}\n\n"
+        f"Documents disponibles :\n{context}\n\n"
+        "Réponds de façon concise et précise en te basant uniquement sur les documents fournis."
+    )
+
+    backend = get_chat_backend()
+    response = await backend.chat(
+        [
+            ChatMessage(role="system", content=system_prompt),
+            ChatMessage(role="user", content=user_message),
+        ],
+        temperature=0.2,
+    )
+    return response.content.strip()
+
+
 def render(state: AgentState) -> str:
-    """Render the final user-facing response for ``state``."""
+    """Render the final user-facing response for ``state`` (sync path only)."""
     language = state["language"]
     draft = state.get("draft_response")
     if not draft:
@@ -94,8 +122,6 @@ def render(state: AgentState) -> str:
     prompts = load_prompts(language)
     template = prompts.get("reporter")
     if template is None:
-        # No template configured for this language → return the draft as-is
-        # plus a citation footer.
         return draft + _format_citations(state.get("citations", []), language)
 
     return template.format(
@@ -104,9 +130,24 @@ def render(state: AgentState) -> str:
     ).rstrip()
 
 
-def run(state: AgentState) -> dict[str, object]:
+async def run(state: AgentState) -> dict[str, object]:
     """Reporter node entry point."""
-    final = render(state)
+    language = state["language"]
+    draft = state.get("draft_response")
+    docs = state.get("retrieved_documents", [])
+
+    if draft:
+        # Worker already produced a draft (e.g. account_lookup) — just render it.
+        final = render(state)
+    elif docs:
+        # Retrieval workers found documents but no draft — synthesise via LLM.
+        final = await _synthesise(state)
+        citations_footer = _format_citations(state.get("citations", []), language)
+        if citations_footer:
+            final = final + citations_footer
+    else:
+        final = _FALLBACK_RESPONSES[language]
+
     return {
         "final_response": final,
         "messages": [ConversationMessage(role="assistant", content=final)],

@@ -59,8 +59,8 @@ _INTENT_RULES: dict[LanguageCode, list[tuple[re.Pattern[str], Intent]]] = {
             re.compile(r"\b(bloquer|opposition|vol.*carte|carte.*vol)\b", re.IGNORECASE),
             Intent(
                 name="card_block",
-                workers=(WorkerName.ACCOUNT_LOOKUP, WorkerName.ESCALATION),
-                rationale="French card-block intent → ACCOUNT_LOOKUP + ESCALATION",
+                workers=(WorkerName.ACCOUNT_LOOKUP,),
+                rationale="French card-block intent → ACCOUNT_LOOKUP; reviewer decides escalation",
             ),
         ),
         (
@@ -96,8 +96,8 @@ _INTENT_RULES: dict[LanguageCode, list[tuple[re.Pattern[str], Intent]]] = {
             re.compile(r"\b(karte sperren|kartensperre|karte verloren)\b", re.IGNORECASE),
             Intent(
                 name="card_block",
-                workers=(WorkerName.ACCOUNT_LOOKUP, WorkerName.ESCALATION),
-                rationale="German card-block intent",
+                workers=(WorkerName.ACCOUNT_LOOKUP,),
+                rationale="German card-block intent → ACCOUNT_LOOKUP; reviewer decides escalation",
             ),
         ),
         (
@@ -130,8 +130,8 @@ _INTENT_RULES: dict[LanguageCode, list[tuple[re.Pattern[str], Intent]]] = {
             re.compile(r"\b(block.*card|card.*lost|card.*stolen|freeze.*card)\b", re.IGNORECASE),
             Intent(
                 name="card_block",
-                workers=(WorkerName.ACCOUNT_LOOKUP, WorkerName.ESCALATION),
-                rationale="English card-block intent",
+                workers=(WorkerName.ACCOUNT_LOOKUP,),
+                rationale="English card-block intent → ACCOUNT_LOOKUP; reviewer decides escalation",
             ),
         ),
         (

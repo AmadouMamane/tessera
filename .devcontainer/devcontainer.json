@@ -1,0 +1,56 @@
+{
+  "name": "Tessera Dev",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
+
+  // All services the dev environment needs.
+  "dockerComposeFile": ["../docker-compose.yml"],
+  "service": "postgres",
+  "overrideCommand": true,
+  "runServices": ["postgres"],
+
+  "features": {
+    // Python toolchain
+    "ghcr.io/devcontainers/features/python:1": { "version": "3.12" },
+    // uv — the only package manager allowed in this repo
+    "ghcr.io/astral-sh/uv:latest": {},
+    // Node 22 for the Next.js frontend
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" },
+    // Docker-in-Docker so you can still run compose commands inside
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+
+  "postCreateCommand": "uv sync --frozen && cd webapp/frontend && npm ci",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.mypy-type-checker",
+        "charliermarsh.ruff",
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/workspaces/tessera/.venv/bin/python",
+        "editor.formatOnSave": true,
+        "[python]": { "editor.defaultFormatter": "charliermarsh.ruff" },
+        "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" }
+      }
+    }
+  },
+
+  "forwardPorts": [3000, 8080, 5432],
+  "portsAttributes": {
+    "3000": { "label": "Frontend (Next.js)" },
+    "8080": { "label": "Backend (FastAPI)" },
+    "5432": { "label": "Postgres" }
+  },
+
+  "remoteEnv": {
+    "TESSERA_ENVIRONMENT": "local",
+    "TESSERA_LLM_PROFILE": "on_prem",
+    "TESSERA_DEFAULT_LANGUAGE": "fr",
+    "TESSERA_POSTGRES__DSN": "postgresql://tessera:tessera@localhost:5432/tessera"
+  }
+}

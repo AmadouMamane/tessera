@@ -137,8 +137,13 @@ def build_graph() -> StateGraph[AgentState]:  # type: ignore[type-arg]
         path_map={name: name for name in worker_targets},
     )
 
-    # Every worker rejoins at the reviewer
-    for worker_node in _WORKER_NODES.values():
+    # Every data-fetching worker rejoins at the reviewer.
+    # escalation_worker is terminal (→ END only) and must be excluded here;
+    # adding it to this loop would create a second edge to reviewer and cause
+    # an infinite cycle when the reviewer routes back to escalation.
+    for worker_name, worker_node in _WORKER_NODES.items():
+        if worker_name is WorkerName.ESCALATION:
+            continue
         graph.add_edge(worker_node, NodeName.REVIEWER.value)
 
     # Reviewer → escalation or reporter

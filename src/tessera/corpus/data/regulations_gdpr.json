@@ -1,0 +1,92 @@
+[
+  {
+    "source": "GDPR/art-6",
+    "text": "Article 6 of the General Data Protection Regulation (Regulation (EU) 2016/679) sets out the lawfulness of processing, requiring that at least one legal basis applies to every processing operation. For a retail bank such as Crédit Aurore, the most relevant bases are: Article 6(1)(b), processing necessary for the performance of a contract to which the data subject is party, which covers opening and operating an account, executing payments and managing a loan; Article 6(1)(c), processing necessary for compliance with a legal obligation, which underpins anti-money-laundering checks under Directive (EU) 2015/849, customer due diligence, transaction monitoring and reporting to financial intelligence units, as well as tax reporting; and Article 6(1)(f), the legitimate interests of the controller, which can support fraud prevention and certain security measures, subject to a balancing test against the rights and freedoms of the data subject. Consent under Article 6(1)(a) is generally reserved for processing that is not necessary for the contract or a legal duty, such as direct marketing or the sharing of data with commercial partners; it must be freely given, specific, informed and unambiguous, and must be as easy to withdraw as to give. A bank may not rely on consent for processing it is legally obliged to perform, because that consent would not be freely given. Each processing purpose must be identified separately, and the legal basis cannot be swapped after the fact. The controller must document the basis relied upon for each purpose, in line with the accountability principle in Article 5(2).",
+    "metadata": {
+      "category": "gdpr",
+      "language": "en",
+      "locator": "GDPR Article 6 - Lawfulness of processing"
+    }
+  },
+  {
+    "source": "GDPR/art-13-14",
+    "text": "Articles 13 and 14 of the GDPR govern the information to be provided to data subjects. Article 13 applies where personal data are collected directly from the data subject, as when a customer opens an account; Article 14 applies where data are obtained from another source, such as a credit reference agency or a fraud-prevention database. In both cases the controller must provide, at the time of collection or within a reasonable period, the identity and contact details of the controller and of the data protection officer, the purposes and legal basis of the processing, the legitimate interests pursued where Article 6(1)(f) is relied upon, the recipients or categories of recipients, any intention to transfer data to a third country and the safeguards relied upon, the retention period or the criteria used to determine it, and the existence of the data subject's rights including access, rectification, erasure, restriction, objection and portability, as well as the right to lodge a complaint with a supervisory authority. Where automated decision-making, including profiling for credit scoring under Article 22, takes place, the controller must provide meaningful information about the logic involved and the significance and envisaged consequences. For a bank, this information is typically delivered through a layered privacy notice referenced in the account agreement. Under Article 14, where data are obtained indirectly, the information must be provided within one month at the latest, or at first communication with the data subject.",
+    "metadata": {
+      "category": "gdpr",
+      "language": "en",
+      "locator": "GDPR Articles 13-14 - Information to data subjects"
+    }
+  },
+  {
+    "source": "GDPR/art-17",
+    "text": "Article 17 of the GDPR establishes the right to erasure, often called the right to be forgotten, allowing a data subject to obtain the deletion of personal data where, among other grounds, the data are no longer necessary for the purposes for which they were collected, consent is withdrawn and no other legal basis applies, or the data have been unlawfully processed. In the banking context this right is significantly constrained by Article 17(3), which provides exceptions where processing is necessary for compliance with a legal obligation or for the establishment, exercise or defence of legal claims. A bank cannot erase data it is required to retain under anti-money-laundering legislation, which typically mandates a five-year retention of identification and transaction records under Directive (EU) 2015/849, nor accounting records subject to commercial-law retention periods, nor data needed to defend against potential litigation during the applicable limitation period. Consequently, a customer who closes an account cannot demand immediate deletion of records subject to these obligations; the bank must instead restrict the data to the legally required purpose and delete it once the retention obligation expires. The bank should explain these limits transparently when refusing or partially refusing an erasure request, and document the legal basis for retention. Marketing data and data processed on the basis of consent, by contrast, must be erased promptly on request.",
+    "metadata": {
+      "category": "gdpr",
+      "language": "en",
+      "locator": "GDPR Article 17 - Right to erasure and banking limits"
+    }
+  },
+  {
+    "source": "GDPR/art-20",
+    "text": "Article 20 of the GDPR grants the right to data portability, allowing the data subject to receive the personal data they have provided to a controller in a structured, commonly used and machine-readable format, and to transmit that data to another controller without hindrance. The right applies only where processing is based on consent under Article 6(1)(a) or on a contract under Article 6(1)(b) and is carried out by automated means. For a bank, this covers data the customer has actively provided, such as identity details and contact information, and observed data generated through the customer's activity, such as transaction history, but it does not extend to derived or inferred data such as a credit score or a risk profile produced by the bank's own analytics. The right to portability interacts with the access to accounts provisions of the second Payment Services Directive (PSD2), which already enable account information services to retrieve transaction data with the customer's consent through dedicated interfaces. The controller must respond within one month, extendable by two further months for complex requests, and must provide the data free of charge. Where technically feasible, the data subject may request direct transmission from one controller to another. Portability does not trigger erasure of the original data, which the bank may continue to hold under another legal basis such as a retention obligation.",
+    "metadata": {
+      "category": "gdpr",
+      "language": "en",
+      "locator": "GDPR Article 20 - Data portability"
+    }
+  },
+  {
+    "source": "GDPR/art-25",
+    "text": "Article 25 of the GDPR establishes data protection by design and by default. Data protection by design requires the controller to implement appropriate technical and organisational measures, such as pseudonymisation and data minimisation, both at the time of determining the means of processing and at the time of the processing itself, taking into account the state of the art, the cost of implementation and the nature, scope, context and purposes of processing, as well as the risks to the rights and freedoms of natural persons. Data protection by default requires that, by default, only personal data necessary for each specific purpose are processed, applying to the amount of data collected, the extent of processing, the period of storage and accessibility. For a bank deploying an AI customer-support agent such as Tessera, by-design measures include minimising the personal data exposed to the language model, masking account numbers and identifiers before they reach external inference services, restricting tool access so that an agent can only read the authenticated customer's own data, and logging access for audit. By-default measures include not enabling optional data-sharing or profiling unless the customer opts in, and limiting retention of conversation logs to what is necessary. The article complements the security obligations of Article 32 and the accountability principle, and certification mechanisms under Article 42 can be used to demonstrate compliance.",
+    "metadata": {
+      "category": "gdpr",
+      "language": "en",
+      "locator": "GDPR Article 25 - Data protection by design and by default"
+    }
+  },
+  {
+    "source": "GDPR/art-32",
+    "text": "Article 32 of the GDPR requires the controller and processor to implement appropriate technical and organisational measures to ensure a level of security appropriate to the risk, taking into account the state of the art, the costs of implementation and the nature, scope, context and purposes of processing, as well as the likelihood and severity of risk to the rights and freedoms of natural persons. The article names, as appropriate, the pseudonymisation and encryption of personal data; the ability to ensure the ongoing confidentiality, integrity, availability and resilience of processing systems and services; the ability to restore availability and access to personal data in a timely manner in the event of a physical or technical incident; and a process for regularly testing, assessing and evaluating the effectiveness of measures. For a retail bank, this translates into encryption of data at rest and in transit, strong customer authentication consistent with PSD2, role-based access controls, network segmentation, secrets management, intrusion detection, and tested backup and disaster-recovery procedures. Article 32 must be read together with the operational resilience requirements of the Digital Operational Resilience Act, which impose more granular obligations on ICT risk management, incident classification and resilience testing for financial entities. Adherence to an approved code of conduct or certification mechanism can be used to demonstrate compliance. The measures must be reviewed and updated as risks evolve and as the state of the art advances.",
+    "metadata": {
+      "category": "gdpr",
+      "language": "en",
+      "locator": "GDPR Article 32 - Security of processing"
+    }
+  },
+  {
+    "source": "GDPR/art-35",
+    "text": "Article 35 of the GDPR requires a data protection impact assessment (DPIA) where a type of processing, in particular using new technologies, is likely to result in a high risk to the rights and freedoms of natural persons. A DPIA is explicitly required for a systematic and extensive evaluation of personal aspects based on automated processing, including profiling, on which decisions are based that produce legal effects or similarly significantly affect the individual. Credit scoring used to decide whether to grant a loan falls squarely within this category, making a DPIA mandatory for a bank before deploying or substantially changing such a system. The assessment must contain a systematic description of the processing operations and purposes, an assessment of necessity and proportionality, an assessment of the risks to data subjects, and the measures envisaged to address those risks, including safeguards and security measures. Where the DPIA indicates a high residual risk that cannot be mitigated, the controller must consult the supervisory authority under Article 36 prior to processing. National supervisory authorities publish lists of processing operations subject to mandatory DPIA, which commonly include large-scale processing of financial data and automated credit decisions. For an AI support agent, a DPIA should consider profiling, automated decisioning, the risk of unlawful disclosure of financial data, and the safeguards built into the system. The DPIA must be kept under review.",
+    "metadata": {
+      "category": "gdpr",
+      "language": "en",
+      "locator": "GDPR Article 35 - Data protection impact assessment"
+    }
+  },
+  {
+    "source": "GDPR/art-83",
+    "text": "Article 83 of the GDPR sets out the conditions for imposing administrative fines and provides for two tiers of maximum penalties. For infringements of obligations such as those relating to controllers and processors under Articles 8, 11, 25 to 39, 42 and 43, fines can reach up to EUR 10 million or, in the case of an undertaking, up to 2 percent of the total worldwide annual turnover of the preceding financial year, whichever is higher. For more serious infringements, including breaches of the basic principles for processing, the conditions for consent, the data subjects' rights under Articles 12 to 22, and transfers to third countries, fines can reach up to EUR 20 million or up to 4 percent of total worldwide annual turnover, whichever is higher. Article 83 lists the factors that supervisory authorities must weigh, including the nature, gravity and duration of the infringement, the number of data subjects affected, the degree of negligence or intent, mitigation measures taken, the categories of data concerned, and cooperation with the authority. Fines must be effective, proportionate and dissuasive. In the financial sector, regulators have imposed substantial penalties on banks and payment institutions for insufficient security measures, excessive retention, and failures to respect data subject rights; the largest fines under the GDPR overall have reached the hundreds of millions of euros, illustrating the scale of exposure. Fines may be imposed in addition to or instead of corrective measures under Article 58(2).",
+    "metadata": {
+      "category": "gdpr",
+      "language": "en",
+      "locator": "GDPR Article 83 - Administrative fines"
+    }
+  },
+  {
+    "source": "GDPR/recital-47",
+    "text": "Recital 47 of the GDPR explains the legitimate-interests legal basis set out in Article 6(1)(f). It states that the legitimate interests of a controller, including those of a controller to which personal data may be disclosed, or of a third party, may provide a legal basis for processing, provided that the interests or the fundamental rights and freedoms of the data subject are not overriding, taking into consideration the reasonable expectations of data subjects based on their relationship with the controller. Such a legitimate interest could exist where there is a relevant and appropriate relationship between the data subject and the controller, such as where the data subject is a client of the controller. The recital notes that the existence of a legitimate interest needs careful assessment, including whether the data subject can reasonably expect, at the time and in the context of the collection of personal data, that processing for that purpose may take place. Crucially for banks, Recital 47 expressly states that the processing of personal data strictly necessary for the purposes of preventing fraud constitutes a legitimate interest of the controller, and that the processing of personal data for direct marketing purposes may be regarded as carried out for a legitimate interest. A bank relying on this basis must conduct and document a legitimate-interests assessment balancing its interest against the rights of the customer, and must inform data subjects of the interest pursued under Articles 13 and 14, while respecting the right to object under Article 21.",
+    "metadata": {
+      "category": "gdpr",
+      "language": "en",
+      "locator": "GDPR Recital 47 - Legitimate interest"
+    }
+  },
+  {
+    "source": "EDPB/guideline-financial-sector",
+    "text": "The European Data Protection Board (EDPB), established under Article 68 of the GDPR, issues guidelines, recommendations and best practices to ensure consistent application of data protection law across the European Union, and several of its instruments bear directly on the financial sector. The EDPB Guidelines 07/2020 on the concepts of controller and processor clarify allocations of responsibility in outsourcing arrangements common in banking, including cloud and processing by service providers, requiring Article 28 data-processing agreements. The EDPB Guidelines 05/2020 on consent set the bar for valid consent, relevant where banks seek to share data with partners or carry out marketing, confirming that consent bundled with the provision of a service is generally not freely given. The EDPB Guidelines on automated individual decision-making and profiling, originally adopted by the Article 29 Working Party and endorsed by the EDPB, address Article 22 and are directly applicable to credit scoring, stressing the rights to human intervention, to express a point of view and to contest a decision. The EDPB has also addressed the interplay between the GDPR and the second Payment Services Directive in its Guidelines 06/2020, clarifying the legal bases for processing by account information and payment initiation service providers and the handling of so-called silent party data. Banks deploying AI must also consider EDPB positions on transparency and on the processing of special-category data. EDPB guidance, while not legally binding in itself, is highly persuasive and is followed by national supervisory authorities in enforcement.",
+    "metadata": {
+      "category": "gdpr",
+      "language": "en",
+      "locator": "EDPB Guidelines - Application to the financial sector"
+    }
+  }
+]

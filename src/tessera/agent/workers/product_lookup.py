@@ -41,6 +41,6 @@ async def run(state: AgentState) -> dict[str, object]:
         documents = await _search(state)
     except Exception as exc:
         return {
-            "error": f"product_lookup failed: {exc}",
+            "errors": [f"product_lookup failed: {exc}"],
         }
     return {"retrieved_documents": documents}

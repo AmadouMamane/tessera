@@ -202,7 +202,8 @@ class AgentState(TypedDict):
     escalation_reason: NotRequired[str]
 
     # --- Error reporting --------------------------------------------------
-    error: NotRequired[str]
+    # Annotated so concurrent workers can each append without conflict.
+    errors: Annotated[list[str], operator.add]
 
 
 def new_state(
@@ -238,4 +239,5 @@ def new_state(
         guard_decisions=[],
         citations=[],
         needs_escalation=False,
+        errors=[],
     )

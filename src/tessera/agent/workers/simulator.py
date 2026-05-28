@@ -87,7 +87,7 @@ async def run(state: AgentState) -> dict[str, object]:
     years = _parse_years(state["user_input"]) or 20  # sensible default
 
     if amount is None:
-        return {"error": "simulator: could not parse a loan amount from the request"}
+        return {"errors": ["simulator: could not parse a loan amount from the request"]}
 
     rate = 3.5
     arguments: dict[str, object] = {"amount": amount, "years": years, "rate": rate}

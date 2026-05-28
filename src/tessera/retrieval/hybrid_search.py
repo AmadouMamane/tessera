@@ -16,8 +16,7 @@ from typing import TYPE_CHECKING
 from tessera.agent.state import RetrievedDocument
 from tessera.retrieval import embeddings, reranking, store
 
-if TYPE_CHECKING:
-    from tessera.settings import LanguageCode
+from tessera.settings import LanguageCode  # noqa: TCH001 — used in signature at runtime
 
 __all__ = ["search"]
 
@@ -28,13 +27,15 @@ _VECTOR_OVERFETCH: int = 3
 async def search(
     *,
     query: str,
-    language: LanguageCode,
+    language: LanguageCode | None,
     corpus: str,
     top_k: int = 4,
 ) -> list[RetrievedDocument]:
-    """Search ``corpus`` for ``query`` in ``language`` and return top-k hits.
+    """Search ``corpus`` for ``query`` and return top-k hits.
 
-    Over-fetches by :data:`_VECTOR_OVERFETCH` from the vector index so the
+    When ``language`` is ``None`` the search spans all languages — useful for
+    regulatory corpora stored in their source language regardless of the active
+    conversation locale. Over-fetches by :data:`_VECTOR_OVERFETCH` so the
     reranker has enough candidates to meaningfully reorder.
     """
     if not query.strip():
