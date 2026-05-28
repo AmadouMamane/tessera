@@ -24,8 +24,7 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from tessera import __version__
 from tessera.api.middleware import AuthMiddleware, RequestIdMiddleware
 from tessera.api.routes import audit, chat, health
-from tessera.observability import logging as obs_logging
-from tessera.observability import metrics, traces
+from tessera.observability import logging as obs_logging, metrics, traces
 from tessera.retrieval.store import get_pool
 from tessera.settings import get_settings
 
@@ -36,7 +35,7 @@ __all__ = ["build_app", "cli"]
 
 
 @asynccontextmanager
-async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
+async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     """Open + close the resources that outlive a single request."""
     obs_logging.configure()
     traces.configure()

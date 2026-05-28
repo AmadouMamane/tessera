@@ -12,9 +12,9 @@ materials. Keep it that way.
 from __future__ import annotations
 
 import argparse
-import importlib.resources as resources
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
+from importlib import resources
 from pathlib import Path
 
 from tessera.settings import LanguageCode
@@ -147,12 +147,8 @@ async def main(argv: list[str] | None = None) -> int:
         help="Generate only one language; default is all three.",
     )
     args = parser.parse_args(argv)
-    targets = (
-        [LanguageCode(args.language)]
-        if args.language
-        else list(LanguageCode)
-    )
+    targets = [LanguageCode(args.language)] if args.language else list(LanguageCode)
     for language in targets:
         path = _write_corpus(language, _CATALOGUE[language])
-        print(f"wrote {path}")  # noqa: T201
+        print(f"wrote {path}")
     return 0

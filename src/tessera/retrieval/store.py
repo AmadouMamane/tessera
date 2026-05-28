@@ -12,12 +12,10 @@ and depends on ``pgvector`` being installed in the target database — see
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from psycopg import AsyncConnection
 from psycopg.rows import dict_row
 from psycopg_pool import AsyncConnectionPool
 
@@ -25,7 +23,9 @@ from tessera.retrieval.embeddings import embedding_dimension
 from tessera.settings import LanguageCode, get_settings
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator
+    from collections.abc import AsyncIterator, Sequence
+
+    from psycopg import AsyncConnection
 
 __all__ = [
     "DocumentRecord",
@@ -109,19 +109,19 @@ async def ensure_schema() -> None:
                 inserted_at  timestamptz NOT NULL DEFAULT now(),
                 UNIQUE (corpus, source, chunk_id)
             );
-            """  # noqa: S608  table name validated by config schema
+            """
         )
         await cur.execute(
             f"""
             CREATE INDEX IF NOT EXISTS {table}_embedding_hnsw
                 ON {table} USING hnsw (embedding vector_cosine_ops);
-            """  # noqa: S608
+            """
         )
         await cur.execute(
             f"""
             CREATE INDEX IF NOT EXISTS {table}_corpus_language
                 ON {table} (corpus, language);
-            """  # noqa: S608
+            """
         )
         await conn.commit()
 
@@ -150,7 +150,7 @@ async def insert_documents(records: Sequence[DocumentRecord]) -> int:
                 (corpus, source, chunk_id, language, text, embedding, metadata)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (corpus, source, chunk_id) DO NOTHING;
-            """,  # noqa: S608
+            """,
             rows,
         )
         await conn.commit()
@@ -182,7 +182,7 @@ async def knn_search(
                 WHERE corpus = %s AND language = %s
                 ORDER BY embedding <=> %s::vector
                 LIMIT %s;
-                """,  # noqa: S608
+                """,
                 (query_embedding, corpus, language.value, query_embedding, top_k),
             )
             rows = await cur.fetchall()

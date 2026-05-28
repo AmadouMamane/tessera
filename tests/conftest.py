@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-import os
 import uuid
-from collections.abc import Iterator
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from tessera.agent.state import AgentState, new_state
 from tessera.settings import LanguageCode, get_settings
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 @pytest.fixture(autouse=True)

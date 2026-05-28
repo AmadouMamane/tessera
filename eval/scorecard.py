@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from eval.runner import CaseResult
 
 
@@ -37,9 +38,7 @@ class Scorecard:
         for result in self.results:
             icon = "✅" if result.passed else "❌"
             reason = "; ".join(result.reasons) if result.reasons else ""
-            lines.append(
-                f"| `{result.case_id}` | `{result.language}` | {icon} | {reason} |"
-            )
+            lines.append(f"| `{result.case_id}` | `{result.language}` | {icon} | {reason} |")
 
         by_language: Counter[str] = Counter()
         passes_by_language: Counter[str] = Counter()

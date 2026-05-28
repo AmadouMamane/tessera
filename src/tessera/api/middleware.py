@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 import structlog
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse, Response
-from starlette.types import ASGIApp
 
 from tessera.settings import get_settings
 
@@ -16,6 +15,7 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
     from starlette.requests import Request
+    from starlette.types import ASGIApp
 
 __all__ = ["AuthMiddleware", "RequestIdMiddleware"]
 
@@ -31,6 +31,7 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
         request: Request,
         call_next: Callable[[Request], Awaitable[Response]],
     ) -> Response:
+        """Inject a request-ID header and bind it to the structlog context."""
         existing = request.headers.get(_REQUEST_ID_HEADER)
         request_id = existing or secrets.token_hex(8)
         structlog.contextvars.bind_contextvars(request_id=request_id)
@@ -63,17 +64,14 @@ class AuthMiddleware(BaseHTTPMiddleware):
         request: Request,
         call_next: Callable[[Request], Awaitable[Response]],
     ) -> Response:
+        """Enforce bearer-token authentication, exempting health and metrics paths."""
         if self._expected is None or request.url.path in self._EXEMPT_PATHS:
             return await call_next(request)
 
         header = request.headers.get("authorization", "")
         if not header.lower().startswith("bearer "):
-            return JSONResponse(
-                {"detail": "missing bearer token"}, status_code=401
-            )
+            return JSONResponse({"detail": "missing bearer token"}, status_code=401)
         presented = header[len("bearer ") :].strip()
         if not secrets.compare_digest(presented, self._expected):
-            return JSONResponse(
-                {"detail": "invalid bearer token"}, status_code=401
-            )
+            return JSONResponse({"detail": "invalid bearer token"}, status_code=401)
         return await call_next(request)

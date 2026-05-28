@@ -22,11 +22,14 @@ deterministic so the regression harness can assert on its outputs.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Final
 
-from tessera.agent.state import AgentState
+from tessera.agent.state import AgentState  # noqa: TCH001  — LangGraph introspects run() at runtime
 from tessera.settings import get_settings
 
 __all__ = ["ReviewOutcome", "review", "run"]
+
+_MIN_TOKEN_LEN: Final = 4
 
 
 @dataclass(frozen=True, slots=True)
@@ -58,12 +61,12 @@ def _score_grounding(state: AgentState) -> float:
         return 0.1
     # Crude lexical overlap as a fast, deterministic proxy. Real grounding
     # scoring (entailment + citation match) lives in eval/scorecard.py.
-    draft_tokens = {tok.lower() for tok in draft.split() if len(tok) > 3}
+    draft_tokens = {tok.lower() for tok in draft.split() if len(tok) >= _MIN_TOKEN_LEN}
     if not draft_tokens:
         return 0.5
     supported = 0
     for doc in docs:
-        doc_tokens = {tok.lower() for tok in doc.text.split() if len(tok) > 3}
+        doc_tokens = {tok.lower() for tok in doc.text.split() if len(tok) >= _MIN_TOKEN_LEN}
         if draft_tokens & doc_tokens:
             supported += 1
     return min(1.0, supported / max(1, len(docs)))

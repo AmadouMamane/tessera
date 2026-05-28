@@ -83,7 +83,7 @@ async def _stream_turn(request: ChatRequest) -> AsyncIterator[bytes]:
 
     try:
         final_state = await graph.ainvoke(initial)
-    except Exception as exc:  # noqa: BLE001  visible failure mode
+    except Exception as exc:
         AGENT_TURNS_TOTAL.labels(language=language.value, outcome="error").inc()
         yield _sse("turn.error", {"error": str(exc)})
         return

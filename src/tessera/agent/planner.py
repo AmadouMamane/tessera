@@ -56,9 +56,7 @@ _INTENT_RULES: dict[LanguageCode, list[tuple[re.Pattern[str], Intent]]] = {
             ),
         ),
         (
-            re.compile(
-                r"\b(bloquer|opposition|vol.*carte|carte.*vol)\b", re.IGNORECASE
-            ),
+            re.compile(r"\b(bloquer|opposition|vol.*carte|carte.*vol)\b", re.IGNORECASE),
             Intent(
                 name="card_block",
                 workers=(WorkerName.ACCOUNT_LOOKUP, WorkerName.ESCALATION),

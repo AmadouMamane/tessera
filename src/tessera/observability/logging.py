@@ -11,11 +11,14 @@ from __future__ import annotations
 
 import logging
 import sys
+from typing import TYPE_CHECKING
 
 import structlog
-from structlog.typing import Processor
 
 from tessera.settings import get_settings
+
+if TYPE_CHECKING:
+    from structlog.typing import Processor
 
 __all__ = ["configure", "get_logger"]
 
@@ -69,4 +72,4 @@ def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
     """Return a structlog logger, configuring on first call."""
     if not _configured:
         configure()
-    return structlog.get_logger(name or "tessera")
+    return structlog.get_logger(name or "tessera")  # type: ignore[no-any-return]

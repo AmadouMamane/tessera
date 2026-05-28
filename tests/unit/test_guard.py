@@ -3,16 +3,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pytest
 
 from tessera.guard.adapter import guarded_invoke
 from tessera.guard.decisions import DecisionKind, load_policy
 from tessera.settings import LanguageCode
-
-if TYPE_CHECKING:
-    pass
 
 
 @pytest.fixture

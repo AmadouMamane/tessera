@@ -13,10 +13,12 @@ correct column width.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from tessera.settings import LLMProfile, get_settings
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 __all__ = ["embed", "embedding_dimension"]
 
@@ -34,14 +36,14 @@ def embedding_dimension() -> int:
 
 async def _embed_vertex(texts: Sequence[str]) -> list[list[float]]:
     """Embed via Vertex AI's text-multilingual-embedding model."""
-    from vertexai.language_models import TextEmbeddingModel  # type: ignore[import-untyped]
+    from vertexai.language_models import TextEmbeddingModel
 
     settings = get_settings()
     model = TextEmbeddingModel.from_pretrained(settings.vertex.embedding_model)
     out: list[list[float]] = []
     for i in range(0, len(texts), _MAX_BATCH):
         batch = list(texts[i : i + _MAX_BATCH])
-        response = await model.get_embeddings_async(batch)
+        response = await model.get_embeddings_async(batch)  # type: ignore[arg-type]
         out.extend(item.values for item in response)
     return out
 

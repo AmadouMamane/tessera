@@ -8,7 +8,10 @@ and writes the top-k chunks back into ``retrieved_documents``.
 
 from __future__ import annotations
 
-from tessera.agent.state import AgentState, RetrievedDocument
+from tessera.agent.state import (  # noqa: TCH001  — runtime introspection
+    AgentState,
+    RetrievedDocument,
+)
 from tessera.retrieval import hybrid_search
 
 NODE_NAME = "product_lookup"
@@ -36,7 +39,7 @@ async def run(state: AgentState) -> dict[str, object]:
     """
     try:
         documents = await _search(state)
-    except Exception as exc:  # noqa: BLE001  surface to reviewer
+    except Exception as exc:
         return {
             "error": f"product_lookup failed: {exc}",
         }

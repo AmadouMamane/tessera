@@ -12,10 +12,9 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import importlib.resources as resources
 import json
 import sys
-from pathlib import Path
+from importlib import resources
 
 from tessera.observability.logging import get_logger
 from tessera.retrieval import embeddings

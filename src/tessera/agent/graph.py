@@ -42,16 +42,20 @@ from typing import TYPE_CHECKING
 
 from langgraph.graph import END, START, StateGraph
 
-from tessera.agent import planner as planner_module
-from tessera.agent import reporter as reporter_module
-from tessera.agent import reviewer as reviewer_module
-from tessera.agent import router as router_module
+from tessera.agent import (
+    planner as planner_module,
+    reporter as reporter_module,
+    reviewer as reviewer_module,
+    router as router_module,
+)
 from tessera.agent.state import AgentState, NodeName, WorkerName
-from tessera.agent.workers import account_lookup as account_lookup_worker
-from tessera.agent.workers import escalation as escalation_worker
-from tessera.agent.workers import product_lookup as product_lookup_worker
-from tessera.agent.workers import regulation_lookup as regulation_lookup_worker
-from tessera.agent.workers import simulator as simulator_worker
+from tessera.agent.workers import (
+    account_lookup as account_lookup_worker,
+    escalation as escalation_worker,
+    product_lookup as product_lookup_worker,
+    regulation_lookup as regulation_lookup_worker,
+    simulator as simulator_worker,
+)
 
 if TYPE_CHECKING:
     from langgraph.graph.state import CompiledStateGraph
@@ -99,13 +103,13 @@ def _route_after_reviewer(state: AgentState) -> str:
 # ---------------------------------------------------------------------------
 
 
-def build_graph() -> StateGraph[AgentState]:
+def build_graph() -> StateGraph[AgentState]:  # type: ignore[type-arg]
     """Construct (but do not compile) the agent's StateGraph.
 
     Returning the uncompiled graph lets tests inspect the topology and lets
     callers register custom checkpointers before compilation.
     """
-    graph: StateGraph[AgentState] = StateGraph(AgentState)
+    graph: StateGraph[AgentState] = StateGraph(AgentState)  # type: ignore[type-arg]
 
     # Top-level nodes
     graph.add_node(NodeName.ROUTER.value, router_module.run)
@@ -129,7 +133,7 @@ def build_graph() -> StateGraph[AgentState]:
     worker_targets = [*_WORKER_NODES.values(), NodeName.REVIEWER.value]
     graph.add_conditional_edges(
         NodeName.PLANNER.value,
-        _route_after_planner,
+        _route_after_planner,  # type: ignore[arg-type]
         path_map={name: name for name in worker_targets},
     )
 
@@ -154,7 +158,7 @@ def build_graph() -> StateGraph[AgentState]:
     return graph
 
 
-def compile_graph() -> CompiledStateGraph[AgentState, AgentState, AgentState]:
+def compile_graph() -> CompiledStateGraph[AgentState, AgentState, AgentState]:  # type: ignore[type-arg]
     """Return a compiled, immediately invokable graph.
 
     Callers needing a checkpointer (persistent conversations) should build the

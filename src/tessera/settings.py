@@ -133,8 +133,7 @@ class GuardSettings(BaseSettings):
     def _threshold_is_a_probability(cls, value: float) -> float:
         if not 0.0 <= value <= 1.0:
             raise ValueError(
-                "escalation_confidence_threshold must be in [0.0, 1.0]; "
-                f"got {value!r}"
+                "escalation_confidence_threshold must be in [0.0, 1.0]; " f"got {value!r}"
             )
         return value
 

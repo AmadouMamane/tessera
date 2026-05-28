@@ -58,7 +58,7 @@ class GuardedResult:
 def _load_mcp_firewall() -> Any | None:
     """Return the mcp_firewall module if installed, else ``None``."""
     try:
-        import mcp_firewall  # type: ignore[import-not-found]
+        import mcp_firewall
     except ImportError:
         return None
     return mcp_firewall
@@ -113,8 +113,7 @@ def _check_tool(
                     kind=DecisionKind.DENY,
                     rule=f"tool.{policy.name}.argument.{arg_name}",
                     rationale=(
-                        f"argument {arg_name!r} did not match the configured "
-                        "validation pattern"
+                        f"argument {arg_name!r} did not match the configured " "validation pattern"
                     ),
                 )
             )
@@ -152,7 +151,7 @@ def _redacted_arguments(
 def _to_record(decision: Decision, target: str) -> GuardDecisionRecord:
     return GuardDecisionRecord(
         target=target,
-        decision=decision.kind.value,  # type: ignore[arg-type]
+        decision=decision.kind.value,
         policy_rule=decision.rule,
         rationale=decision.rationale,
         redactions=decision.redactions,
@@ -215,7 +214,7 @@ async def guarded_invoke(
         result = invoke()
         if inspect.isawaitable(result):
             result = await result
-    except Exception as exc:  # noqa: BLE001  forward to caller via state
+    except Exception as exc:
         emit_audit(
             target=tool_name,
             arguments=audit_args,

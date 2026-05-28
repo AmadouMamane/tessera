@@ -36,7 +36,7 @@ def _resolve_exporter() -> SpanExporter:
         try:
             from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 
-            return CloudTraceSpanExporter(project_id=settings.cloud_logging_project)
+            return CloudTraceSpanExporter(project_id=settings.cloud_logging_project)  # type: ignore[no-untyped-call]
         except ImportError:
             pass
     if settings.otel_endpoint:
@@ -44,7 +44,7 @@ def _resolve_exporter() -> SpanExporter:
             OTLPSpanExporter,
         )
 
-        return OTLPSpanExporter(endpoint=settings.otel_endpoint)
+        return OTLPSpanExporter(endpoint=settings.otel_endpoint)  # type: ignore[no-any-return]
     return ConsoleSpanExporter()
 
 

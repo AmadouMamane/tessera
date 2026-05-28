@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 import ollama
 
 from tessera.llm.budget import get_budget_tracker
 from tessera.llm.router import ChatMessage, ChatResponse
 from tessera.settings import get_settings
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 __all__ = ["OllamaBackend"]
 
@@ -38,10 +41,7 @@ class OllamaBackend:
         if max_output_tokens is not None:
             options["num_predict"] = max_output_tokens
 
-        payload = [
-            {"role": message.role, "content": message.content}
-            for message in messages
-        ]
+        payload = [{"role": message.role, "content": message.content} for message in messages]
         response = await self._client.chat(
             model=self.model,
             messages=payload,

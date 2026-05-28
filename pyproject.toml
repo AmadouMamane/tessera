@@ -213,6 +213,11 @@ ignore = [
     "PLR0913",  # too-many-arguments (LangGraph nodes legitimately take many)
     "S101",     # assert is fine in tests
     "ANN401",   # Any is acceptable in adapter boundaries
+    "ANN101",   # self annotation not required in Python
+    "ANN102",   # cls annotation not required in Python
+    "D107",     # __init__ docstring — Google style uses the class docstring instead
+    "PLW0603",  # global singletons are the intended pattern for module-level state
+    "D105",     # magic methods (__str__, __repr__, etc.) don't need docstrings
 ]
 unfixable = [
     "ERA001",   # never auto-delete commented code; require human review
@@ -284,7 +289,10 @@ module = [
     "promptfoo.*",
     "deepeval.*",
     "google.cloud.aiplatform.*",
+    "google.cloud.logging.*",
     "opentelemetry.exporter.cloud_trace.*",
+    "opentelemetry.exporter.otlp.*",
+    "vertexai.*",
 ]
 ignore_missing_imports = true
 

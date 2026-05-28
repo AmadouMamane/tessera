@@ -41,7 +41,7 @@ async def run(state: AgentState) -> dict[str, object]:
             corpus=_CORPUS,
             top_k=_TOP_K,
         )
-    except Exception as exc:  # noqa: BLE001  surface to reviewer
+    except Exception as exc:
         return {"error": f"regulation_lookup failed: {exc}"}
 
     citations = [c for c in (_to_citation(doc) for doc in documents) if c is not None]

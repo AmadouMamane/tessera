@@ -2,15 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from tessera.llm.budget import get_budget_tracker
 from tessera.llm.router import ChatMessage, ChatResponse
 from tessera.settings import get_settings
 
 if TYPE_CHECKING:
-    from vertexai.generative_models import GenerativeModel  # type: ignore[import-untyped]
+    from collections.abc import Sequence
+
+    from vertexai.generative_models import GenerativeModel
 
 __all__ = ["VertexAIBackend"]
 
@@ -44,8 +45,8 @@ class VertexAIBackend:
             raise RuntimeError(
                 "Vertex AI project id is not configured; set TESSERA_VERTEX__PROJECT_ID"
             )
-        import vertexai  # type: ignore[import-untyped]
-        from vertexai.generative_models import GenerativeModel  # type: ignore[import-untyped]
+        import vertexai
+        from vertexai.generative_models import GenerativeModel
 
         vertexai.init(project=self._project, location=self._location)
         self._model_instance = GenerativeModel(self.model)
@@ -82,7 +83,11 @@ class VertexAIBackend:
         usage = getattr(response, "usage_metadata", None)
         input_tokens = int(getattr(usage, "prompt_token_count", 0) or 0)
         output_tokens = int(getattr(usage, "candidates_token_count", 0) or 0)
-        finish_reason = getattr(response.candidates[0], "finish_reason", "stop") if response.candidates else "stop"
+        finish_reason = (
+            getattr(response.candidates[0], "finish_reason", "stop")
+            if response.candidates
+            else "stop"
+        )
 
         get_budget_tracker().record(
             backend=self.name,
@@ -99,7 +104,9 @@ class VertexAIBackend:
         )
 
 
-def _normalise_finish_reason(raw: object) -> ChatResponse.__annotations__["finish_reason"]:
+def _normalise_finish_reason(
+    raw: object,
+) -> Literal["stop", "length", "tool_call", "content_filter", "error"]:
     """Map Vertex's finish reason enum onto the four values we expose."""
     text = str(raw).lower()
     if "max" in text or "length" in text:

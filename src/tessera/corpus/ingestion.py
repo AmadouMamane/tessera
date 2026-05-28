@@ -3,16 +3,19 @@
 from __future__ import annotations
 
 import argparse
-import importlib.resources as resources
 import json
-from collections.abc import Iterable
+from importlib import resources
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from tessera.observability.logging import get_logger
 from tessera.retrieval import embeddings
 from tessera.retrieval.chunking import chunk_text
 from tessera.retrieval.store import DocumentRecord, ensure_schema, insert_documents
 from tessera.settings import LanguageCode
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 LOG = get_logger("tessera.corpus.ingestion")
 
@@ -55,7 +58,10 @@ async def ingest_path(path: Path, corpus: str, language: LanguageCode) -> int:
     for doc in docs:
         source = str(doc["source"])
         text = str(doc["text"])
-        metadata = {str(k): str(v) for k, v in (doc.get("metadata") or {}).items()}
+        raw_meta = doc.get("metadata")
+        metadata = {
+            str(k): str(v) for k, v in (raw_meta if isinstance(raw_meta, dict) else {}).items()
+        }
         chunks = chunk_text(text, language=language)
         if not chunks:
             continue

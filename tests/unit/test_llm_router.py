@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from decimal import Decimal
-
-import pytest
+from typing import TYPE_CHECKING
 
 from tessera.llm.budget import BudgetTracker
 from tessera.llm.router import get_chat_backend
 from tessera.settings import LLMProfile, get_settings
+
+if TYPE_CHECKING:
+    import pytest
 
 
 class TestBudgetTracker:
@@ -57,7 +59,8 @@ class TestProfileResolution:
         assert settings.resolved_llm_profile() is LLMProfile.ON_PREM
 
     def test_get_chat_backend_returns_ollama_by_default(
-        self, monkeypatch: pytest.MonkeyPatch
+        self,
+        monkeypatch: pytest.MonkeyPatch,  # noqa: ARG002
     ) -> None:
         get_chat_backend.cache_clear()
         backend = get_chat_backend()

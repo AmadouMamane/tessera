@@ -71,4 +71,7 @@ class TestEndToEnd:
         )
         final = await graph.ainvoke(state)
         assert final["needs_escalation"] is True
-        assert "advisor" in final["final_response"].lower() or "reference" in final["final_response"].lower()
+        assert (
+            "advisor" in final["final_response"].lower()
+            or "reference" in final["final_response"].lower()
+        )

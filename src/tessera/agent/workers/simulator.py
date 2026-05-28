@@ -15,11 +15,14 @@ from __future__ import annotations
 import re
 import time
 from datetime import UTC, datetime
+from typing import Final
 
 from tessera.agent.state import AgentState, ToolCallRecord
 from tessera.agent.tools import loan_simulate
 from tessera.guard.adapter import guarded_invoke
 from tessera.settings import LanguageCode
+
+_MIN_LOAN_AMOUNT: Final = 1000
 
 NODE_NAME = "simulator"
 
@@ -63,7 +66,7 @@ def _parse_amount(text: str) -> float | None:
     except ValueError:
         return None
     # Amounts under 1000 are almost certainly noise (years, percentages).
-    if value < 1000:
+    if value < _MIN_LOAN_AMOUNT:
         return None
     return value
 
@@ -84,15 +87,14 @@ async def run(state: AgentState) -> dict[str, object]:
     years = _parse_years(state["user_input"]) or 20  # sensible default
 
     if amount is None:
-        return {
-            "error": "simulator: could not parse a loan amount from the request"
-        }
+        return {"error": "simulator: could not parse a loan amount from the request"}
 
-    arguments = {"amount": amount, "years": years, "rate": 3.5}
+    rate = 3.5
+    arguments: dict[str, object] = {"amount": amount, "years": years, "rate": rate}
     started = time.perf_counter()
     guarded_result = await guarded_invoke(
         tool_name="loan_simulate",
-        invoke=lambda: loan_simulate.compute(**arguments),
+        invoke=lambda: loan_simulate.compute(amount=amount, years=years, rate=rate),
         arguments=arguments,
         language=state["language"],
     )

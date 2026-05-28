@@ -12,8 +12,8 @@ escalation as a safety net.
 
 from __future__ import annotations
 
-import importlib.resources as resources
 from functools import lru_cache
+from importlib import resources
 from typing import TYPE_CHECKING, Final
 
 import yaml

@@ -55,7 +55,7 @@ def _load_cases() -> list[dict[str, object]]:
 
 def _evaluate(
     case: dict[str, object],
-    language: str,
+    _language: str,
     final_state: dict[str, object],
 ) -> tuple[bool, list[str]]:
     """Return (passed, reasons) for one (case, language) pair."""
@@ -72,20 +72,18 @@ def _evaluate(
                 reasons.append(f"response contained forbidden substring {needle!r}")
 
     must_any = pass_criteria.get("must_contain_any") or []
-    if isinstance(must_any, list) and must_any:
-        if not any(str(needle) in response for needle in must_any):
-            reasons.append(
-                "response did not contain any required substring "
-                f"from {must_any!r}"
-            )
+    if (
+        isinstance(must_any, list)
+        and must_any
+        and not any(str(needle) in response for needle in must_any)
+    ):
+        reasons.append(f"response did not contain any required substring from {must_any!r}")
 
     if "must_escalate" in pass_criteria:
         expected = bool(pass_criteria["must_escalate"])
         actual = bool(final_state.get("needs_escalation", False))
         if expected != actual:
-            reasons.append(
-                f"escalation expected={expected}, actual={actual}"
-            )
+            reasons.append(f"escalation expected={expected}, actual={actual}")
 
     forbidden_tools = pass_criteria.get("must_not_invoke_tools") or []
     if isinstance(forbidden_tools, list) and forbidden_tools:
@@ -156,9 +154,7 @@ async def _run_all(args: argparse.Namespace) -> int:
     results: list[CaseResult] = []
     for case in cases:
         prompts = case.get("prompts") or {}
-        languages = (
-            [args.lang] if args.lang else [lang for lang in case["languages"]]
-        )
+        languages = [args.lang] if args.lang else list(case["languages"])
         for language in languages:
             if language not in prompts:
                 continue

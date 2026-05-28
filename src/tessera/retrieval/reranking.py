@@ -11,11 +11,13 @@ from __future__ import annotations
 import math
 import re
 from collections import Counter
-from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
-from tessera.retrieval.store import VectorHit
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Sequence
+
+    from tessera.retrieval.store import VectorHit
 
 __all__ = ["RerankedHit", "lexical_score", "rerank"]
 
@@ -69,9 +71,7 @@ def rerank(
 
     vector_ranking: dict[tuple[str, str], int] = {
         (hit.source, hit.chunk_id): rank
-        for rank, hit in enumerate(
-            sorted(hits, key=lambda h: h.score, reverse=True), start=1
-        )
+        for rank, hit in enumerate(sorted(hits, key=lambda h: h.score, reverse=True), start=1)
     }
     lexical_ranked: Iterable[tuple[VectorHit, float]] = (
         (hit, lexical_score(query, hit.text)) for hit in hits

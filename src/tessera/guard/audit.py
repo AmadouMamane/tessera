@@ -14,11 +14,13 @@ from __future__ import annotations
 
 import json
 import sys
-from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
-from tessera.agent.state import GuardDecisionRecord
+if TYPE_CHECKING:
+    from collections.abc import Iterable, Mapping
+
+    from tessera.agent.state import GuardDecisionRecord
 
 __all__ = ["emit_audit"]
 
@@ -40,7 +42,7 @@ def _coerce_arguments(arguments: Mapping[str, object]) -> dict[str, Any]:
     """Coerce argument values to JSON-serialisable primitives."""
     safe: dict[str, Any] = {}
     for key, value in arguments.items():
-        if isinstance(value, (str, int, float, bool)) or value is None:
+        if isinstance(value, str | int | float | bool) or value is None:
             safe[key] = value
         else:
             safe[key] = repr(value)
@@ -75,12 +77,12 @@ def _emit_stdout(entry: dict[str, Any]) -> None:
 def _emit_cloud_logging(entry: dict[str, Any]) -> None:
     """Lazily import google-cloud-logging to avoid a hard dep at start-up."""
     try:
-        from google.cloud import logging as cloud_logging  # type: ignore[import-untyped]
+        from google.cloud import logging as cloud_logging
     except ImportError:
         _emit_stdout(entry)  # graceful degradation
         return
-    client = cloud_logging.Client()
-    logger = client.logger("tessera-guard-audit")
+    client = cloud_logging.Client()  # type: ignore[no-untyped-call]
+    logger = client.logger("tessera-guard-audit")  # type: ignore[no-untyped-call]
     logger.log_struct(entry, severity="INFO")
 
 
@@ -123,5 +125,5 @@ def emit_audit(
                 _emit_cloud_logging(entry)
             case "postgres":
                 _emit_postgres(entry)
-    except Exception as exc:  # noqa: BLE001  audit must never crash the agent
+    except Exception as exc:
         sys.stderr.write(f"tessera.guard.audit: sink {sink!r} failed: {exc}\n")

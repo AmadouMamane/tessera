@@ -17,7 +17,7 @@ __all__ = [
     "Decision",
     "DecisionKind",
     "Policy",
-    "RuleViolation",
+    "RuleViolationError",
     "ToolPolicy",
     "load_policy",
 ]
@@ -42,7 +42,7 @@ class Decision:
 
 
 @dataclass(frozen=True, slots=True)
-class RuleViolation(Exception):
+class RuleViolationError(Exception):
     """Raised internally when a deny rule fires; never surfaces to callers."""
 
     rule: str
@@ -103,15 +103,13 @@ def _compile_tool(name: str, raw: dict[str, object]) -> ToolPolicy:
     languages_raw = raw.get("require_languages") or []
     if not isinstance(languages_raw, list):
         raise TypeError(f"tool {name!r}: require_languages must be a list")
-    languages: frozenset[LanguageCode] = frozenset(
-        LanguageCode(item) for item in languages_raw
-    )
+    languages: frozenset[LanguageCode] = frozenset(LanguageCode(item) for item in languages_raw)
     return ToolPolicy(
         name=name,
         allow=bool(raw.get("allow", False)),
         requires_confirmation=bool(raw.get("requires_confirmation", False)),
         require_languages=languages,
-        max_calls_per_turn=int(raw.get("max_calls_per_turn", 1)),
+        max_calls_per_turn=int(raw.get("max_calls_per_turn") or 1),  # type: ignore[call-overload]
         arguments={
             arg_name: _compile_arg(arg_raw)
             for arg_name, arg_raw in arguments_raw.items()
@@ -133,15 +131,11 @@ def load_policy(path: Path | None = None) -> Policy:
     if not isinstance(tools_raw, dict):
         raise TypeError("guard policy: tools must be a mapping")
     tools = {
-        name: _compile_tool(name, raw)
-        for name, raw in tools_raw.items()
-        if isinstance(raw, dict)
+        name: _compile_tool(name, raw) for name, raw in tools_raw.items() if isinstance(raw, dict)
     }
 
     pi_raw = parsed.get("prompt_injection") or {}
-    deny = tuple(
-        re.compile(str(p)) for p in pi_raw.get("deny_patterns", []) or []
-    )
+    deny = tuple(re.compile(str(p)) for p in pi_raw.get("deny_patterns", []) or [])
     transforms_raw = pi_raw.get("transform_patterns", []) or []
     transforms = tuple(
         (re.compile(str(item["match"])), str(item.get("replacement", "[redacted]")))
@@ -150,9 +144,7 @@ def load_policy(path: Path | None = None) -> Policy:
     )
 
     pii_raw = parsed.get("pii") or {}
-    pii_patterns = tuple(
-        re.compile(str(p)) for p in pii_raw.get("redact_patterns", []) or []
-    )
+    pii_patterns = tuple(re.compile(str(p)) for p in pii_raw.get("redact_patterns", []) or [])
 
     return Policy(
         version=int(parsed.get("version", 0)),

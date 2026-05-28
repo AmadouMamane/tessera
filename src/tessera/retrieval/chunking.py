@@ -11,9 +11,10 @@ from __future__ import annotations
 import re
 import unicodedata
 from dataclasses import dataclass
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
-from tessera.settings import LanguageCode
+if TYPE_CHECKING:
+    from tessera.settings import LanguageCode
 
 __all__ = ["Chunk", "ChunkerConfig", "chunk_text"]
 
@@ -89,9 +90,7 @@ def chunk_text(
         nonlocal buffer, buffer_len
         body = " ".join(buffer).strip()
         if len(body) >= cfg.minimum_chars:
-            chunks.append(
-                Chunk(text=body, start=cursor, end=end_pos, language=language)
-            )
+            chunks.append(Chunk(text=body, start=cursor, end=end_pos, language=language))
         buffer = []
         buffer_len = 0
 
@@ -100,7 +99,7 @@ def chunk_text(
             flush(end_pos=cursor + buffer_len)
             # Carry over enough trailing sentences to satisfy the overlap.
             if cfg.overlap_chars > 0 and chunks:
-                tail = chunks[-1].text[-cfg.overlap_chars:]
+                tail = chunks[-1].text[-cfg.overlap_chars :]
                 buffer.append(tail)
                 buffer_len = len(tail)
             cursor = max(0, cursor + buffer_len)

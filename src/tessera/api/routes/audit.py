@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 router = APIRouter(tags=["audit"])
 
@@ -59,17 +59,17 @@ def _read_entries(path: Path) -> list[AuditEntry]:
         return []
     out: list[AuditEntry] = []
     with path.open("r", encoding="utf-8") as fp:
-        for line in fp:
-            line = line.strip()
-            if not line:
+        for raw in fp:
+            stripped = raw.strip()
+            if not stripped:
                 continue
             try:
-                payload = json.loads(line)
+                payload = json.loads(stripped)
             except json.JSONDecodeError:
                 continue
             try:
                 out.append(AuditEntry(**payload))
-            except Exception:  # noqa: BLE001  skip malformed entry
+            except (ValidationError, TypeError):
                 continue
     return out
 
@@ -79,9 +79,7 @@ async def audit_list(
     cursor: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=_PAGE_MAX)] = _PAGE_DEFAULT,
     target: Annotated[str | None, Query()] = None,
-    outcome: Annotated[
-        Literal["allowed", "denied", "error"] | None, Query()
-    ] = None,
+    outcome: Annotated[Literal["allowed", "denied", "error"] | None, Query()] = None,
 ) -> AuditPage:
     """Return a paged slice of the audit log."""
     path = _resolve_audit_path()

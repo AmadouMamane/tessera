@@ -7,7 +7,7 @@ data-minimisation principle of GDPR Art. 5(1)(c).
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Final, Literal
 
@@ -37,7 +37,7 @@ class TransactionSearchRequest(BaseModel):
 
     @model_validator(mode="after")
     def _check_window(self) -> TransactionSearchRequest:
-        upper = self.until or date.today()  # noqa: DTZ011  date-only by design
+        upper = self.until or date.today()
         if upper < self.since:
             raise ValueError("until must be on or after since")
         if (upper - self.since).days > _MAX_LOOKBACK_DAYS:
@@ -69,8 +69,7 @@ class TransactionSearchResult(BaseModel):
     customer_id: str
     transactions: list[Transaction]
     truncated: bool = Field(
-        description="True when the underlying store had more results than the "
-        "configured limit.",
+        description="True when the underlying store had more results than the " "configured limit.",
     )
 
 
@@ -114,12 +113,12 @@ async def search(
         direction=direction,
     )
     ledger = _DEMO_LEDGER.get(request.customer_id, [])
-    upper = request.until or date.today()  # noqa: DTZ011
+    upper = request.until or date.today()
     in_window = [
         txn
         for txn in ledger
         if request.since <= txn.posted_at.date() <= upper
-        and (request.direction == "both" or txn.direction == request.direction)
+        and (request.direction in ("both", txn.direction))
     ]
     truncated = len(in_window) > request.limit
     return TransactionSearchResult(

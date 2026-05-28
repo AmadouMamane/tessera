@@ -13,14 +13,15 @@ mention in the relevant ADR.
 
 from __future__ import annotations
 
+import contextlib
 import operator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Annotated, Literal, NotRequired, TypedDict
-from uuid import UUID
+from uuid import UUID  # noqa: TCH003  — LangGraph calls get_type_hints() at runtime
 
-from tessera.settings import LanguageCode
+from tessera.settings import LanguageCode  # noqa: TCH001  — same reason
 
 __all__ = [
     "AgentState",
@@ -133,8 +134,7 @@ class Citation:
 
 
 def _dedup_concat[T](left: list[T], right: list[T]) -> list[T]:
-    """Reducer that concatenates two lists, preserving order and removing
-    duplicates by equality.
+    """Reducer that concatenates two lists, preserving order and removing duplicates by equality.
 
     Used for fields where two parallel workers may legitimately return the
     same document or citation — we keep the first occurrence to keep ordering
@@ -143,12 +143,10 @@ def _dedup_concat[T](left: list[T], right: list[T]) -> list[T]:
     seen: set[int] = set()
     out: list[T] = []
     for item in (*left, *right):
-        key = id(item) if not isinstance(item, (str, int, float)) else hash(item)
+        key = id(item) if not isinstance(item, str | int | float) else hash(item)
         # Frozen dataclasses are hashable; fall back to identity otherwise.
-        try:
+        with contextlib.suppress(TypeError):
             key = hash(item)
-        except TypeError:
-            pass
         if key in seen:
             continue
         seen.add(key)

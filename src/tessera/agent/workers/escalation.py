@@ -41,16 +41,24 @@ _HANDOFF_TEMPLATES: dict[LanguageCode, str] = {
 async def run(state: AgentState) -> dict[str, object]:
     """Worker entry point."""
     reason = state.get("escalation_reason") or "human handoff requested"
-    arguments = {
-        "conversation_id": str(state["conversation_id"]),
-        "language": state["language"].value,
+    conversation_id = str(state["conversation_id"])
+    language_val = state["language"].value
+    transcript = state["user_input"][:500]
+    arguments: dict[str, object] = {
+        "conversation_id": conversation_id,
+        "language": language_val,
         "reason": reason,
-        "transcript_excerpt": state["user_input"][:500],
+        "transcript_excerpt": transcript,
     }
     started = time.perf_counter()
     guarded_result = await guarded_invoke(
         tool_name="ticket_escalate",
-        invoke=lambda: ticket_escalate.open_ticket(**arguments),
+        invoke=lambda: ticket_escalate.open_ticket(
+            conversation_id=conversation_id,
+            language=state["language"],  # type: ignore[arg-type]
+            reason=reason,
+            transcript_excerpt=transcript,
+        ),
         arguments=arguments,
         language=state["language"],
     )
@@ -67,13 +75,10 @@ async def run(state: AgentState) -> dict[str, object]:
     )
 
     ticket_reference = (
-        guarded_result.result.reference if call.succeeded and guarded_result.result
-        else "PENDING"
+        guarded_result.result.reference if call.succeeded and guarded_result.result else "PENDING"
     )
 
-    final = _HANDOFF_TEMPLATES[state["language"]].format(
-        ticket_reference=ticket_reference
-    )
+    final = _HANDOFF_TEMPLATES[state["language"]].format(ticket_reference=ticket_reference)
 
     return {
         "tool_calls": [call],

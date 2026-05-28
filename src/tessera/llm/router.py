@@ -8,12 +8,14 @@ for the lifetime of the process.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Literal, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Literal, Protocol, runtime_checkable
 
 from tessera.settings import LLMProfile, get_settings
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 __all__ = [
     "ChatBackend",
