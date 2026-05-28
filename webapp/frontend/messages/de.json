@@ -1,0 +1,97 @@
+{
+  "app": {
+    "title": "Tessera",
+    "subtitle": "Bankberatung — Crédit Aurore",
+    "tagline": "Mehrsprachiger Agent, verankert im EU-Aufsichtsrecht."
+  },
+  "nav": {
+    "chat": "Chat",
+    "audit": "Audit-Protokoll",
+    "eval": "Regressionsscore",
+    "health": "Servicestatus",
+    "settings": "Einstellungen"
+  },
+  "common": {
+    "language": "Sprache",
+    "search": "Suchen",
+    "loading": "Lädt …",
+    "empty": "Keine Ergebnisse.",
+    "error": "Ein Fehler ist aufgetreten.",
+    "retry": "Erneut versuchen",
+    "close": "Schließen",
+    "details": "Details",
+    "filter": "Filter",
+    "all": "Alle",
+    "of": "von",
+    "results": "Ergebnissen",
+    "next": "Weiter",
+    "previous": "Zurück"
+  },
+  "chat": {
+    "title": "Chat",
+    "description": "Stellen Sie Tessera Ihre Fragen. Antworten werden durch die interne Firewall geprüft und im Audit-Protokoll erfasst.",
+    "placeholder": "Stellen Sie Ihre Frage …",
+    "send": "Senden",
+    "clear": "Neuer Chat",
+    "thinking": "Tessera denkt nach …",
+    "youSaid": "Sie",
+    "assistantSaid": "Tessera",
+    "sources": "Quellen",
+    "escalated": "Diese Anfrage wurde an eine Beraterin oder einen Berater weitergeleitet.",
+    "confidence": "Konfidenz",
+    "languageHint": "Erkannte Sprache"
+  },
+  "audit": {
+    "title": "Audit-Protokoll",
+    "description": "Jeder Werkzeugaufruf wird mit seiner Entscheidung, Quelle und der zugehörigen Richtlinie protokolliert.",
+    "columns": {
+      "occurredAt": "Zeitpunkt",
+      "target": "Werkzeug",
+      "outcome": "Verdikt",
+      "decisions": "Entscheidungen",
+      "actions": ""
+    },
+    "outcomes": {
+      "allowed": "Erlaubt",
+      "denied": "Abgelehnt",
+      "error": "Fehler"
+    },
+    "filters": {
+      "target": "Werkzeug",
+      "outcome": "Verdikt"
+    }
+  },
+  "eval": {
+    "title": "Regressionsscore",
+    "description": "Tessera wird gegen einen Katalog öffentlich dokumentierter Agentenfehler getestet. Durchgefallene Fälle bleiben sichtbar — nichts wird versteckt.",
+    "summary": {
+      "total": "Durchgeführt",
+      "passed": "Bestanden",
+      "failed": "Fehlgeschlagen",
+      "rate": "Erfolgsquote"
+    },
+    "columns": {
+      "case": "Fall",
+      "language": "Sprache",
+      "result": "Ergebnis",
+      "reason": "Begründung"
+    },
+    "passed": "Bestanden",
+    "failed": "Fehlgeschlagen"
+  },
+  "health": {
+    "title": "Servicestatus",
+    "description": "Echtzeit-Indikatoren für Backend, Postgres-Pool und LLM-Budget.",
+    "cards": {
+      "backend": "Backend",
+      "readiness": "Verfügbarkeit",
+      "budget": "LLM-Budget",
+      "version": "Version"
+    },
+    "status": {
+      "ok": "Betriebsbereit",
+      "degraded": "Beeinträchtigt",
+      "down": "Offline"
+    }
+  }
+}

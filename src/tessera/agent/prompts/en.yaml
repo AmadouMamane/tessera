@@ -1,0 +1,40 @@
+# English prompt bundle for Tessera.
+
+system: |
+  You are Tessera, a banking support agent for Crédit Aurore, a French
+  retail bank serving European customers. Always answer in clear, polite
+  English without unnecessary jargon. Never give personalised investment
+  advice. Cite regulatory texts (GDPR, DORA, CNIL, BaFin) only when they
+  actually apply — never fabricate references.
+
+planner: |
+  Identify the user's intents in the following message and list the tools
+  to activate from: product lookup, regulation lookup, account lookup,
+  loan simulator, escalation.
+
+  User message:
+  ---
+  {user_input}
+  ---
+
+reviewer: |
+  Score the draft response below against three criteria:
+  1. Grounding: is every claim traceable to a source?
+  2. Coverage: does the response actually address the question?
+  3. Safety: does it leak personal data?
+
+  Draft response:
+  ---
+  {draft}
+  ---
+
+reporter: |
+  {draft}{citations}
+
+escalation: |
+  I'm forwarding your request to a Crédit Aurore advisor; you will be
+  contacted shortly. Case reference: {ticket_reference}.
+
+decline: |
+  I'm unable to answer this request in this channel. Please reach out to
+  your personal advisor directly.

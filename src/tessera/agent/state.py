@@ -1,0 +1,243 @@
+"""Typed state passed between LangGraph nodes.
+
+LangGraph identifies state by reducer functions on a ``TypedDict``. For
+Tessera we use a single :class:`AgentState` with explicit reducers on the
+fields that accumulate across nodes (messages, retrieved documents, tool
+calls, guard decisions, citations), and last-write-wins on the scalar fields
+that represent the agent's current best answer.
+
+The state schema is the contract between the orchestration layer (graph) and
+every node — keep it minimal, fully typed, and stable. New fields require a
+mention in the relevant ADR.
+"""
+
+from __future__ import annotations
+
+import operator
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Annotated, Literal, NotRequired, TypedDict
+from uuid import UUID
+
+from tessera.settings import LanguageCode
+
+__all__ = [
+    "AgentState",
+    "Citation",
+    "ConversationMessage",
+    "GuardDecisionRecord",
+    "NodeName",
+    "RetrievedDocument",
+    "ToolCallRecord",
+    "WorkerName",
+    "new_state",
+]
+
+
+# ---------------------------------------------------------------------------
+# Node identifiers
+# ---------------------------------------------------------------------------
+
+
+class NodeName(StrEnum):
+    """Top-level LangGraph node identifiers.
+
+    The values are also used as string keys when wiring the StateGraph and
+    when emitting trace spans, so they must remain stable.
+    """
+
+    ROUTER = "router"
+    PLANNER = "planner"
+    DISPATCH = "dispatch"
+    REVIEWER = "reviewer"
+    REPORTER = "reporter"
+    ESCALATION = "escalation"
+
+
+class WorkerName(StrEnum):
+    """Worker (orchestration) node identifiers."""
+
+    PRODUCT_LOOKUP = "product_lookup"
+    REGULATION_LOOKUP = "regulation_lookup"
+    ACCOUNT_LOOKUP = "account_lookup"
+    SIMULATOR = "simulator"
+    ESCALATION = "escalation_worker"
+
+
+# ---------------------------------------------------------------------------
+# Frozen records carried in the state
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class ConversationMessage:
+    """A single turn of the visible conversation."""
+
+    role: Literal["user", "assistant", "system", "tool"]
+    content: str
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
+    name: str | None = None  # tool name when ``role == "tool"``
+
+
+@dataclass(frozen=True, slots=True)
+class RetrievedDocument:
+    """A document chunk returned by the retrieval layer."""
+
+    source: str
+    chunk_id: str
+    language: LanguageCode
+    text: str
+    score: float
+    metadata: dict[str, str] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, slots=True)
+class ToolCallRecord:
+    """An invocation of an LLM-callable tool, with its result."""
+
+    tool_name: str
+    arguments: dict[str, object]
+    result: object | None
+    succeeded: bool
+    error: str | None = None
+    started_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    duration_ms: float = 0.0
+
+
+@dataclass(frozen=True, slots=True)
+class GuardDecisionRecord:
+    """One decision emitted by the runtime guard (mcp-firewall adapter)."""
+
+    target: str  # tool or worker name being guarded
+    decision: Literal["allow", "deny", "transform"]
+    policy_rule: str
+    rationale: str
+    redactions: tuple[str, ...] = ()
+    occurred_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+
+
+@dataclass(frozen=True, slots=True)
+class Citation:
+    """A regulatory or product-corpus citation used to ground a response."""
+
+    source: str  # e.g. "DORA Article 28", "BaFin Rundschreiben 10/2022"
+    locator: str  # e.g. "art. 28(3)", "section 4.2"
+    language: LanguageCode
+    excerpt: str
+
+
+# ---------------------------------------------------------------------------
+# Reducers for accumulating fields
+# ---------------------------------------------------------------------------
+
+
+def _dedup_concat[T](left: list[T], right: list[T]) -> list[T]:
+    """Reducer that concatenates two lists, preserving order and removing
+    duplicates by equality.
+
+    Used for fields where two parallel workers may legitimately return the
+    same document or citation — we keep the first occurrence to keep ordering
+    deterministic for replay.
+    """
+    seen: set[int] = set()
+    out: list[T] = []
+    for item in (*left, *right):
+        key = id(item) if not isinstance(item, (str, int, float)) else hash(item)
+        # Frozen dataclasses are hashable; fall back to identity otherwise.
+        try:
+            key = hash(item)
+        except TypeError:
+            pass
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(item)
+    return out
+
+
+# ---------------------------------------------------------------------------
+# The state itself
+# ---------------------------------------------------------------------------
+
+
+class AgentState(TypedDict):
+    """The TypedDict passed between every LangGraph node.
+
+    Fields annotated with ``Annotated[..., operator.add]`` accumulate across
+    nodes; all others use LangGraph's default last-write-wins behaviour.
+    """
+
+    # --- Identity ---------------------------------------------------------
+    conversation_id: UUID
+    turn_id: UUID
+
+    # --- Input ------------------------------------------------------------
+    user_input: str
+    language: LanguageCode
+    language_confidence: float
+
+    # --- Conversation history --------------------------------------------
+    messages: Annotated[list[ConversationMessage], operator.add]
+
+    # --- Planning ---------------------------------------------------------
+    plan: list[WorkerName]
+    plan_rationale: NotRequired[str]
+
+    # --- Retrieval --------------------------------------------------------
+    retrieved_documents: Annotated[list[RetrievedDocument], _dedup_concat]
+
+    # --- Tool use ---------------------------------------------------------
+    tool_calls: Annotated[list[ToolCallRecord], operator.add]
+
+    # --- Guardrails -------------------------------------------------------
+    guard_decisions: Annotated[list[GuardDecisionRecord], operator.add]
+
+    # --- Output -----------------------------------------------------------
+    draft_response: NotRequired[str]
+    final_response: NotRequired[str]
+    confidence: NotRequired[float]
+    citations: Annotated[list[Citation], _dedup_concat]
+
+    # --- Escalation -------------------------------------------------------
+    needs_escalation: bool
+    escalation_reason: NotRequired[str]
+
+    # --- Error reporting --------------------------------------------------
+    error: NotRequired[str]
+
+
+def new_state(
+    *,
+    conversation_id: UUID,
+    turn_id: UUID,
+    user_input: str,
+    language: LanguageCode,
+    language_confidence: float = 1.0,
+) -> AgentState:
+    """Construct a fresh :class:`AgentState` ready to enter the graph.
+
+    Args:
+        conversation_id: Stable identifier across multiple turns.
+        turn_id: Identifier unique to this single turn.
+        user_input: The raw user message in its detected language.
+        language: The detected language (FR/DE/EN).
+        language_confidence: Probability assigned by the language detector.
+
+    Returns:
+        A state dict with all accumulator fields initialised to empty lists.
+    """
+    return AgentState(
+        conversation_id=conversation_id,
+        turn_id=turn_id,
+        user_input=user_input,
+        language=language,
+        language_confidence=language_confidence,
+        messages=[ConversationMessage(role="user", content=user_input)],
+        plan=[],
+        retrieved_documents=[],
+        tool_calls=[],
+        guard_decisions=[],
+        citations=[],
+        needs_escalation=False,
+    )

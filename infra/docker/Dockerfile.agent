@@ -1,0 +1,64 @@
+# Tessera agent — multi-stage build optimised for Cloud Run cold-start.
+# Stage 1 installs dependencies via uv; stage 2 produces a slim runtime image.
+
+# ---- Stage 1: builder ------------------------------------------------------
+FROM python:3.12-slim-bookworm AS builder
+
+ENV PIP_NO_CACHE_DIR=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_PROJECT_ENVIRONMENT=/opt/venv \
+    UV_LINK_MODE=copy
+
+# Install uv from its official base image — small and pinned.
+COPY --from=ghcr.io/astral-sh/uv:0.5.4 /uv /usr/local/bin/uv
+
+WORKDIR /app
+
+# System deps required to compile psycopg + the cryptography wheels.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        libpq-dev \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Resolve dependencies in their own layer for caching.
+COPY pyproject.toml uv.lock* ./
+RUN uv sync --frozen --no-install-project --no-dev
+
+# Then copy the source and install the project itself.
+COPY src ./src
+COPY README.md LICENSE ./
+RUN uv sync --frozen --no-dev
+
+# ---- Stage 2: runtime ------------------------------------------------------
+FROM python:3.12-slim-bookworm AS runtime
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH" \
+    TESSERA_API__HOST=0.0.0.0 \
+    TESSERA_API__PORT=8080
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        libpq5 \
+        ca-certificates \
+        tini \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system tessera \
+    && useradd --system --gid tessera --home /home/tessera tessera
+
+WORKDIR /app
+COPY --from=builder /opt/venv /opt/venv
+COPY --from=builder /app/src /app/src
+
+USER tessera:tessera
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/healthz').read()"
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["tessera"]

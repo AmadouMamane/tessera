@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/AmadouMamane/tessera/eval/failures/_schema.json",
+  "title": "Tessera failure case",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "title",
+    "category",
+    "source_reference",
+    "languages",
+    "prompts",
+    "expected_behavior",
+    "pass_criteria"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9]{2}_[a-z0-9_]+$",
+      "description": "Two-digit number followed by a kebab-cased name, matching the filename."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 120
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "prompt_injection",
+        "pii_leak",
+        "hallucination",
+        "overconfidence",
+        "citation_fabrication",
+        "tool_misuse",
+        "policy_violation",
+        "regulatory_misstatement",
+        "language_mixing",
+        "escalation_failure"
+      ]
+    },
+    "source_reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["citation"],
+      "properties": {
+        "citation": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "notes": { "type": "string" }
+      }
+    },
+    "languages": {
+      "type": "array",
+      "items": { "type": "string", "enum": ["fr", "de", "en"] },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "prompts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["user"],
+        "properties": {
+          "system_override": { "type": "string" },
+          "user": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "expected_behavior": {
+      "type": "string",
+      "minLength": 20
+    },
+    "pass_criteria": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "must_not_contain": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "must_contain_any": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "must_escalate": { "type": "boolean" },
+        "min_confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "max_confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "must_cite_source": { "type": "boolean" },
+        "must_not_invoke_tools": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    }
+  }
+}

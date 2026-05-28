@@ -1,0 +1,104 @@
+"""Generic ingestion entry point — shared by the seed and regulation scripts."""
+
+from __future__ import annotations
+
+import argparse
+import importlib.resources as resources
+import json
+from collections.abc import Iterable
+from pathlib import Path
+
+from tessera.observability.logging import get_logger
+from tessera.retrieval import embeddings
+from tessera.retrieval.chunking import chunk_text
+from tessera.retrieval.store import DocumentRecord, ensure_schema, insert_documents
+from tessera.settings import LanguageCode
+
+LOG = get_logger("tessera.corpus.ingestion")
+
+
+def _load(path: Path) -> list[dict[str, object]]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, list):
+        raise TypeError(f"{path}: expected a JSON list of documents")
+    return [item for item in payload if isinstance(item, dict)]
+
+
+def _iter_data_files(corpus_filter: str | None) -> Iterable[tuple[Path, str, LanguageCode]]:
+    package = resources.files("tessera.corpus.data")
+    for entry in package.iterdir():
+        name = entry.name
+        if not name.endswith(".json"):
+            continue
+        if not name.startswith("regulations_") and corpus_filter == "regulations":
+            continue
+        if name.startswith("regulations_"):
+            corpus = "regulations"
+            # naming convention: regulations_<jurisdiction>.json — language is FR/DE/EN
+            # for the demo we assume EN texts unless the file declares otherwise.
+            language = LanguageCode.EN
+        else:
+            base = name.removesuffix(".json")
+            *_, lang_code = base.rsplit("_", 1)
+            corpus = base.removesuffix(f"_{lang_code}")
+            try:
+                language = LanguageCode(lang_code)
+            except ValueError:
+                continue
+        yield Path(str(entry)), corpus, language
+
+
+async def ingest_path(path: Path, corpus: str, language: LanguageCode) -> int:
+    """Ingest a single JSON file into pgvector."""
+    docs = _load(path)
+    records: list[DocumentRecord] = []
+    for doc in docs:
+        source = str(doc["source"])
+        text = str(doc["text"])
+        metadata = {str(k): str(v) for k, v in (doc.get("metadata") or {}).items()}
+        chunks = chunk_text(text, language=language)
+        if not chunks:
+            continue
+        vectors = await embeddings.embed([c.text for c in chunks])
+        for idx, (chunk, vector) in enumerate(zip(chunks, vectors, strict=True)):
+            records.append(
+                DocumentRecord(
+                    corpus=corpus,
+                    source=source,
+                    chunk_id=f"{source}#{idx:04d}",
+                    language=language,
+                    text=chunk.text,
+                    embedding=vector,
+                    metadata=metadata,
+                )
+            )
+    inserted = await insert_documents(records)
+    LOG.info(
+        "corpus.ingest_file",
+        path=str(path),
+        corpus=corpus,
+        language=language.value,
+        records=len(records),
+        inserted=inserted,
+    )
+    return inserted
+
+
+async def main(argv: list[str] | None = None) -> int:
+    """CLI entry point used by ``scripts/ingest_regulations.py``."""
+    parser = argparse.ArgumentParser(description="Ingest a corpus into pgvector.")
+    parser.add_argument(
+        "--corpus",
+        default="regulations",
+        help="Filter to this logical corpus (default: regulations).",
+    )
+    args = parser.parse_args(argv)
+
+    await ensure_schema()
+    total = 0
+    for path, corpus, language in _iter_data_files(args.corpus):
+        if args.corpus and corpus != args.corpus:
+            continue
+        total += await ingest_path(path, corpus, language)
+    LOG.info("corpus.ingest_done", inserted=total)
+    return 0

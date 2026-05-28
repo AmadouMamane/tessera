@@ -1,0 +1,97 @@
+name: Eval
+
+on:
+  schedule:
+    # Nightly at 03:00 UTC.
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+    inputs:
+      case:
+        description: "Run only the case with this id (e.g. 03_hallucination_fact). Empty = run all."
+        required: false
+        default: ""
+      language:
+        description: "Restrict to one language (fr, de, en). Empty = all."
+        required: false
+        default: ""
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: eval-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  UV_VERSION: "0.5.4"
+
+jobs:
+  run-eval:
+    name: Non-regression failure catalogue
+    runs-on: ubuntu-latest
+    # PR-label gate: only run on labelled PRs to avoid burning quota on every push.
+    if: >
+      github.event_name == 'schedule' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'pull_request' && github.event.label.name == 'eval')
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: tessera
+          POSTGRES_PASSWORD: tessera
+          POSTGRES_DB: tessera
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tessera -d tessera"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      TESSERA_POSTGRES__DSN: postgresql://tessera:tessera@localhost:5432/tessera
+      TESSERA_LLM_PROFILE: on_prem
+      TESSERA_OBS__METRICS_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: |
+            pyproject.toml
+            uv.lock
+
+      - name: Sync with eval group
+        run: uv sync --group eval
+
+      - name: Run the failure catalogue
+        id: eval
+        run: |
+          set -o pipefail
+          ARGS=""
+          if [[ -n "${{ inputs.case }}" ]]; then ARGS="$ARGS --case ${{ inputs.case }}"; fi
+          if [[ -n "${{ inputs.language }}" ]]; then ARGS="$ARGS --lang ${{ inputs.language }}"; fi
+          uv run python scripts/run_eval.py $ARGS | tee eval/reports/scorecard.md
+
+      - name: Upload scorecard
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-scorecard-${{ github.run_id }}
+          path: |
+            eval/reports/latest.json
+            eval/reports/scorecard.md
+          retention-days: 30
+
+      - name: Comment scorecard on PR
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: tessera-eval
+          path: eval/reports/scorecard.md

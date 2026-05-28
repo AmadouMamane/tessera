@@ -1,0 +1,69 @@
+"use client";
+
+import {
+  QueryClient,
+  QueryClientProvider,
+  isServer,
+} from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { ThemeProvider } from "next-themes";
+import { Toaster } from "sonner";
+import type { ReactNode } from "react";
+import { useState } from "react";
+
+import { TooltipProvider } from "@/components/ui/tooltip";
+
+/**
+ * Bootstrap a single QueryClient per browser tab.
+ *
+ * On the server we always build a fresh client so requests do not leak
+ * across users. On the client we cache the instance on `window` so
+ * Suspense boundaries do not recreate it on every navigation.
+ */
+let browserClient: QueryClient | undefined;
+
+function makeQueryClient(): QueryClient {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 30_000,
+        gcTime: 5 * 60_000,
+        refetchOnWindowFocus: false,
+        retry: 1,
+      },
+    },
+  });
+}
+
+function getQueryClient(): QueryClient {
+  if (isServer) return makeQueryClient();
+  if (!browserClient) browserClient = makeQueryClient();
+  return browserClient;
+}
+
+export function Providers({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(getQueryClient);
+  return (
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider delayDuration={200} skipDelayDuration={120}>
+          {children}
+        </TooltipProvider>
+        <Toaster
+          position="bottom-right"
+          theme="system"
+          richColors
+          closeButton
+        />
+        {process.env.NODE_ENV !== "production" ? (
+          <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+        ) : null}
+      </QueryClientProvider>
+    </ThemeProvider>
+  );
+}

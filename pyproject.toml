@@ -1,0 +1,360 @@
+[build-system]
+requires = ["hatchling>=1.25.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tessera"
+version = "0.1.0"
+description = "Multilingual (FR/DE/EN) banking support LLM agent for the European retail market, grounded in EU regulatory corpora and guarded by mcp-firewall."
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.12,<3.13"
+authors = [
+    { name = "Amadou Mamane Sarki", email = "mamanesarki@yahoo.fr" },
+]
+keywords = [
+    "llm",
+    "agent",
+    "banking",
+    "compliance",
+    "gdpr",
+    "dora",
+    "langgraph",
+    "multilingual",
+    "rag",
+    "guardrails",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "License :: OSI Approved :: Apache Software License",
+    "Natural Language :: English",
+    "Natural Language :: French",
+    "Natural Language :: German",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS :: MacOS X",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
+
+dependencies = [
+    # Agent orchestration
+    "langgraph>=0.2.50,<0.3",
+    "langchain-core>=0.3.20,<0.4",
+    "langchain-google-vertexai>=2.0.10,<3",
+
+    # HTTP layer
+    "fastapi>=0.115.0,<0.116",
+    "uvicorn[standard]>=0.32.0,<0.33",
+    "httpx>=0.27.2,<0.28",
+    "python-multipart>=0.0.12,<0.1",
+
+    # Runtime guard (consumed as dependency — see docs/differentiation.md)
+    "mcp-firewall>=0.1.0,<0.4",
+
+    # Retrieval
+    "psycopg[binary,pool]>=3.2.3,<4",
+    "pgvector>=0.3.6,<0.4",
+    "sqlalchemy>=2.0.36,<3",
+    "alembic>=1.14.0,<2",
+
+    # Local LLM path
+    "ollama>=0.4.1,<0.5",
+
+    # Configuration & validation
+    "pydantic>=2.9.0,<3",
+    "pydantic-settings>=2.6.0,<3",
+    "pyyaml>=6.0.2,<7",
+    "jsonschema>=4.23.0,<5",
+
+    # Observability
+    "opentelemetry-api>=1.28.0,<2",
+    "opentelemetry-sdk>=1.28.0,<2",
+    "opentelemetry-instrumentation-fastapi>=0.49b0,<1",
+    "opentelemetry-exporter-gcp-trace>=1.7.0,<2",
+    "structlog>=24.4.0,<25",
+    "prometheus-client>=0.21.0,<0.22",
+
+    # GCP integration
+    "google-cloud-secret-manager>=2.21.1,<3",
+    "google-cloud-logging>=3.11.3,<4",
+    "google-cloud-aiplatform>=1.74.0,<2",
+]
+
+[project.optional-dependencies]
+on-prem = [
+    # On-premises path: local Llama 3.3 70B via Ollama on Apple Silicon
+    "sentence-transformers>=3.3.0,<4",
+    "torch>=2.5.1,<3 ; platform_machine == 'arm64'",
+]
+
+[project.urls]
+Homepage = "https://github.com/AmadouMamane/tessera"
+Repository = "https://github.com/AmadouMamane/tessera"
+Issues = "https://github.com/AmadouMamane/tessera/issues"
+Documentation = "https://github.com/AmadouMamane/tessera/tree/main/docs"
+Changelog = "https://github.com/AmadouMamane/tessera/blob/main/CHANGELOG.md"
+
+[project.scripts]
+tessera = "tessera.api.main:cli"
+tessera-eval = "eval.runner:main"
+tessera-ingest = "tessera.corpus.ingestion:main"
+
+[dependency-groups]
+dev = [
+    # Lint, format, type-check
+    "ruff>=0.7.4,<0.8",
+    "mypy>=1.13.0,<2",
+    "pre-commit>=4.0.1,<5",
+
+    # Test
+    "pytest>=8.3.3,<9",
+    "pytest-asyncio>=0.24.0,<0.25",
+    "pytest-cov>=6.0.0,<7",
+    "pytest-mock>=3.14.0,<4",
+    "pytest-xdist>=3.6.1,<4",
+    "hypothesis>=6.119.0,<7",
+
+    # Type stubs
+    "types-pyyaml>=6.0.12,<7",
+    "types-jsonschema>=4.23.0,<5",
+
+    # Local dev tooling
+    "ipython>=8.29.0,<9",
+    "rich>=13.9.4,<14",
+]
+
+eval = [
+    # Non-regression harness (40 publicly documented agent failures)
+    "promptfoo>=0.1.0,<0.2 ; python_version < '4'",
+    "deepeval>=2.0.0,<3",
+    "rapidfuzz>=3.10.1,<4",
+]
+
+docs = [
+    "mkdocs>=1.6.1,<2",
+    "mkdocs-material>=9.5.44,<10",
+    "mkdocstrings[python]>=0.27.0,<0.28",
+]
+
+# ---------------------------------------------------------------------------
+# Build configuration
+# ---------------------------------------------------------------------------
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/tessera"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/tessera",
+    "eval",
+    "docs",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+]
+
+# ---------------------------------------------------------------------------
+# uv configuration
+# ---------------------------------------------------------------------------
+
+[tool.uv]
+package = true
+required-version = ">=0.5.0"
+
+# ---------------------------------------------------------------------------
+# Ruff — lint + format
+# ---------------------------------------------------------------------------
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests", "eval", "scripts"]
+extend-exclude = [
+    ".venv",
+    "webapp/frontend",
+    "infra/terraform/.terraform",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "N",      # pep8-naming
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "SIM",    # flake8-simplify
+    "C4",     # flake8-comprehensions
+    "PIE",    # flake8-pie
+    "RET",    # flake8-return
+    "PTH",    # flake8-use-pathlib
+    "PL",     # pylint
+    "RUF",    # ruff-specific rules
+    "S",      # flake8-bandit (security)
+    "ASYNC",  # flake8-async
+    "TID",    # flake8-tidy-imports
+    "TCH",    # flake8-type-checking
+    "ARG",    # flake8-unused-arguments
+    "ERA",    # eradicate (commented-out code)
+    "G",      # flake8-logging-format
+    "ANN",    # flake8-annotations
+    "D",      # pydocstyle (Google style)
+]
+ignore = [
+    "D203",     # one-blank-line-before-class (incompatible with D211)
+    "D213",     # multi-line-summary-second-line (incompatible with D212)
+    "PLR0913",  # too-many-arguments (LangGraph nodes legitimately take many)
+    "S101",     # assert is fine in tests
+    "ANN401",   # Any is acceptable in adapter boundaries
+]
+unfixable = [
+    "ERA001",   # never auto-delete commented code; require human review
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "D", "ANN", "PLR2004", "ARG001"]
+"eval/**/*.py" = ["D", "ANN", "T201"]
+"scripts/**/*.py" = ["D", "T201", "S603", "S607"]
+"src/tessera/__init__.py" = ["D104"]
+"**/__init__.py" = ["D104", "F401"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["tessera", "eval"]
+combine-as-imports = true
+split-on-trailing-comma = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+docstring-code-format = true
+docstring-code-line-length = 88
+
+# ---------------------------------------------------------------------------
+# Mypy — strict mode (frozen by CLAUDE.md)
+# ---------------------------------------------------------------------------
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unreachable = true
+disallow_any_generics = true
+disallow_untyped_decorators = true
+no_implicit_reexport = true
+extra_checks = true
+enable_error_code = [
+    "redundant-expr",
+    "possibly-undefined",
+    "truthy-bool",
+    "truthy-iterable",
+    "ignore-without-code",
+    "unused-awaitable",
+]
+files = ["src/tessera", "tests"]
+exclude = [
+    "scripts/",
+    "webapp/frontend/",
+    "infra/",
+    "build/",
+    ".venv/",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "pgvector.*",
+    "ollama.*",
+    "mcp_firewall.*",
+    "promptfoo.*",
+    "deepeval.*",
+    "google.cloud.aiplatform.*",
+    "opentelemetry.exporter.cloud_trace.*",
+]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["tests.*"]
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+# ---------------------------------------------------------------------------
+# Pytest
+# ---------------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+minversion = "8.3"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--showlocals",
+    "--tb=short",
+    "--import-mode=importlib",
+]
+markers = [
+    "integration: tests that hit Postgres, the LLM, or external services (deselect with '-m \"not integration\"')",
+    "slow: tests that take more than one second",
+    "fr: French-language agent path",
+    "de: German-language agent path",
+    "en: English-language agent path",
+    "firewall: tests that exercise the mcp-firewall adapter",
+    "regression: non-regression failure cases (see eval/failures/)",
+]
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning:google.*",
+    "ignore::DeprecationWarning:pkg_resources.*",
+    "ignore::PendingDeprecationWarning",
+]
+
+# ---------------------------------------------------------------------------
+# Coverage
+# ---------------------------------------------------------------------------
+
+[tool.coverage.run]
+source = ["src/tessera"]
+branch = true
+parallel = true
+omit = [
+    "*/tests/*",
+    "*/__main__.py",
+    "src/tessera/observability/traces.py",
+]
+
+[tool.coverage.report]
+precision = 1
+show_missing = true
+skip_covered = false
+fail_under = 80
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "\\.\\.\\.",
+]
+
+[tool.coverage.html]
+directory = "build/coverage-html"

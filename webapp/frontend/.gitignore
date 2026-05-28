@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.*
+
+# Build output
+.next/
+out/
+build/
+
+# Tests
+coverage/
+playwright-report/
+test-results/
+
+# Env
+.env
+.env.local
+.env*.local
+
+# Editor + OS
+.DS_Store
+*.log
+*.tsbuildinfo
+.vercel

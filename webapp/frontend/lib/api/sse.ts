@@ -1,0 +1,98 @@
+/**
+ * SSE client for the agent's `/chat` endpoint.
+ *
+ * The FastAPI route emits one `turn.start`, optional `turn.draft` events,
+ * a `turn.end` envelope, and `turn.error` on failure. We use
+ * `@microsoft/fetch-event-source` rather than the native `EventSource`
+ * because (a) we need to POST a body, (b) we need fine-grained abort
+ * control, and (c) the native API does not surface non-200 status codes
+ * usefully.
+ */
+import { fetchEventSource } from "@microsoft/fetch-event-source";
+
+import {
+  ChatEndEventSchema,
+  ChatErrorEventSchema,
+  ChatStartEventSchema,
+  type ChatEndEvent,
+} from "./schemas";
+
+export interface ChatTurnRequest {
+  message: string;
+  conversation_id?: string;
+  language?: "fr" | "de" | "en";
+}
+
+export interface ChatTurnCallbacks {
+  onStart?: (event: { conversation_id: string; turn_id: string }) => void;
+  onEnd?: (envelope: ChatEndEvent) => void;
+  onError?: (message: string) => void;
+}
+
+export interface StreamChatOptions extends ChatTurnCallbacks {
+  signal?: AbortSignal;
+}
+
+/**
+ * Open an SSE connection to `/api/chat` and dispatch parsed events to the
+ * provided callbacks. Resolves once the server closes the stream.
+ */
+export async function streamChat(
+  payload: ChatTurnRequest,
+  { signal, onStart, onEnd, onError }: StreamChatOptions = {},
+): Promise<void> {
+  await fetchEventSource("/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "text/event-stream",
+    },
+    body: JSON.stringify(payload),
+    signal,
+    openWhenHidden: true,
+    onopen: async (response) => {
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        throw new Error(
+          `chat stream returned ${response.status}: ${text || "unknown error"}`,
+        );
+      }
+    },
+    onmessage(event) {
+      const data = safeParseJson(event.data);
+      if (data === undefined) return;
+      switch (event.event) {
+        case "turn.start": {
+          const parsed = ChatStartEventSchema.safeParse(data);
+          if (parsed.success) onStart?.(parsed.data);
+          return;
+        }
+        case "turn.end": {
+          const parsed = ChatEndEventSchema.safeParse(data);
+          if (parsed.success) onEnd?.(parsed.data);
+          return;
+        }
+        case "turn.error": {
+          const parsed = ChatErrorEventSchema.safeParse(data);
+          if (parsed.success) onError?.(parsed.data.error);
+          return;
+        }
+        default:
+          return;
+      }
+    },
+    onerror(err) {
+      onError?.(err instanceof Error ? err.message : String(err));
+      throw err; // let fetchEventSource stop retrying
+    },
+  });
+}
+
+function safeParseJson(raw: string): unknown {
+  if (!raw) return undefined;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return undefined;
+  }
+}

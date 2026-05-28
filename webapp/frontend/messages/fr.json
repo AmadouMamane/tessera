@@ -1,0 +1,97 @@
+{
+  "app": {
+    "title": "Tessera",
+    "subtitle": "Assistance bancaire Crédit Aurore",
+    "tagline": "Agent multilingue, ancré dans la réglementation européenne."
+  },
+  "nav": {
+    "chat": "Conversation",
+    "audit": "Journal d'audit",
+    "eval": "Score de non-régression",
+    "health": "État du service",
+    "settings": "Paramètres"
+  },
+  "common": {
+    "language": "Langue",
+    "search": "Rechercher",
+    "loading": "Chargement…",
+    "empty": "Aucun résultat.",
+    "error": "Une erreur est survenue.",
+    "retry": "Réessayer",
+    "close": "Fermer",
+    "details": "Détails",
+    "filter": "Filtrer",
+    "all": "Tous",
+    "of": "sur",
+    "results": "résultats",
+    "next": "Suivant",
+    "previous": "Précédent"
+  },
+  "chat": {
+    "title": "Conversation",
+    "description": "Posez vos questions à Tessera. Les réponses sont vérifiées par le pare-feu interne et tracées dans le journal d'audit.",
+    "placeholder": "Posez votre question…",
+    "send": "Envoyer",
+    "clear": "Nouvelle conversation",
+    "thinking": "Tessera réfléchit…",
+    "youSaid": "Vous",
+    "assistantSaid": "Tessera",
+    "sources": "Sources",
+    "escalated": "Cette conversation a été transmise à un conseiller.",
+    "confidence": "Confiance",
+    "languageHint": "Langue détectée"
+  },
+  "audit": {
+    "title": "Journal d'audit",
+    "description": "Chaque appel d'outil est enregistré avec sa décision, son auteur, et la justification de la politique.",
+    "columns": {
+      "occurredAt": "Date",
+      "target": "Outil",
+      "outcome": "Verdict",
+      "decisions": "Décisions",
+      "actions": ""
+    },
+    "outcomes": {
+      "allowed": "Autorisé",
+      "denied": "Refusé",
+      "error": "Erreur"
+    },
+    "filters": {
+      "target": "Outil",
+      "outcome": "Verdict"
+    }
+  },
+  "eval": {
+    "title": "Score de non-régression",
+    "description": "Tessera est confrontée à un catalogue d'échecs publiquement documentés. Les cas qui échouent sont visibles, pas masqués.",
+    "summary": {
+      "total": "Cas exécutés",
+      "passed": "Réussis",
+      "failed": "Échecs",
+      "rate": "Taux de réussite"
+    },
+    "columns": {
+      "case": "Cas",
+      "language": "Langue",
+      "result": "Résultat",
+      "reason": "Justification"
+    },
+    "passed": "Réussi",
+    "failed": "Échec"
+  },
+  "health": {
+    "title": "État du service",
+    "description": "Indicateurs en temps réel sur le backend, le pool Postgres et le budget LLM.",
+    "cards": {
+      "backend": "Backend",
+      "readiness": "Disponibilité",
+      "budget": "Budget LLM",
+      "version": "Version"
+    },
+    "status": {
+      "ok": "Opérationnel",
+      "degraded": "Dégradé",
+      "down": "Hors ligne"
+    }
+  }
+}

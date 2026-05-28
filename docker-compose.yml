@@ -1,0 +1,42 @@
+# Local-only stack for the README quickstart.
+# Production uses Cloud Run + Cloud SQL — see infra/terraform/.
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: tessera-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: tessera
+      POSTGRES_PASSWORD: tessera
+      POSTGRES_DB: tessera
+    ports:
+      - "5432:5432"
+    volumes:
+      - tessera_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tessera -d tessera"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  agent:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.agent
+    image: tessera-agent:local
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      TESSERA_ENVIRONMENT: local
+      TESSERA_LLM_PROFILE: on_prem
+      TESSERA_POSTGRES__DSN: postgresql://tessera:tessera@postgres:5432/tessera
+      TESSERA_OBS__LOG_FORMAT: console
+      TESSERA_OBS__METRICS_ENABLED: "false"
+    ports:
+      - "8080:8080"
+    profiles: ["full"]
+
+volumes:
+  tessera_pgdata:

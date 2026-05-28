@@ -1,0 +1,164 @@
+"""LangGraph wiring for the Tessera agent.
+
+The graph flows:
+
+.. code-block:: text
+
+    START
+      │
+      ▼
+    router        ─── classify language + intent
+      │
+      ▼
+    planner       ─── decide which workers to run
+      │
+      ▼
+    dispatch      ─── fan-out to selected workers (parallel)
+      │   │   │
+      │   │   └── account_lookup
+      │   └────── regulation_lookup
+      └────────── product_lookup, simulator, escalation_worker
+      │
+      ▼
+    reviewer      ─── score grounding + safety; may set needs_escalation
+      │
+      ├── (needs_escalation) ──▶ escalation ──▶ END
+      │
+      ▼
+    reporter      ─── render the final answer in the user's language
+      │
+      ▼
+    END
+
+Workers are deliberately defined as separate callables rather than a generic
+``ToolNode`` because LangGraph's ``add_conditional_edges`` lets us
+deterministically replay decisions during the regression harness — see
+``eval/runner.py``.
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from langgraph.graph import END, START, StateGraph
+
+from tessera.agent import planner as planner_module
+from tessera.agent import reporter as reporter_module
+from tessera.agent import reviewer as reviewer_module
+from tessera.agent import router as router_module
+from tessera.agent.state import AgentState, NodeName, WorkerName
+from tessera.agent.workers import account_lookup as account_lookup_worker
+from tessera.agent.workers import escalation as escalation_worker
+from tessera.agent.workers import product_lookup as product_lookup_worker
+from tessera.agent.workers import regulation_lookup as regulation_lookup_worker
+from tessera.agent.workers import simulator as simulator_worker
+
+if TYPE_CHECKING:
+    from langgraph.graph.state import CompiledStateGraph
+
+__all__ = ["build_graph", "compile_graph"]
+
+
+# ---------------------------------------------------------------------------
+# Worker dispatch table — each WorkerName maps to its node function.
+# ---------------------------------------------------------------------------
+
+_WORKER_NODES: dict[WorkerName, str] = {
+    WorkerName.PRODUCT_LOOKUP: product_lookup_worker.NODE_NAME,
+    WorkerName.REGULATION_LOOKUP: regulation_lookup_worker.NODE_NAME,
+    WorkerName.ACCOUNT_LOOKUP: account_lookup_worker.NODE_NAME,
+    WorkerName.SIMULATOR: simulator_worker.NODE_NAME,
+    WorkerName.ESCALATION: escalation_worker.NODE_NAME,
+}
+
+
+def _route_after_planner(state: AgentState) -> list[str]:
+    """Conditional edge: send the state to every worker selected by the plan.
+
+    LangGraph treats a list of next-node names as a fan-out: each named node
+    receives the same input state and their outputs are merged through the
+    state's reducers.
+    """
+    plan = state.get("plan") or []
+    if not plan:
+        # Empty plan → nothing useful to do; jump straight to the reviewer so
+        # it can decide whether to escalate or politely decline.
+        return [NodeName.REVIEWER.value]
+    return [_WORKER_NODES[name] for name in plan]
+
+
+def _route_after_reviewer(state: AgentState) -> str:
+    """Conditional edge: escalate to a human if the reviewer flagged it."""
+    if state.get("needs_escalation", False):
+        return NodeName.ESCALATION.value
+    return NodeName.REPORTER.value
+
+
+# ---------------------------------------------------------------------------
+# Builders
+# ---------------------------------------------------------------------------
+
+
+def build_graph() -> StateGraph[AgentState]:
+    """Construct (but do not compile) the agent's StateGraph.
+
+    Returning the uncompiled graph lets tests inspect the topology and lets
+    callers register custom checkpointers before compilation.
+    """
+    graph: StateGraph[AgentState] = StateGraph(AgentState)
+
+    # Top-level nodes
+    graph.add_node(NodeName.ROUTER.value, router_module.run)
+    graph.add_node(NodeName.PLANNER.value, planner_module.run)
+    graph.add_node(NodeName.REVIEWER.value, reviewer_module.run)
+    graph.add_node(NodeName.REPORTER.value, reporter_module.run)
+
+    # Workers — registered under the names declared in their modules so that
+    # _route_after_planner's return values are valid node identifiers.
+    graph.add_node(product_lookup_worker.NODE_NAME, product_lookup_worker.run)
+    graph.add_node(regulation_lookup_worker.NODE_NAME, regulation_lookup_worker.run)
+    graph.add_node(account_lookup_worker.NODE_NAME, account_lookup_worker.run)
+    graph.add_node(simulator_worker.NODE_NAME, simulator_worker.run)
+    graph.add_node(escalation_worker.NODE_NAME, escalation_worker.run)
+
+    # Linear backbone
+    graph.add_edge(START, NodeName.ROUTER.value)
+    graph.add_edge(NodeName.ROUTER.value, NodeName.PLANNER.value)
+
+    # Planner → workers fan-out
+    worker_targets = [*_WORKER_NODES.values(), NodeName.REVIEWER.value]
+    graph.add_conditional_edges(
+        NodeName.PLANNER.value,
+        _route_after_planner,
+        path_map={name: name for name in worker_targets},
+    )
+
+    # Every worker rejoins at the reviewer
+    for worker_node in _WORKER_NODES.values():
+        graph.add_edge(worker_node, NodeName.REVIEWER.value)
+
+    # Reviewer → escalation or reporter
+    graph.add_conditional_edges(
+        NodeName.REVIEWER.value,
+        _route_after_reviewer,
+        path_map={
+            NodeName.ESCALATION.value: escalation_worker.NODE_NAME,
+            NodeName.REPORTER.value: NodeName.REPORTER.value,
+        },
+    )
+
+    graph.add_edge(NodeName.REPORTER.value, END)
+    # Escalation produces a brief human-handoff message then terminates.
+    graph.add_edge(escalation_worker.NODE_NAME, END)
+
+    return graph
+
+
+def compile_graph() -> CompiledStateGraph[AgentState, AgentState, AgentState]:
+    """Return a compiled, immediately invokable graph.
+
+    Callers needing a checkpointer (persistent conversations) should build the
+    graph manually with :func:`build_graph` and compile it themselves with the
+    checkpointer of their choice.
+    """
+    return build_graph().compile()

@@ -1,0 +1,97 @@
+{
+  "app": {
+    "title": "Tessera",
+    "subtitle": "Crédit Aurore banking support",
+    "tagline": "Multilingual agent grounded in EU regulatory corpora."
+  },
+  "nav": {
+    "chat": "Chat",
+    "audit": "Audit trail",
+    "eval": "Regression scorecard",
+    "health": "Service health",
+    "settings": "Settings"
+  },
+  "common": {
+    "language": "Language",
+    "search": "Search",
+    "loading": "Loading…",
+    "empty": "No results.",
+    "error": "Something went wrong.",
+    "retry": "Retry",
+    "close": "Close",
+    "details": "Details",
+    "filter": "Filter",
+    "all": "All",
+    "of": "of",
+    "results": "results",
+    "next": "Next",
+    "previous": "Previous"
+  },
+  "chat": {
+    "title": "Chat",
+    "description": "Ask Tessera anything. Responses are checked by the internal firewall and recorded in the audit trail.",
+    "placeholder": "Ask your question…",
+    "send": "Send",
+    "clear": "New chat",
+    "thinking": "Tessera is thinking…",
+    "youSaid": "You",
+    "assistantSaid": "Tessera",
+    "sources": "Sources",
+    "escalated": "This conversation was forwarded to a human advisor.",
+    "confidence": "Confidence",
+    "languageHint": "Detected language"
+  },
+  "audit": {
+    "title": "Audit trail",
+    "description": "Every tool call is recorded with its decision, target, and policy rationale.",
+    "columns": {
+      "occurredAt": "When",
+      "target": "Tool",
+      "outcome": "Verdict",
+      "decisions": "Decisions",
+      "actions": ""
+    },
+    "outcomes": {
+      "allowed": "Allowed",
+      "denied": "Denied",
+      "error": "Error"
+    },
+    "filters": {
+      "target": "Tool",
+      "outcome": "Verdict"
+    }
+  },
+  "eval": {
+    "title": "Regression scorecard",
+    "description": "Tessera is exercised against a catalogue of publicly documented agent failures. Failing cases stay visible — nothing is hidden.",
+    "summary": {
+      "total": "Cases run",
+      "passed": "Passed",
+      "failed": "Failed",
+      "rate": "Pass rate"
+    },
+    "columns": {
+      "case": "Case",
+      "language": "Language",
+      "result": "Result",
+      "reason": "Reason"
+    },
+    "passed": "Pass",
+    "failed": "Fail"
+  },
+  "health": {
+    "title": "Service health",
+    "description": "Real-time indicators for the backend, the Postgres pool, and the LLM budget.",
+    "cards": {
+      "backend": "Backend",
+      "readiness": "Readiness",
+      "budget": "LLM budget",
+      "version": "Version"
+    },
+    "status": {
+      "ok": "Operational",
+      "degraded": "Degraded",
+      "down": "Down"
+    }
+  }
+}

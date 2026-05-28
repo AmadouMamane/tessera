@@ -1,0 +1,68 @@
+"""On-premises chat backend backed by Ollama (Llama 3.3 70B)."""
+
+from __future__ import annotations
+
+from collections.abc import Sequence
+
+import ollama
+
+from tessera.llm.budget import get_budget_tracker
+from tessera.llm.router import ChatMessage, ChatResponse
+from tessera.settings import get_settings
+
+__all__ = ["OllamaBackend"]
+
+
+class OllamaBackend:
+    """On-prem chat backend backed by a locally-served Ollama daemon."""
+
+    name = "ollama"
+
+    def __init__(self) -> None:
+        settings = get_settings().ollama
+        self.model = settings.chat_model
+        self._host = str(settings.host)
+        self._timeout = settings.timeout_seconds
+        self._keep_alive = f"{settings.keep_alive_seconds}s"
+        self._client = ollama.AsyncClient(host=self._host)
+
+    async def chat(
+        self,
+        messages: Sequence[ChatMessage],
+        *,
+        temperature: float = 0.2,
+        max_output_tokens: int | None = None,
+    ) -> ChatResponse:
+        """Stream-less chat completion."""
+        options: dict[str, object] = {"temperature": temperature}
+        if max_output_tokens is not None:
+            options["num_predict"] = max_output_tokens
+
+        payload = [
+            {"role": message.role, "content": message.content}
+            for message in messages
+        ]
+        response = await self._client.chat(
+            model=self.model,
+            messages=payload,
+            options=options,
+            keep_alive=self._keep_alive,
+        )
+        content = response["message"]["content"]
+        input_tokens = int(response.get("prompt_eval_count", 0) or 0)
+        output_tokens = int(response.get("eval_count", 0) or 0)
+        done_reason = str(response.get("done_reason", "stop"))
+
+        get_budget_tracker().record(
+            backend=self.name,
+            model=self.model,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+        )
+        return ChatResponse(
+            content=str(content),
+            model=self.model,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            finish_reason="length" if done_reason == "length" else "stop",
+        )

@@ -1,0 +1,101 @@
+# Tessera runtime guardrail policy.
+#
+# This file is the canonical, auditable description of what tools the agent
+# may invoke, under what conditions, and what redactions to apply. It is
+# read at start-up by tessera.guard.adapter and re-read on SIGHUP.
+#
+# Schema:
+#   version: integer, bumped on every breaking change.
+#   tools:
+#     <tool_name>:
+#       allow: bool                       # default: false
+#       requires_confirmation: bool       # require explicit user re-ask
+#       require_languages: [fr, de, en]   # restrict invocation to listed langs
+#       max_calls_per_turn: int           # default: 1
+#       arguments:                        # per-argument validation
+#         <arg_name>:
+#           pattern: regex                # value must match
+#           redact_in_audit: bool         # mask value in the audit trail
+#   prompt_injection:
+#     deny_patterns: [regex, ...]
+#     transform_patterns:
+#       - match: regex
+#         replacement: string
+#   pii:
+#     redact_patterns: [regex, ...]       # applied to all tool inputs/outputs
+
+version: 1
+
+tools:
+  account_balance:
+    allow: true
+    requires_confirmation: false
+    max_calls_per_turn: 2
+    arguments:
+      customer_id:
+        pattern: "^[a-zA-Z0-9_-]{4,64}$"
+        redact_in_audit: true
+
+  card_block:
+    allow: true
+    requires_confirmation: true
+    max_calls_per_turn: 1
+    arguments:
+      customer_id:
+        pattern: "^[a-zA-Z0-9_-]{4,64}$"
+        redact_in_audit: true
+      card_last_four:
+        pattern: "^[0-9]{4}$"
+        redact_in_audit: false
+      reason:
+        pattern: "^(lost|stolen|fraud_suspected|customer_request)$"
+        redact_in_audit: false
+
+  transaction_search:
+    allow: true
+    requires_confirmation: false
+    max_calls_per_turn: 3
+    arguments:
+      customer_id:
+        pattern: "^[a-zA-Z0-9_-]{4,64}$"
+        redact_in_audit: true
+
+  loan_simulate:
+    allow: true
+    requires_confirmation: false
+    max_calls_per_turn: 5
+
+  ticket_escalate:
+    allow: true
+    requires_confirmation: false
+    max_calls_per_turn: 1
+    arguments:
+      transcript_excerpt:
+        redact_in_audit: true
+
+# Patterns that mark the user's input as adversarial. ``deny_patterns`` reject
+# the turn entirely; ``transform_patterns`` strip the offending substring.
+prompt_injection:
+  deny_patterns:
+    - "(?i)ignore (all previous|all|previous|the above) instructions"
+    - "(?i)you are now (a |an |the )?(new |different )?(assistant|system|agent)"
+    - "(?i)reveal (your|the) system prompt"
+    - "(?i)disregard (the|your) (rules|policy|guardrails)"
+  transform_patterns:
+    - match: "(?i)\\b(act as|pretend to be|roleplay as)\\b[^.]*\\."
+      replacement: "[redacted role-play attempt]"
+
+# Patterns that constitute personal data and must be masked from logs and
+# from arguments echoed back to the LLM.
+pii:
+  redact_patterns:
+    # Email
+    - "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
+    # IBAN (FR/DE/AT/BE/NL/IT/ES, basic shape — full check at the tool layer)
+    - "(?i)[A-Z]{2}[0-9]{2}[A-Z0-9 ]{11,30}"
+    # 16-digit PAN
+    - "\\b(?:\\d[ -]?){13,19}\\b"
+    # French phone number
+    - "\\b(?:\\+33|0)[1-9](?:[ .-]?[0-9]{2}){4}\\b"
+    # German phone number
+    - "\\b(?:\\+49|0)[1-9][0-9]{1,4}[ /-]?[0-9]{3,10}\\b"

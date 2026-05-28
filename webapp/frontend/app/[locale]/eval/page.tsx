@@ -1,0 +1,25 @@
+import { getTranslations, setRequestLocale } from "next-intl/server";
+
+import { ScorecardView } from "@/components/eval/scorecard-view";
+import { AppShell } from "@/components/layout/app-shell";
+
+interface EvalPageProps {
+  params: Promise<{ locale: string }>;
+}
+
+export async function generateMetadata({ params }: EvalPageProps) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "eval" });
+  return { title: t("title") };
+}
+
+export default async function EvalPage({ params }: EvalPageProps) {
+  const { locale } = await params;
+  setRequestLocale(locale);
+  const t = await getTranslations({ locale, namespace: "eval" });
+  return (
+    <AppShell title={t("title")} description={t("description")}>
+      <ScorecardView locale={locale} />
+    </AppShell>
+  );
+}
