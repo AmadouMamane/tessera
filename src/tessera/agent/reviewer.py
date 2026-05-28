@@ -48,12 +48,23 @@ def _score_grounding(state: AgentState) -> float:
     """Score how well the draft response is grounded.
 
     Without a draft yet (reviewer ran before any worker produced text), we
-    treat grounding as neutral (0.5) rather than failing — the planner may
-    have legitimately decided no draft was needed.
+    treat grounding as neutral (0.5) rather than failing.
+
+    When the draft originates from a successful tool call (account balance,
+    loan simulation) it is grounded by definition — the data came directly
+    from a database, not from the LLM. In that case we return 0.9 regardless
+    of lexical overlap with retrieved documents.
+
+    When the draft comes from retrieval-based synthesis, we check lexical
+    overlap between the draft and the supporting documents.
     """
     draft = state.get("draft_response")
     if not draft:
         return 0.5
+    # Tool-result drafts are intrinsically grounded.
+    tool_calls = state.get("tool_calls", [])
+    if any(call.succeeded for call in tool_calls):
+        return 0.9
     docs = state.get("retrieved_documents", [])
     if not docs:
         # A non-empty draft with zero supporting documents is the canonical
