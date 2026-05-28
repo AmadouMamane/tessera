@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from tessera.agent import build_graph
-from tessera.agent.planner import classify_intent, plan_for
+from tessera.agent.planner import classify_all_intents, classify_intent, plan_for
 from tessera.agent.reporter import render
 from tessera.agent.reviewer import review
 from tessera.agent.router import detect_language
@@ -63,6 +63,15 @@ class TestPlanner:
         plan, _ = plan_for("Bloquer ma carte", LanguageCode.FR)
         assert WorkerName.ACCOUNT_LOOKUP in plan
         assert WorkerName.ESCALATION not in plan
+
+    def test_multi_intent_activates_all_workers(self) -> None:
+        # "vol de carte" matches card_block AND "rgpd" matches regulation —
+        # both workers must appear in the plan.
+        plan, _ = plan_for(
+            "que dit le rgpd sur le vol de carte bancaire", LanguageCode.FR
+        )
+        assert WorkerName.ACCOUNT_LOOKUP in plan
+        assert WorkerName.REGULATION_LOOKUP in plan
 
     def test_no_match_falls_back_to_default(self) -> None:
         intent = classify_intent("Lorem ipsum sit dolor", LanguageCode.EN)

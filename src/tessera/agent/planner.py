@@ -166,12 +166,30 @@ def classify_intent(text: str, language: LanguageCode) -> Intent | None:
     return None
 
 
+def classify_all_intents(text: str, language: LanguageCode) -> list[Intent]:
+    """Return all intents whose patterns match ``text`` for ``language``."""
+    return [intent for pattern, intent in _INTENT_RULES[language] if pattern.search(text)]
+
+
 def plan_for(text: str, language: LanguageCode) -> tuple[list[WorkerName], str]:
-    """Return the workers to invoke and a human-readable rationale."""
-    intent = classify_intent(text, language)
-    if intent is None:
+    """Return the workers to invoke and a human-readable rationale.
+
+    Collects all matching intents so multi-topic queries (e.g. regulatory
+    question that also mentions a card) activate all relevant workers.
+    """
+    intents = classify_all_intents(text, language)
+    if not intents:
         return list(_DEFAULT_PLAN), "No intent matched; fan out to default lookups."
-    return list(intent.workers), intent.rationale
+
+    seen: set[WorkerName] = set()
+    workers: list[WorkerName] = []
+    for intent in intents:
+        for w in intent.workers:
+            if w not in seen:
+                seen.add(w)
+                workers.append(w)
+    rationale = "; ".join(i.rationale for i in intents)
+    return workers, rationale
 
 
 def run(state: AgentState) -> dict[str, object]:
