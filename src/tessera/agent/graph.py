@@ -76,6 +76,17 @@ _WORKER_NODES: dict[WorkerName, str] = {
 }
 
 
+def _route_after_router(state: AgentState) -> str:
+    """Conditional edge: short-circuit to END when the injection guard blocked the input.
+
+    The router writes a ``final_response`` and an empty ``plan`` when it
+    detects a prompt-injection attempt. In that case we skip the LLM entirely.
+    """
+    if state.get("final_response") and state.get("plan") == []:
+        return END
+    return NodeName.PLANNER.value
+
+
 def _route_after_planner(state: AgentState) -> list[str]:
     """Conditional edge: send the state to every worker selected by the plan.
 
@@ -127,7 +138,18 @@ def build_graph() -> StateGraph[AgentState]:  # type: ignore[type-arg]
 
     # Linear backbone
     graph.add_edge(START, NodeName.ROUTER.value)
-    graph.add_edge(NodeName.ROUTER.value, NodeName.PLANNER.value)
+
+    # After the router, either proceed to the planner or short-circuit to END
+    # when the router's prompt-injection check blocked the input (final_response
+    # is already written; no LLM call needed).
+    graph.add_conditional_edges(
+        NodeName.ROUTER.value,
+        _route_after_router,
+        path_map={
+            NodeName.PLANNER.value: NodeName.PLANNER.value,
+            END: END,
+        },
+    )
 
     # Planner → workers fan-out
     worker_targets = [*_WORKER_NODES.values(), NodeName.REVIEWER.value]

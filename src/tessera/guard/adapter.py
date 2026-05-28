@@ -37,7 +37,16 @@ from tessera.settings import LanguageCode, get_settings
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
-__all__ = ["GuardedResult", "guarded_invoke"]
+__all__ = ["GuardedResult", "InputCheckResult", "check_user_input", "guarded_invoke"]
+
+
+@dataclass(frozen=True, slots=True)
+class InputCheckResult:
+    """Outcome of checking the raw user input against the guard policy."""
+
+    allowed: bool
+    sanitised_text: str
+    decisions: tuple[GuardDecisionRecord, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -161,6 +170,77 @@ def _to_record(decision: Decision, target: str) -> GuardDecisionRecord:
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
+
+def check_user_input(
+    text: str,
+    *,
+    policy: Policy | None = None,
+) -> InputCheckResult:
+    """Check raw user input against prompt-injection deny and transform patterns.
+
+    Called at the start of every turn — before the LLM sees anything — so that
+    injected instructions never reach the language model.
+
+    Returns:
+        An :class:`InputCheckResult` whose ``allowed`` flag is ``False`` when a
+        deny pattern matched, or ``True`` with a (potentially redacted)
+        ``sanitised_text`` when the input is acceptable.
+    """
+    active_policy = policy or load_policy()
+    settings = get_settings()
+    records: list[GuardDecisionRecord] = []
+
+    for pattern in active_policy.prompt_injection_deny:
+        if pattern.search(text):
+            record = GuardDecisionRecord(
+                target="user_input",
+                decision=DecisionKind.DENY.value,
+                policy_rule="prompt_injection.deny_patterns",
+                rationale=f"user input matched injection deny pattern: {pattern.pattern!r}",
+            )
+            records.append(record)
+            emit_audit(
+                target="user_input",
+                arguments={"text": "[redacted — matched deny pattern]"},
+                decisions=records,
+                sink=settings.guard.audit_sink,
+                outcome="denied",
+            )
+            return InputCheckResult(
+                allowed=False,
+                sanitised_text=text,
+                decisions=tuple(records),
+            )
+
+    sanitised = text
+    for pattern, replacement in active_policy.prompt_injection_transforms:
+        sanitised = pattern.sub(replacement, sanitised)
+
+    if sanitised != text:
+        record = GuardDecisionRecord(
+            target="user_input",
+            decision=DecisionKind.TRANSFORM.value,
+            policy_rule="prompt_injection.transform_patterns",
+            rationale="role-play or persona cue redacted from user input",
+        )
+        records.append(record)
+
+    if not records:
+        records.append(
+            GuardDecisionRecord(
+                target="user_input",
+                decision=DecisionKind.ALLOW.value,
+                policy_rule="prompt_injection.deny_patterns",
+                rationale="user input passed all injection checks",
+            )
+        )
+
+    return InputCheckResult(
+        allowed=True,
+        sanitised_text=sanitised,
+        decisions=tuple(records),
+    )
 
 
 async def guarded_invoke(

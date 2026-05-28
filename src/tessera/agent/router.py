@@ -19,7 +19,8 @@ import re
 from dataclasses import dataclass
 from typing import Final
 
-from tessera.agent.state import AgentState  # noqa: TCH001  — LangGraph introspects run() at runtime
+from tessera.agent.state import AgentState, GuardDecisionRecord  # noqa: TCH001  — LangGraph introspects run() at runtime
+from tessera.guard.adapter import check_user_input
 from tessera.settings import LanguageCode, get_settings
 
 __all__ = ["LanguageDetectionResult", "detect_language", "run"]
@@ -232,19 +233,59 @@ def detect_language(
     )
 
 
+_INJECTION_BLOCKED_RESPONSES: Final[dict[LanguageCode, str]] = {
+    LanguageCode.FR: (
+        "Votre message contient des instructions que je ne peux pas traiter. "
+        "Si vous avez une question concernant vos comptes ou nos services, "
+        "je suis à votre disposition."
+    ),
+    LanguageCode.DE: (
+        "Ihre Nachricht enthält Anweisungen, die ich nicht verarbeiten kann. "
+        "Wenn Sie eine Frage zu Ihren Konten oder unseren Diensten haben, "
+        "stehe ich Ihnen gerne zur Verfügung."
+    ),
+    LanguageCode.EN: (
+        "Your message contains instructions I cannot process. "
+        "If you have a question about your accounts or our services, "
+        "I'm happy to help."
+    ),
+}
+
+
 def run(state: AgentState) -> dict[str, object]:
     """Router node entry point.
 
-    Updates ``language`` and ``language_confidence`` on the state when the
-    detector returns a confident result, or keeps the existing values if the
-    caller already pinned them (useful in tests and replays).
-    """
-    if state.get("language_confidence", 0.0) > _PINNED_CONFIDENCE:
-        # Caller has pinned the language explicitly; respect it.
-        return {}
+    Runs the prompt-injection check on the raw user input before any LLM
+    call. A matched deny pattern short-circuits the graph: we set
+    ``needs_escalation=False`` and write a safe ``final_response`` directly
+    so the reporter is bypassed.
 
-    detection = detect_language(state["user_input"])
+    Also updates ``language`` and ``language_confidence`` when the detector
+    returns a confident result, or keeps the existing values if the caller
+    already pinned them (useful in tests and replays).
+    """
+    input_check = check_user_input(state["user_input"])
+    guard_decisions: list[GuardDecisionRecord] = list(
+        state.get("guard_decisions") or []
+    ) + list(input_check.decisions)
+
+    if not input_check.allowed:
+        # Detect language for the blocked response even though the turn is denied.
+        lang = state.get("language") or get_settings().default_language
+        return {
+            "guard_decisions": guard_decisions,
+            "needs_escalation": False,
+            "final_response": _INJECTION_BLOCKED_RESPONSES[lang],
+            "plan": [],
+            "plan_rationale": "input blocked by prompt-injection guard",
+        }
+
+    if state.get("language_confidence", 0.0) > _PINNED_CONFIDENCE:
+        return {"guard_decisions": guard_decisions}
+
+    detection = detect_language(input_check.sanitised_text)
     return {
+        "guard_decisions": guard_decisions,
         "language": detection.language,
         "language_confidence": detection.confidence,
     }
