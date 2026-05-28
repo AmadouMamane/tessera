@@ -86,19 +86,28 @@ def _format_citations(citations: Iterable[Citation], language: LanguageCode) -> 
 
 
 async def _synthesise(state: AgentState) -> str:
-    """Call the LLM to produce a grounded answer from retrieved documents."""
+    """Call the LLM to produce a grounded answer from all available sources.
+
+    When a tool-result draft is also present (e.g. account balance alongside
+    RGPD docs), it is injected as additional context so the LLM can address
+    every aspect of the user's question in one coherent response.
+    """
     language = state["language"]
     prompts = load_prompts(language)
     system_prompt = prompts.get("system", "You are a helpful banking assistant.")
 
     docs = state.get("retrieved_documents", [])
-    context = "\n\n".join(
-        f"[{doc.source}]\n{doc.text}" for doc in docs[:6]
-    )
+    context = "\n\n".join(f"[{doc.source}]\n{doc.text}" for doc in docs[:6])
+
+    draft = state.get("draft_response", "")
+    tool_context = f"\nInformation récupérée en base : {draft}\n" if draft else ""
+
     user_message = (
-        f"Question du client : {state['user_input']}\n\n"
-        f"Documents disponibles :\n{context}\n\n"
-        "Réponds de façon concise et précise en te basant uniquement sur les documents fournis."
+        f"Question du client : {state['user_input']}\n"
+        f"{tool_context}"
+        f"\nDocuments disponibles :\n{context}\n\n"
+        "Réponds de façon concise et précise en adressant tous les aspects de la question, "
+        "en te basant sur les documents et les données disponibles."
     )
 
     backend = get_chat_backend()
@@ -136,15 +145,16 @@ async def run(state: AgentState) -> dict[str, object]:
     draft = state.get("draft_response")
     docs = state.get("retrieved_documents", [])
 
-    if draft:
-        # Worker already produced a draft (e.g. account_lookup) — just render it.
-        final = render(state)
-    elif docs:
-        # Retrieval workers found documents but no draft — synthesise via LLM.
+    if docs:
+        # Retrieved documents are present — always synthesise via LLM so
+        # every aspect of the question (tool result + regulation) is addressed.
         final = await _synthesise(state)
         citations_footer = _format_citations(state.get("citations", []), language)
         if citations_footer:
             final = final + citations_footer
+    elif draft:
+        # Tool result only, no retrieval docs — render the draft directly.
+        final = render(state)
     else:
         final = _FALLBACK_RESPONSES[language]
 
