@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+  <defs>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+      .layer-label { font-size: 11px; font-weight: 700; fill: #1e3a5f; letter-spacing: 0.05em; text-transform: uppercase; }
+      .box-title { font-size: 13px; font-weight: 700; }
+      .box-sub   { font-size: 11px; fill: #555; }
+      .arrow-label { font-size: 10px; fill: #555; }
+    </style>
+    <!-- Arrowhead marker -->
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto">
+      <path d="M0,0 L8,3.5 L0,7 Z" fill="#6b7280"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="8" markerHeight="8" refX="7" refY="3.5" orient="auto">
+      <path d="M0,0 L8,3.5 L0,7 Z" fill="#1e3a5f"/>
+    </marker>
+    <!-- Drop shadow filter -->
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#00000018"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="500" fill="#fafafa"/>
+
+  <!-- ═══════════════════════════════════════════════════════
+       TITLE
+  ═══════════════════════════════════════════════════════ -->
+  <text x="400" y="32" text-anchor="middle" font-size="16" font-weight="700" fill="#1e3a5f" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    Tessera — System Architecture
+  </text>
+  <text x="400" y="50" text-anchor="middle" font-size="11" fill="#888" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    Multilingual EU Banking Support Agent
+  </text>
+
+  <!-- ═══════════════════════════════════════════════════════
+       LAYER 1 — CLIENT
+  ═══════════════════════════════════════════════════════ -->
+  <!-- Layer band -->
+  <rect x="20" y="65" width="760" height="70" rx="10" fill="#f0f4fa" stroke="#c5d3e8" stroke-width="1"/>
+  <text x="36" y="84" class="layer-label" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Client Layer</text>
+
+  <!-- Browser box -->
+  <rect x="260" y="90" width="280" height="36" rx="7" fill="#1e3a5f" filter="url(#shadow)"/>
+  <text x="400" y="112" text-anchor="middle" font-size="13" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    Browser / Dashboard (Next.js)
+  </text>
+
+  <!-- ═══════════════════════════════════════════════════════
+       ARROW Client → FastAPI
+  ═══════════════════════════════════════════════════════ -->
+  <line x1="400" y1="126" x2="400" y2="150" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="408" y="141" class="arrow-label" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">HTTP / SSE</text>
+
+  <!-- ═══════════════════════════════════════════════════════
+       LAYER 2 — API + AGENT
+  ═══════════════════════════════════════════════════════ -->
+  <rect x="20" y="155" width="760" height="215" rx="10" fill="#f0f4fa" stroke="#c5d3e8" stroke-width="1"/>
+  <text x="36" y="173" class="layer-label" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Backend Layer</text>
+
+  <!-- FastAPI box -->
+  <rect x="260" y="178" width="280" height="36" rx="7" fill="#1e3a5f" filter="url(#shadow)"/>
+  <text x="400" y="200" text-anchor="middle" font-size="13" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    FastAPI — /chat  /audit
+  </text>
+
+  <!-- Arrows FastAPI → Agent, Retrieval, LLM -->
+  <!-- FastAPI → LangGraph Agent -->
+  <line x1="340" y1="214" x2="230" y2="240" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- FastAPI → Retrieval -->
+  <line x1="400" y1="214" x2="400" y2="240" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- FastAPI → LLM Router -->
+  <line x1="460" y1="214" x2="570" y2="240" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ── LangGraph Agent box ── -->
+  <rect x="50" y="244" width="280" height="110" rx="8" fill="#fff" stroke="#1e3a5f" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="50" y="244" width="280" height="26" rx="8" fill="#1e3a5f"/>
+  <rect x="50" y="258" width="280" height="12" fill="#1e3a5f"/>
+  <text x="190" y="261" text-anchor="middle" font-size="12" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    LangGraph Agent
+  </text>
+  <!-- Pipeline row -->
+  <text x="70" y="285" font-size="10" fill="#1e3a5f" font-weight="600" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Pipeline:</text>
+  <text x="70" y="300" font-size="10" fill="#444" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Router → Planner → Workers</text>
+  <text x="70" y="315" font-size="10" fill="#444" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">→ Reviewer → Reporter</text>
+  <!-- mcp-firewall sub-box -->
+  <rect x="70" y="324" width="240" height="22" rx="5" fill="#fde8e8" stroke="#d9534f" stroke-width="1"/>
+  <text x="190" y="339" text-anchor="middle" font-size="10" font-weight="700" fill="#b91c1c" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    mcp-firewall  (guard layer)
+  </text>
+
+  <!-- ── Retrieval Layer box ── -->
+  <rect x="345" y="244" width="110" height="110" rx="8" fill="#fff" stroke="#c9a84c" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="345" y="244" width="110" height="26" rx="8" fill="#c9a84c"/>
+  <rect x="345" y="258" width="110" height="12" fill="#c9a84c"/>
+  <text x="400" y="261" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    Retrieval
+  </text>
+  <text x="400" y="288" text-anchor="middle" font-size="10" fill="#444" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">pgvector</text>
+  <text x="400" y="303" text-anchor="middle" font-size="10" fill="#444" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Postgres</text>
+  <text x="400" y="318" text-anchor="middle" font-size="10" fill="#888" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">hybrid search</text>
+  <text x="400" y="333" text-anchor="middle" font-size="10" fill="#888" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">+ reranking</text>
+
+  <!-- ── LLM Layer box ── -->
+  <rect x="470" y="244" width="280" height="110" rx="8" fill="#fff" stroke="#1e3a5f" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="470" y="244" width="280" height="26" rx="8" fill="#1e3a5f"/>
+  <rect x="470" y="258" width="280" height="12" fill="#1e3a5f"/>
+  <text x="610" y="261" text-anchor="middle" font-size="12" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    LLM Layer
+  </text>
+  <!-- Ollama sub-box -->
+  <rect x="485" y="276" width="115" height="66" rx="6" fill="#f0f7f0" stroke="#22863a" stroke-width="1"/>
+  <text x="542" y="293" text-anchor="middle" font-size="10" font-weight="700" fill="#22863a" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Ollama (on-prem)</text>
+  <text x="542" y="309" text-anchor="middle" font-size="10" fill="#444" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Llama 3.3 70B</text>
+  <text x="542" y="324" text-anchor="middle" font-size="10" fill="#888" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Apple Silicon</text>
+  <text x="542" y="339" text-anchor="middle" font-size="9" fill="#888" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">M1 Ultra</text>
+  <!-- Vertex AI sub-box -->
+  <rect x="618" y="276" width="115" height="66" rx="6" fill="#f0f4ff" stroke="#3b5fc0" stroke-width="1"/>
+  <text x="675" y="293" text-anchor="middle" font-size="10" font-weight="700" fill="#3b5fc0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Vertex AI</text>
+  <text x="675" y="309" text-anchor="middle" font-size="10" fill="#444" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Gemini</text>
+  <text x="675" y="324" text-anchor="middle" font-size="10" fill="#888" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">(frontier)</text>
+  <text x="675" y="339" text-anchor="middle" font-size="9" fill="#888" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Cloud Run</text>
+
+  <!-- ═══════════════════════════════════════════════════════
+       LAYER 3 — OBSERVABILITY + INFRA
+  ═══════════════════════════════════════════════════════ -->
+  <rect x="20" y="382" width="760" height="90" rx="10" fill="#f0f4fa" stroke="#c5d3e8" stroke-width="1"/>
+  <text x="36" y="400" class="layer-label" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Observability &amp; Infrastructure</text>
+
+  <!-- Arrow from backend to infra -->
+  <line x1="400" y1="370" x2="400" y2="382" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Infra boxes -->
+  <rect x="42" y="408" width="160" height="50" rx="7" fill="#fff" stroke="#c9a84c" stroke-width="1.2" filter="url(#shadow)"/>
+  <text x="122" y="429" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a5f" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">OpenTelemetry</text>
+  <text x="122" y="447" text-anchor="middle" font-size="10" fill="#666" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Traces · Metrics · Logs</text>
+
+  <rect x="220" y="408" width="160" height="50" rx="7" fill="#fff" stroke="#c9a84c" stroke-width="1.2" filter="url(#shadow)"/>
+  <text x="300" y="429" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a5f" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Cloud Logging</text>
+  <text x="300" y="447" text-anchor="middle" font-size="10" fill="#666" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">structlog / GCP</text>
+
+  <rect x="398" y="408" width="160" height="50" rx="7" fill="#fff" stroke="#c9a84c" stroke-width="1.2" filter="url(#shadow)"/>
+  <text x="478" y="429" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a5f" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Secret Manager</text>
+  <text x="478" y="447" text-anchor="middle" font-size="10" fill="#666" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">GCP credentials</text>
+
+  <rect x="576" y="408" width="186" height="50" rx="7" fill="#fff" stroke="#c9a84c" stroke-width="1.2" filter="url(#shadow)"/>
+  <text x="669" y="429" text-anchor="middle" font-size="11" font-weight="700" fill="#1e3a5f" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Cloud Run + Cloud SQL</text>
+  <text x="669" y="447" text-anchor="middle" font-size="10" fill="#666" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Terraform (infra/)</text>
+
+  <!-- ═══════════════════════════════════════════════════════
+       LEGEND
+  ═══════════════════════════════════════════════════════ -->
+  <text x="400" y="487" text-anchor="middle" font-size="9" fill="#aaa" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    tessera · Apache-2.0 · Python 3.12 · LangGraph · FastAPI · pgvector · mcp-firewall
+  </text>
+</svg>

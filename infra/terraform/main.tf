@@ -8,10 +8,18 @@ terraform {
       source  = "hashicorp/google"
       version = "~> 5.40"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 
   backend "gcs" {
     # Configured per-environment via `terraform init -backend-config=...`
+    # Example:
+    #   terraform init \
+    #     -backend-config="bucket=<tf-state-bucket>" \
+    #     -backend-config="prefix=tessera/production"
   }
 }
 
@@ -27,11 +35,18 @@ locals {
     "sqladmin.googleapis.com",
     "secretmanager.googleapis.com",
     "aiplatform.googleapis.com",
+    "artifactregistry.googleapis.com",
     "logging.googleapis.com",
     "monitoring.googleapis.com",
     "cloudtrace.googleapis.com",
-    "artifactregistry.googleapis.com",
+    "vpcaccess.googleapis.com",
+    "servicenetworking.googleapis.com",
   ]
+
+  common_labels = {
+    environment = var.environment
+    app         = "tessera"
+  }
 }
 
 resource "google_project_service" "apis" {

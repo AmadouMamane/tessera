@@ -1,0 +1,182 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="700" viewBox="0 0 600 700">
+  <defs>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    </style>
+    <marker id="arr" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#6b7280"/>
+    </marker>
+    <marker id="arr-g" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#22863a"/>
+    </marker>
+    <marker id="arr-r" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#d9534f"/>
+    </marker>
+    <filter id="sh" x="-8%" y="-6%" width="116%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#00000018"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="600" height="700" fill="#fafafa"/>
+
+  <!-- Title -->
+  <text x="300" y="30" text-anchor="middle" font-size="15" font-weight="700" fill="#1e3a5f" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    Tessera — Evaluation Harness Flow
+  </text>
+  <text x="300" y="48" text-anchor="middle" font-size="10" fill="#888" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    Non-regression pipeline over 40 catalogued agent failures
+  </text>
+
+  <!-- ═══════════════════════════════
+       STEP 1 — Failure cases
+  ═══════════════════════════════ -->
+  <rect x="100" y="62" width="400" height="52" rx="9" fill="#fff" stroke="#9ca3af" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="300" y="83" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a5f" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    eval/failures/*.json
+  </text>
+  <text x="300" y="101" text-anchor="middle" font-size="10" fill="#666" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    Validated against failures/_schema.json  ·  40 catalogued cases
+  </text>
+
+  <!-- Sample failure badges -->
+  <rect x="112" y="106" width="74" height="16" rx="4" fill="#f3f4f6" stroke="#d1d5db" stroke-width="0.8"/>
+  <text x="149" y="118" text-anchor="middle" font-size="8" fill="#555" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">01 prompt_injection</text>
+
+  <rect x="194" y="106" width="56" height="16" rx="4" fill="#f3f4f6" stroke="#d1d5db" stroke-width="0.8"/>
+  <text x="222" y="118" text-anchor="middle" font-size="8" fill="#555" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">02 pii_leak</text>
+
+  <rect x="258" y="106" width="80" height="16" rx="4" fill="#f3f4f6" stroke="#d1d5db" stroke-width="0.8"/>
+  <text x="298" y="118" text-anchor="middle" font-size="8" fill="#555" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">03 hallucination_fact</text>
+
+  <rect x="346" y="106" width="60" height="16" rx="4" fill="#f3f4f6" stroke="#d1d5db" stroke-width="0.8"/>
+  <text x="376" y="118" text-anchor="middle" font-size="8" fill="#555" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">…  40 total</text>
+
+  <!-- Arrow 1 → 2 -->
+  <line x1="300" y1="122" x2="300" y2="143" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ═══════════════════════════════
+       STEP 2 — load_case()
+  ═══════════════════════════════ -->
+  <rect x="150" y="147" width="300" height="46" rx="8" fill="#f5f5f5" stroke="#9ca3af" stroke-width="1.2" filter="url(#sh)"/>
+  <text x="300" y="167" text-anchor="middle" font-size="12" font-weight="700" fill="#374151" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    runner.py — load_case()
+  </text>
+  <text x="300" y="184" text-anchor="middle" font-size="10" fill="#666" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    Parse JSON · validate schema · build fixtures
+  </text>
+
+  <!-- Arrow 2 → 3 -->
+  <line x1="300" y1="193" x2="300" y2="213" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ═══════════════════════════════
+       STEP 3 — run_case() + Agent + LLM
+  ═══════════════════════════════ -->
+  <!-- Outer box -->
+  <rect x="80" y="217" width="440" height="100" rx="9" fill="#fff" stroke="#1e3a5f" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="300" y="235" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a5f" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    runner.py — run_case()
+  </text>
+  <!-- Sub-boxes side by side -->
+  <!-- Agent graph -->
+  <rect x="96" y="241" width="140" height="64" rx="7" fill="#f0f4fa" stroke="#1e3a5f" stroke-width="1"/>
+  <text x="166" y="260" text-anchor="middle" font-size="10" font-weight="700" fill="#1e3a5f" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Agent Graph</text>
+  <text x="166" y="276" text-anchor="middle" font-size="9" fill="#555" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">LangGraph execution</text>
+  <text x="166" y="291" text-anchor="middle" font-size="9" fill="#555" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">+ mcp-firewall guard</text>
+  <text x="166" y="304" text-anchor="middle" font-size="9" fill="#888" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">audit trail captured</text>
+
+  <!-- Arrow agent → LLM -->
+  <line x1="236" y1="273" x2="260" y2="273" stroke="#6b7280" stroke-width="1.2" marker-end="url(#arr)"/>
+
+  <!-- LLM + Retrieval -->
+  <rect x="264" y="241" width="240" height="64" rx="7" fill="#f0f4fa" stroke="#c9a84c" stroke-width="1"/>
+  <text x="384" y="260" text-anchor="middle" font-size="10" font-weight="700" fill="#1e3a5f" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">LLM + Retrieval</text>
+  <text x="340" y="276" text-anchor="middle" font-size="9" fill="#555" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Vertex AI / Ollama</text>
+  <text x="430" y="276" text-anchor="middle" font-size="9" fill="#555" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">pgvector search</text>
+  <text x="384" y="292" text-anchor="middle" font-size="9" fill="#888" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">response + citations returned</text>
+
+  <!-- Arrow 3 → 4 -->
+  <line x1="300" y1="317" x2="300" y2="337" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ═══════════════════════════════
+       STEP 4 — scorecard.evaluate()
+  ═══════════════════════════════ -->
+  <!-- Outer card -->
+  <rect x="80" y="341" width="440" height="168" rx="9" fill="#fff" stroke="#1e3a5f" stroke-width="1.5" filter="url(#sh)"/>
+  <rect x="80" y="341" width="440" height="28" rx="9" fill="#1e3a5f"/>
+  <rect x="80" y="357" width="440" height="12" fill="#1e3a5f"/>
+  <text x="300" y="360" text-anchor="middle" font-size="12" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    scorecard.py — evaluate()
+  </text>
+
+  <!-- Check rows -->
+  <!-- must_not_contain -->
+  <rect x="100" y="375" width="360" height="22" rx="5" fill="#fde8e8" stroke="#d9534f" stroke-width="0.8"/>
+  <text x="280" y="390" text-anchor="middle" font-size="10" fill="#b91c1c" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    must_not_contain check  — blocks PII / forbidden phrases
+  </text>
+
+  <!-- must_contain_any -->
+  <rect x="100" y="402" width="360" height="22" rx="5" fill="#f0f7f0" stroke="#22863a" stroke-width="0.8"/>
+  <text x="280" y="417" text-anchor="middle" font-size="10" fill="#22863a" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    must_contain_any check  — required answer elements
+  </text>
+
+  <!-- must_escalate -->
+  <rect x="100" y="429" width="172" height="22" rx="5" fill="#fde8e8" stroke="#d9534f" stroke-width="0.8"/>
+  <text x="186" y="444" text-anchor="middle" font-size="10" fill="#b91c1c" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    must_escalate check
+  </text>
+
+  <!-- confidence bounds -->
+  <rect x="288" y="429" width="172" height="22" rx="5" fill="#f0f7f0" stroke="#22863a" stroke-width="0.8"/>
+  <text x="374" y="444" text-anchor="middle" font-size="10" fill="#22863a" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    confidence bounds check
+  </text>
+
+  <!-- citation check -->
+  <rect x="100" y="456" width="360" height="22" rx="5" fill="#f0f4fa" stroke="#1e3a5f" stroke-width="0.8"/>
+  <text x="280" y="471" text-anchor="middle" font-size="10" fill="#1e3a5f" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    citation check  — verifiable EU regulatory references
+  </text>
+
+  <!-- Arrow 4 → 5 -->
+  <line x1="300" y1="509" x2="300" y2="529" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ═══════════════════════════════
+       STEP 5 — Outputs
+  ═══════════════════════════════ -->
+  <rect x="80" y="533" width="440" height="60" rx="9" fill="#fff" stroke="#9ca3af" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="300" y="552" text-anchor="middle" font-size="12" font-weight="700" fill="#374151" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    reports/latest.json + scorecard.md
+  </text>
+
+  <!-- Output sub-badges -->
+  <rect x="100" y="558" width="100" height="22" rx="5" fill="#f0f7f0" stroke="#22863a" stroke-width="0.8"/>
+  <text x="150" y="573" text-anchor="middle" font-size="10" font-weight="600" fill="#22863a" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">PASS cases</text>
+
+  <rect x="218" y="558" width="100" height="22" rx="5" fill="#fde8e8" stroke="#d9534f" stroke-width="0.8"/>
+  <text x="268" y="573" text-anchor="middle" font-size="10" font-weight="600" fill="#b91c1c" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">FAIL cases</text>
+
+  <rect x="336" y="558" width="168" height="22" rx="5" fill="#f5f5f5" stroke="#9ca3af" stroke-width="0.8"/>
+  <text x="420" y="573" text-anchor="middle" font-size="10" fill="#555" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">root-cause annotations</text>
+
+  <!-- Arrow 5 → 6 -->
+  <line x1="300" y1="593" x2="300" y2="613" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ═══════════════════════════════
+       STEP 6 — GitHub Actions CI
+  ═══════════════════════════════ -->
+  <rect x="80" y="617" width="440" height="52" rx="9" fill="#f0f4fa" stroke="#1e3a5f" stroke-width="1.5" filter="url(#sh)"/>
+  <text x="300" y="637" text-anchor="middle" font-size="12" font-weight="700" fill="#1e3a5f" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    GitHub Actions — eval.yml
+  </text>
+  <text x="300" y="656" text-anchor="middle" font-size="10" fill="#555" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    Sticky PR comment  ·  scorecard diff per commit  ·  regression gate
+  </text>
+
+  <!-- Footer -->
+  <text x="300" y="688" text-anchor="middle" font-size="9" fill="#bbb" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    tessera · eval/ · inspired by AgentAssay + Promptfoo
+  </text>
+</svg>

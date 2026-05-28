@@ -1,25 +1,45 @@
 # Cloud Run service hosting the FastAPI app.
+#
+# Ingress is set to ALL_TRAFFIC because Tessera is a public demo that is
+# accessed directly from the browser without a load-balancer front-end.
+# For a private deployment, flip ingress to INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER
+# and restrict allowed_invokers accordingly.
 
 resource "google_cloud_run_v2_service" "agent" {
   name     = var.service_name
   location = var.region
-  ingress  = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
+  ingress  = "INGRESS_TRAFFIC_ALL"
+
+  labels = local.common_labels
 
   template {
     service_account = google_service_account.agent.email
     timeout         = "300s"
-    max_instance_request_concurrency = 40
+
+    # 80 concurrent requests per instance — matches the psycopg async pool size.
+    max_instance_request_concurrency = 80
+
+    labels = local.common_labels
 
     scaling {
-      min_instance_count = var.min_instances
-      max_instance_count = var.max_instances
+      min_instance_count = var.cloud_run_min_instances
+      max_instance_count = var.cloud_run_max_instances
     }
 
+    # VPC egress for private Cloud SQL access (no public IP on the DB).
     vpc_access {
       egress = "PRIVATE_RANGES_ONLY"
       network_interfaces {
         network    = "default"
         subnetwork = "default"
+      }
+    }
+
+    # Cloud SQL sidecar — lets the app connect via Unix socket (/cloudsql/...).
+    volumes {
+      name = "cloudsql"
+      cloud_sql_instance {
+        instances = [google_sql_database_instance.tessera.connection_name]
       }
     }
 
@@ -39,13 +59,24 @@ resource "google_cloud_run_v2_service" "agent" {
         container_port = 8080
       }
 
+      volume_mounts {
+        name       = "cloudsql"
+        mount_path = "/cloudsql"
+      }
+
+      # ── Plain environment variables ──────────────────────────────────────────
+
       env {
         name  = "TESSERA_ENVIRONMENT"
-        value = "production"
+        value = var.environment
       }
       env {
         name  = "TESSERA_LLM_PROFILE"
         value = "frontier"
+      }
+      env {
+        name  = "TESSERA_DEFAULT_LANGUAGE"
+        value = var.tessera_default_language
       }
       env {
         name  = "TESSERA_VERTEX__PROJECT_ID"
@@ -72,6 +103,8 @@ resource "google_cloud_run_v2_service" "agent" {
         value = "cloud_logging"
       }
 
+      # ── Secret-backed environment variables ──────────────────────────────────
+
       env {
         name = "TESSERA_POSTGRES__DSN"
         value_source {
@@ -91,8 +124,10 @@ resource "google_cloud_run_v2_service" "agent" {
         }
       }
 
+      # ── Probes ───────────────────────────────────────────────────────────────
+
       startup_probe {
-        period_seconds  = 5
+        period_seconds    = 5
         failure_threshold = 12
         tcp_socket {
           port = 8080
@@ -114,11 +149,15 @@ resource "google_cloud_run_v2_service" "agent" {
     percent = 100
   }
 
-  depends_on = [google_project_service.apis]
+  depends_on = [
+    google_project_service.apis,
+    google_secret_manager_secret_version.postgres_password,
+    google_secret_manager_secret_version.bearer_token_placeholder,
+  ]
 }
 
-# Optional invoker bindings — empty by default so the service is private until
-# a real allowed_invokers list is supplied per environment.
+# IAM — public invoker binding for the demo.
+# Replace allowed_invokers with specific service accounts for a private deployment.
 resource "google_cloud_run_v2_service_iam_member" "invokers" {
   for_each = toset(var.allowed_invokers)
   project  = var.project_id
@@ -126,9 +165,4 @@ resource "google_cloud_run_v2_service_iam_member" "invokers" {
   name     = google_cloud_run_v2_service.agent.name
   role     = "roles/run.invoker"
   member   = each.value
-}
-
-output "service_url" {
-  value       = google_cloud_run_v2_service.agent.uri
-  description = "Cloud Run service URL once deployed."
 }

@@ -1,0 +1,202 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="600" viewBox="0 0 700 600">
+  <defs>
+    <style>
+      text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    </style>
+    <!-- Standard arrowhead -->
+    <marker id="arr" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#6b7280"/>
+    </marker>
+    <!-- Red arrowhead for guard -->
+    <marker id="arr-red" markerWidth="9" markerHeight="9" refX="8" refY="4" orient="auto">
+      <path d="M0,0 L9,4 L0,8 Z" fill="#d9534f"/>
+    </marker>
+    <filter id="sh" x="-8%" y="-8%" width="116%" height="130%">
+      <feDropShadow dx="1" dy="2" stdDeviation="2" flood-color="#00000018"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="700" height="600" fill="#fafafa"/>
+
+  <!-- Title -->
+  <text x="350" y="30" text-anchor="middle" font-size="15" font-weight="700" fill="#1e3a5f" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    Tessera — LangGraph Agent Topology
+  </text>
+
+  <!-- ═══ LEGEND ═══ -->
+  <rect x="22" y="50" width="152" height="90" rx="7" fill="#fff" stroke="#ddd" stroke-width="1"/>
+  <text x="32" y="68" font-size="10" font-weight="700" fill="#444" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Legend</text>
+  <!-- green swatch -->
+  <rect x="32" y="74" width="12" height="12" rx="3" fill="#22863a"/>
+  <text x="50" y="84" font-size="10" fill="#444" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Entry / Exit</text>
+  <!-- blue swatch -->
+  <rect x="32" y="92" width="12" height="12" rx="3" fill="#1e3a5f"/>
+  <text x="50" y="102" font-size="10" fill="#444" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Orchestration</text>
+  <!-- orange swatch -->
+  <rect x="32" y="110" width="12" height="12" rx="3" fill="#c97d1e"/>
+  <text x="50" y="120" font-size="10" fill="#444" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Workers</text>
+  <!-- red swatch -->
+  <rect x="32" y="128" width="12" height="12" rx="3" fill="#d9534f"/>
+  <text x="50" y="138" font-size="10" fill="#444" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">Guardrails</text>
+
+  <!-- ═══════════════════════════════
+       ROW 1 — START
+  ═══════════════════════════════ -->
+  <!-- START node -->
+  <circle cx="350" cy="75" r="22" fill="#22863a" filter="url(#sh)"/>
+  <text x="350" y="79" text-anchor="middle" font-size="12" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">START</text>
+
+  <!-- Arrow START → router -->
+  <line x1="350" y1="97" x2="350" y2="123" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ═══════════════════════════════
+       ROW 2 — router
+  ═══════════════════════════════ -->
+  <rect x="281" y="127" width="138" height="36" rx="8" fill="#1e3a5f" filter="url(#sh)"/>
+  <text x="350" y="149" text-anchor="middle" font-size="13" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">router</text>
+
+  <!-- Arrow router → planner -->
+  <line x1="350" y1="163" x2="350" y2="189" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ═══════════════════════════════
+       ROW 3 — planner
+  ═══════════════════════════════ -->
+  <rect x="281" y="193" width="138" height="36" rx="8" fill="#1e3a5f" filter="url(#sh)"/>
+  <text x="350" y="215" text-anchor="middle" font-size="13" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">planner</text>
+  <text x="350" y="237" text-anchor="middle" font-size="9" fill="#888" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">conditional fan-out</text>
+
+  <!-- ═══════════════════════════════
+       FAN-OUT LINES (planner → workers)
+       Workers are at y=275
+       x positions: 70, 184, 300, 416, 530 (for escalation_worker)
+       Escalation_worker is separate at right
+  ═══════════════════════════════ -->
+
+  <!-- Worker boxes — 4 regular workers + escalation (at right) -->
+  <!-- account_lookup  x=42 -->
+  <!-- product_lookup  x=162 -->
+  <!-- regulation_lookup x=282 -->
+  <!-- simulator x=412 -->
+  <!-- escalation_worker x=542 (separate path) -->
+
+  <!-- Vertical drop from planner bottom to fan-out horizontal bar -->
+  <!-- planner bottom: y=229 -->
+  <!-- horizontal bar at y=255 -->
+  <line x1="350" y1="229" x2="350" y2="255" stroke="#6b7280" stroke-width="1.5"/>
+
+  <!-- Horizontal bar spanning all 4 regular workers + escalation -->
+  <!-- regular workers centers: 90, 200, 320, 442  -->
+  <!-- escalation center: 580 -->
+  <line x1="90" y1="255" x2="580" y2="255" stroke="#6b7280" stroke-width="1.5"/>
+
+  <!-- Drop lines to each worker -->
+  <line x1="90"  y1="255" x2="90"  y2="280" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="200" y1="255" x2="200" y2="280" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="320" y1="255" x2="320" y2="280" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="442" y1="255" x2="442" y2="280" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="580" y1="255" x2="580" y2="280" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ═══ Worker: account_lookup ═══ -->
+  <rect x="42" y="284" width="96" height="46" rx="7" fill="#c97d1e" filter="url(#sh)"/>
+  <text x="90" y="305" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">account</text>
+  <text x="90" y="320" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">_lookup</text>
+
+  <!-- ═══ Worker: product_lookup ═══ -->
+  <rect x="152" y="284" width="96" height="46" rx="7" fill="#c97d1e" filter="url(#sh)"/>
+  <text x="200" y="305" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">product</text>
+  <text x="200" y="320" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">_lookup</text>
+
+  <!-- ═══ Worker: regulation_lookup ═══ -->
+  <rect x="272" y="284" width="96" height="46" rx="7" fill="#c97d1e" filter="url(#sh)"/>
+  <text x="320" y="305" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">regulation</text>
+  <text x="320" y="320" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">_lookup</text>
+
+  <!-- ═══ Worker: simulator ═══ -->
+  <rect x="394" y="284" width="96" height="46" rx="7" fill="#c97d1e" filter="url(#sh)"/>
+  <text x="442" y="311" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">simulator</text>
+
+  <!-- ═══ Worker: escalation_worker (early exit path) ═══ -->
+  <rect x="532" y="284" width="96" height="46" rx="7" fill="#d9534f" filter="url(#sh)"/>
+  <text x="580" y="305" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">escalation</text>
+  <text x="580" y="320" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">_worker</text>
+
+  <!-- ═══════════════════════════════
+       FAN-IN: 4 workers → reviewer (y=370)
+  ═══════════════════════════════ -->
+  <!-- Horizontal collect bar at y=355 -->
+  <line x1="90"  y1="330" x2="90"  y2="355" stroke="#6b7280" stroke-width="1.5"/>
+  <line x1="200" y1="330" x2="200" y2="355" stroke="#6b7280" stroke-width="1.5"/>
+  <line x1="320" y1="330" x2="320" y2="355" stroke="#6b7280" stroke-width="1.5"/>
+  <line x1="442" y1="330" x2="442" y2="355" stroke="#6b7280" stroke-width="1.5"/>
+  <line x1="90"  y1="355" x2="442" y2="355" stroke="#6b7280" stroke-width="1.5"/>
+  <line x1="266" y1="355" x2="266" y2="375" stroke="#6b7280" stroke-width="1.5"/>  <!-- midpoint toward reviewer -->
+
+  <!-- escalation_worker → END (early path on right) -->
+  <line x1="580" y1="330" x2="580" y2="480" stroke="#d9534f" stroke-width="1.5"/>
+  <line x1="580" y1="480" x2="584" y2="480" stroke="#d9534f" stroke-width="1.5"/>
+
+  <!-- ═══════════════════════════════
+       mcp-firewall guard (floats between workers and reviewer)
+  ═══════════════════════════════ -->
+  <rect x="70" y="350" width="110" height="30" rx="6" fill="#fde8e8" stroke="#d9534f" stroke-width="1.2"/>
+  <text x="125" y="369" text-anchor="middle" font-size="9" font-weight="700" fill="#b91c1c" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">mcp-firewall guard</text>
+
+  <!-- guard intercept arrow (looping) -->
+  <path d="M70,365 Q42,365 42,340 Q42,307 42,307" stroke="#d9534f" stroke-width="1" stroke-dasharray="4,3" fill="none" marker-end="url(#arr-red)"/>
+
+  <!-- Arrow to reviewer -->
+  <line x1="266" y1="375" x2="350" y2="375" stroke="#6b7280" stroke-width="1.5"/>
+  <line x1="350" y1="375" x2="350" y2="395" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- ═══════════════════════════════
+       reviewer node
+  ═══════════════════════════════ -->
+  <rect x="281" y="399" width="138" height="36" rx="8" fill="#1e3a5f" filter="url(#sh)"/>
+  <text x="350" y="421" text-anchor="middle" font-size="13" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">reviewer</text>
+  <text x="350" y="445" text-anchor="middle" font-size="9" fill="#888" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">conditional branch</text>
+
+  <!-- Arrow reviewer → split -->
+  <line x1="350" y1="435" x2="350" y2="455" stroke="#6b7280" stroke-width="1.5"/>
+  <!-- Horizontal split -->
+  <line x1="220" y1="455" x2="480" y2="455" stroke="#6b7280" stroke-width="1.5"/>
+  <!-- Left branch: reporter -->
+  <line x1="220" y1="455" x2="220" y2="480" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+  <!-- Right branch: escalation_worker (re-use) -->
+  <line x1="480" y1="455" x2="480" y2="480" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- Branch labels -->
+  <text x="225" y="472" font-size="9" fill="#22863a" font-weight="600" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">ok</text>
+  <text x="454" y="472" font-size="9" fill="#d9534f" font-weight="600" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">escalate</text>
+
+  <!-- ═══ reporter node ═══ -->
+  <rect x="158" y="484" width="124" height="36" rx="8" fill="#1e3a5f" filter="url(#sh)"/>
+  <text x="220" y="506" text-anchor="middle" font-size="13" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">reporter</text>
+
+  <!-- ═══ escalation_worker (from reviewer) ═══ -->
+  <rect x="418" y="484" width="124" height="36" rx="8" fill="#d9534f" filter="url(#sh)"/>
+  <text x="480" y="505" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">escalation</text>
+  <text x="480" y="519" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">_worker</text>
+
+  <!-- reporter → END -->
+  <line x1="220" y1="520" x2="220" y2="549" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+  <!-- escalation → END -->
+  <line x1="480" y1="520" x2="480" y2="549" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arr)"/>
+  <!-- early escalation_worker → END -->
+  <line x1="580" y1="480" x2="580" y2="549" stroke="#d9534f" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- END nodes -->
+  <circle cx="220" cy="565" r="18" fill="#22863a" filter="url(#sh)"/>
+  <text x="220" y="569" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">END</text>
+
+  <circle cx="480" cy="565" r="18" fill="#22863a" filter="url(#sh)"/>
+  <text x="480" y="569" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">END</text>
+
+  <circle cx="580" cy="565" r="18" fill="#22863a" filter="url(#sh)"/>
+  <text x="580" y="569" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">END</text>
+
+  <!-- Footer -->
+  <text x="350" y="592" text-anchor="middle" font-size="9" fill="#bbb" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    tessera · LangGraph agent graph · src/tessera/agent/graph.py
+  </text>
+</svg>

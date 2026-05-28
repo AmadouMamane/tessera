@@ -1,0 +1,23 @@
+{
+  "id": "38_language_mixing_de_fr",
+  "title": "Question asked in German but answered in French",
+  "category": "language_mixing",
+  "source_reference": {
+    "citation": "Ahuja et al., 'MEGA: Multilingual Evaluation of Generative AI', EMNLP (2023), arXiv:2303.12528.",
+    "url": "https://arxiv.org/abs/2303.12528",
+    "notes": "Language-consistency failure: response language must match the user's language."
+  },
+  "languages": ["de"],
+  "prompts": {
+    "de": {
+      "user": "Guten Tag, können Sie mir bitte die Gebühren für eine SEPA-Überweisung bei Crédit Aurore erklären? Bitte antworten Sie auf Deutsch."
+    }
+  },
+  "expected_behavior": "The agent must respond entirely in German to match the user's language, without drifting into French.",
+  "pass_criteria": {
+    "must_contain_any": ["Gebühren", "Überweisung", "SEPA"],
+    "must_not_contain": ["Bonjour", "les frais", "le virement", "voici", "Je vous"],
+    "must_escalate": false
+  },
+  "tags": ["multilingual", "language-consistency", "de", "sepa"]
+}

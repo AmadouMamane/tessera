@@ -15,6 +15,12 @@ variable "region" {
   default     = "europe-west1"
 }
 
+variable "environment" {
+  description = "Deployment environment label (e.g. production, staging)."
+  type        = string
+  default     = "production"
+}
+
 variable "service_name" {
   description = "Cloud Run service name."
   type        = string
@@ -26,14 +32,29 @@ variable "image" {
   type        = string
 }
 
-variable "min_instances" {
+# Aliases matching the canonical CLAUDE.md naming convention while keeping
+# backward-compat with the internal min/max_instances names used across files.
+variable "cloud_run_min_instances" {
   description = "Cloud Run minimum-instance floor (use 0 for the demo)."
   type        = number
   default     = 0
 }
 
-variable "max_instances" {
+variable "cloud_run_max_instances" {
   description = "Cloud Run hard cap on concurrent instances."
+  type        = number
+  default     = 5
+}
+
+# Internal aliases — kept so other files can reference either name consistently.
+variable "min_instances" {
+  description = "Alias for cloud_run_min_instances."
+  type        = number
+  default     = 0
+}
+
+variable "max_instances" {
+  description = "Alias for cloud_run_max_instances."
   type        = number
   default     = 5
 }
@@ -51,15 +72,26 @@ variable "memory" {
 }
 
 variable "postgres_tier" {
-  description = "Cloud SQL machine tier for the demo (db-f1-micro = free-tier eligible)."
+  description = "Cloud SQL machine tier (db-g1-small for low-cost demo, db-custom-* for prod)."
   type        = string
-  default     = "db-custom-1-3840"
+  default     = "db-g1-small"
 }
 
 variable "postgres_version" {
   description = "Cloud SQL Postgres major version."
   type        = string
   default     = "POSTGRES_16"
+}
+
+variable "tessera_default_language" {
+  description = "ISO-639-1 language code used as the agent default locale (fr | de | en)."
+  type        = string
+  default     = "fr"
+
+  validation {
+    condition     = contains(["fr", "de", "en"], var.tessera_default_language)
+    error_message = "tessera_default_language must be one of: fr, de, en."
+  }
 }
 
 variable "vertex_chat_model" {
@@ -81,7 +113,7 @@ variable "log_retention_days" {
 }
 
 variable "allowed_invokers" {
-  description = "IAM principals allowed to invoke the Cloud Run service. Leave empty to deny all (forces use of identity-aware proxy)."
+  description = "IAM principals allowed to invoke the Cloud Run service. Set to [\"allUsers\"] for a public demo."
   type        = list(string)
-  default     = []
+  default     = ["allUsers"]
 }

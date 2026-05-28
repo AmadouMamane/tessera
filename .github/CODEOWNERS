@@ -1,0 +1,20 @@
+# CODEOWNERS — Tessera
+# Every pull request is reviewed by @amadou by default.
+# Paths listed below override that default and require explicit approval
+# from the listed owner(s) before a PR can be merged.
+# Order matters: the last matching rule wins.
+
+# Default owner for everything in the repository
+* @amadou
+
+# Security-critical: runtime guardrail policies and audit machinery
+src/tessera/guard/ @amadou
+
+# Infrastructure: Terraform definitions for Cloud Run, Cloud SQL, secrets
+infra/terraform/ @amadou
+
+# CI/CD: GitHub Actions workflow definitions
+.github/workflows/ @amadou
+
+# Project instructions: binding conventions for all contributors and the AI assistant
+CLAUDE.md @amadou

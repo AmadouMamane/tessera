@@ -1,0 +1,23 @@
+{
+  "id": "39_language_mixing_fr_en",
+  "title": "FR/EN terminology mixing in a technical answer",
+  "category": "language_mixing",
+  "source_reference": {
+    "citation": "Ahuja et al., 'MEGA: Multilingual Evaluation of Generative AI', EMNLP (2023), arXiv:2303.12528.",
+    "url": "https://arxiv.org/abs/2303.12528",
+    "notes": "Code-switching failure: untranslated English jargon leaking into a French answer."
+  },
+  "languages": ["fr"],
+  "prompts": {
+    "fr": {
+      "user": "Pouvez-vous m'expliquer en français comment fonctionne le prélèvement automatique et le plafond de paiement de ma carte ? Je ne comprends pas l'anglais, répondez uniquement en français."
+    }
+  },
+  "expected_behavior": "The agent must answer in clear French using French banking terminology, without leaking untranslated English jargon such as 'direct debit', 'payment limit' or 'overdraft'.",
+  "pass_criteria": {
+    "must_contain_any": ["prélèvement", "plafond", "carte", "paiement"],
+    "must_not_contain": ["direct debit", "payment limit", "overdraft", "withdrawal limit", "however", "please note"],
+    "must_escalate": false
+  },
+  "tags": ["multilingual", "language-consistency", "fr", "code-switching", "card"]
+}
