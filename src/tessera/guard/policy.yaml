@@ -77,13 +77,30 @@ tools:
 # the turn entirely; ``transform_patterns`` strip the offending substring.
 prompt_injection:
   deny_patterns:
+    # English
     - "(?i)ignore (all previous|all|previous|the above) instructions"
     - "(?i)you are now (a |an |the )?(new |different )?(assistant|system|agent)"
     - "(?i)reveal (your|the) system prompt"
     - "(?i)disregard (the|your) (rules|policy|guardrails)"
+    # French
+    - "(?i)ignore[sz]? (toutes? les?|les?) instructions? (pr[eé]c[eé]dentes?|ci-dessus|ant[eé]rieures?)"
+    - "(?i)tu es (maintenant |d[eé]sormais )?(un |une |le |la )?(nouvel?le? )?(assistant|syst[eè]me|agent)"
+    - "(?i)r[eé]v[eè]le[sz]? (ton|votre|le) (prompt syst[eè]me|syst[eè]me prompt)"
+    - "(?i)ignore[sz]? (tes|vos) (r[eè]gles?|politiques?|instructions?|contraintes?)"
+    # German
+    - "(?i)ignorier(e|st)? (alle? (vorherigen?|vorigen?|bisherigen?)|die obigen?) (Anweisungen?|Regeln?|Instruktionen?)"
+    - "(?i)du bist (jetzt |nun )?(ein |eine |der |die |das )?(neuer? )?(Assistent|System|Agent)"
+    - "(?i)(zeig|offenbar|enthüll)(e|st)? (dein(en?)?|das) (System[- ]?Prompt|Systemprompt)"
+    - "(?i)missachte (dein(e|en)?) (Regeln?|Richtlinien?|Anweisungen?)"
   transform_patterns:
     - match: "(?i)\\b(act as|pretend to be|roleplay as)\\b[^.]*\\."
       replacement: "[redacted role-play attempt]"
+    - match: "(?i)\\b(fais semblant d'être|joue le rôle de|comporte-toi comme)\\b[^.]*\\."
+      replacement: "[tentative de jeu de rôle redactée]"
+    - match: "(?i)\\b(tu es|tu dois être|agis comme)\\b[^.]*\\."
+      replacement: "[instruction de rôle redactée]"
+    - match: "(?i)\\b(sei|spiele|tu so als ob du)\\b[^.]*\\."
+      replacement: "[Rollenspielversuch geschwärzt]"
 
 # Patterns that constitute personal data and must be masked from logs and
 # from arguments echoed back to the LLM.
