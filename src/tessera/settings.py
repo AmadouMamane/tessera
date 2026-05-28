@@ -124,7 +124,8 @@ class GuardSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="TESSERA_GUARD_", extra="ignore")
 
     policy_path: Path = Path("src/tessera/guard/policy.yaml")
-    audit_sink: Literal["stdout", "cloud_logging", "postgres"] = "stdout"
+    audit_sink: Literal["stdout", "file", "cloud_logging", "postgres"] = "file"
+    audit_file: Path = Path("/tmp/tessera/audit.log")
     fail_closed: bool = True
     escalation_confidence_threshold: float = 0.6
 

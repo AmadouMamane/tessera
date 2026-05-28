@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import sys
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
@@ -86,6 +87,13 @@ def _emit_cloud_logging(entry: dict[str, Any]) -> None:
     logger.log_struct(entry, severity="INFO")
 
 
+def _emit_file(entry: dict[str, Any], path: Path) -> None:
+    """Append a JSON-Lines entry to ``path``, creating parent dirs as needed."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as fp:
+        fp.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
 def _emit_postgres(entry: dict[str, Any]) -> None:
     """Persist the audit entry to the dedicated audit table.
 
@@ -100,7 +108,7 @@ def emit_audit(
     target: str,
     arguments: Mapping[str, object],
     decisions: Iterable[GuardDecisionRecord],
-    sink: Literal["stdout", "cloud_logging", "postgres"],
+    sink: Literal["stdout", "file", "cloud_logging", "postgres"],
     outcome: _Outcome,
     error: str | None = None,
 ) -> None:
@@ -121,6 +129,9 @@ def emit_audit(
         match sink:
             case "stdout":
                 _emit_stdout(entry)
+            case "file":
+                from tessera.settings import get_settings
+                _emit_file(entry, get_settings().guard.audit_file)
             case "cloud_logging":
                 _emit_cloud_logging(entry)
             case "postgres":

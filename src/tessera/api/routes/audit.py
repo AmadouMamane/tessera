@@ -10,7 +10,6 @@ schema returned by both readers is identical, defined here as
 from __future__ import annotations
 
 import json
-import os
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -43,15 +42,13 @@ class AuditPage(BaseModel):
     has_more: bool
 
 
-_AUDIT_FILE_ENV = "TESSERA_AUDIT_FILE"
-_DEFAULT_AUDIT_FILE = Path("/var/log/tessera/audit.log")
 _PAGE_DEFAULT = 50
 _PAGE_MAX = 500
 
 
 def _resolve_audit_path() -> Path:
-    raw = os.environ.get(_AUDIT_FILE_ENV)
-    return Path(raw) if raw else _DEFAULT_AUDIT_FILE
+    from tessera.settings import get_settings
+    return get_settings().guard.audit_file
 
 
 def _read_entries(path: Path) -> list[AuditEntry]:

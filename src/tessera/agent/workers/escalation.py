@@ -55,7 +55,7 @@ async def run(state: AgentState) -> dict[str, object]:
         tool_name="ticket_escalate",
         invoke=lambda: ticket_escalate.open_ticket(
             conversation_id=conversation_id,
-            language=state["language"],  # type: ignore[arg-type]
+            language=state["language"].value,
             reason=reason,
             transcript_excerpt=transcript,
         ),
