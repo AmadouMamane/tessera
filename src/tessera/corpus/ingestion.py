@@ -41,6 +41,8 @@ def _iter_data_files(corpus_filter: str | None) -> Iterable[tuple[Path, str, Lan
             # DORA / GDPR → EN (EU Official Journal primary text)
             # BaFin        → DE (German national authority)
             # CNIL         → FR (French national authority)
+            # Source prefixes in corpus JSON files match the issuing authority:
+            # BaFin/* → DE, CNIL/* → FR, DORA/* and GDPR/* → EN
             _REGULATION_LANGUAGES: dict[str, LanguageCode] = {
                 "regulations_dora.json": LanguageCode.EN,
                 "regulations_gdpr.json": LanguageCode.EN,
