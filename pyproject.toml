@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tessera"
-version = "0.1.0"
+version = "0.3.0"
 description = "Multilingual (FR/DE/EN) banking support LLM agent for the European retail market, grounded in EU regulatory corpora and guarded by mcp-firewall."
 readme = "README.md"
 license = "Apache-2.0"
