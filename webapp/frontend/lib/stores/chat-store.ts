@@ -93,12 +93,13 @@ export const useChatStore = create<ChatState>()(
 
       finalizeAssistant: (payload) =>
         set((state) => {
-          // If startAssistant was called we already have a bubble — replace it.
           const messages = [...state.messages];
           const lastIdx = messages.findLastIndex((m) => m.role === "assistant");
-          if (lastIdx !== -1 && messages[lastIdx].id === payload.id) {
+          if (lastIdx !== -1) {
+            // Streaming path: replace the in-progress bubble with final metadata.
             messages[lastIdx] = { ...messages[lastIdx], ...payload, role: "assistant" };
           } else {
+            // Non-streaming path (injection block, no tokens emitted).
             messages.push({ ...payload, role: "assistant", createdAt: Date.now() });
           }
           return { messages, isStreaming: false };
