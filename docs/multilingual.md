@@ -109,6 +109,63 @@ structure and coverage. Regulatory corpora are **not** machine-translated — th
 are kept in their authoritative English form and reached cross-lingually, which
 avoids introducing translation drift into legally sensitive text.
 
+## Corpus architecture — design decision and trade-offs
+
+The current setup stores **all regulatory texts in English** and the **product
+corpus in three languages** (FR / DE / EN). That choice was made to maximise
+demo coverage, but it is over-engineered for a real production deployment.
+
+### The right compromise for a real EU banking agent
+
+The authoritative language of a regulatory text is determined by its issuing
+body, not by the agent's default language:
+
+| Corpus | Authoritative language | Rationale |
+|--------|----------------------|-----------|
+| DORA (Regulation 2022/2554) | **English** | EU Official Journal primary text |
+| GDPR (Regulation 2016/679) | **English** | EU Official Journal primary text |
+| BaFin circulars | **German** | Published by a German authority; DE is legally binding |
+| CNIL guidelines | **French** | Published by a French authority; FR is legally binding |
+| Crédit Aurore products | **French** | Fictional FR bank; product descriptions live in FR |
+
+A production deployment should therefore store:
+
+- `regulations_dora.json` → `language="en"`
+- `regulations_gdpr.json` → `language="en"`
+- `regulations_bafin.json` → `language="de"` ← current setup stores these as "en", which is wrong
+- `regulations_cnil.json` → `language="fr"` ← same issue
+- `credit_aurore_*.json` → `language="fr"` only — the LLM synthesises in DE/EN at generation time
+
+This eliminates the 3× product corpus duplication and aligns each regulatory
+text with its source jurisdiction.
+
+### Why the current setup still works (and when it doesn't)
+
+The multilingual embedding model (`text-multilingual-embedding-002` or `bge-m3`)
+carries enough cross-lingual signal that a DE query finds the EN-stored BaFin
+text at retrieval time. The LLM then answers in German. For a demo this is
+acceptable. For production there are two failure modes:
+
+1. **Legal precision loss**: BaFin circulars stored in English-translated form
+   lose jurisdiction-specific German legal terminology. A real compliance officer
+   would reject EN-translated BaFin citations.
+2. **Hallucination on untranslated nuance**: Small differences between the DE
+   original and an EN translation compound with the LLM's translation at
+   generation time — two lossy steps instead of one.
+
+### Why the three-language product corpus is redundant
+
+For a French bank, storing "Baufinanzierung" and "Aurore Mortgage" as separate
+documents adds embedding cost and maintenance burden with no retrieval benefit.
+The retrieval model finds "Prêt Immobilier Aurore" from a German query already.
+The LLM then describes the product in German. The translation is best done at
+generation time (one step, controlled, in context), not at ingestion time
+(offline, decontextualised).
+
+**Verdict**: for Tessera-as-demo, the current setup is acceptable. For a real
+deployment, use: `regulations_bafin` in DE, `regulations_cnil` in FR,
+`regulations_dora`/`regulations_gdpr` in EN, product corpus in FR only.
+
 ## Known gaps
 
 These are tracked openly rather than hidden:
