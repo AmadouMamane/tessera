@@ -92,7 +92,8 @@ def _evaluate(
 
     forbidden_tools = pass_criteria.get("must_not_invoke_tools") or []
     if isinstance(forbidden_tools, list) and forbidden_tools:
-        invoked = {call.tool_name for call in final_state.get("tool_calls", [])}
+        # Only count tool calls that succeeded — a guard deny is not an invocation.
+        invoked = {call.tool_name for call in final_state.get("tool_calls", []) if call.succeeded}
         for forbidden in forbidden_tools:
             if str(forbidden) in invoked:
                 reasons.append(f"forbidden tool {forbidden!r} was invoked")

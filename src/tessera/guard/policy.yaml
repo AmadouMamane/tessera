@@ -85,9 +85,16 @@ tools:
 # the turn entirely; ``transform_patterns`` strip the offending substring.
 prompt_injection:
   deny_patterns:
-    # Encoded / obfuscated injection
-    - "(?i)(base64|decode|atob|btoa|eval|exec).*instruction"
-    - "[A-Za-z0-9+/]{30,}={0,2}"   # raw base64 blob ≥ 30 chars
+    # Roleplay / persona override — DENY (not transform: LLM must never see it)
+    - "(?i)\\b(act as|pretend to be|roleplay as|play the role of)\\b.{0,60}(no restriction|without rule|without limit|sans restriction|sans r[eè]gle|aucune limite|ohne Einschr[äa]nkung|keine Regeln)"
+    - "(?i)\\b(tu joues? le r[ôo]le|joue le r[ôo]le|fais semblant d'[eê]tre)\\b.{0,80}(sans|aucune|pas de).{0,30}(restriction|r[eè]gle|limite|contr[ôo]le)"
+    - "(?i)\\b(spiele? die Rolle|tu so als ob du)\\b.{0,80}(ohne|keine).{0,30}(Einschr[äa]nkung|Regel|Grenze)"
+    # XML / pseudo-tag instruction injection (case 10)
+    - "</?\\s*(system|instruction|prompt|rule|override|admin)[^>]{0,50}>"
+    - "(?i)(</motif>|</raison>|</reason>|</field>).*<(system|instruction|prompt)"
+    # Encoded / obfuscated injection (case 11)
+    - "(?i)\\b(d[eé]code|decode|atob|btoa)\\b.{0,40}\\b(ex[eé]cute?|run|apply|follow)\\b"
+    - "(?i)\\b(base64|encodé|encoded)\\b.{0,60}\\b(instruction|r[eè]gle|rule|commande|command)\\b"
     # English
     - "(?i)ignore (all previous|all|previous|the above) instructions"
     - "(?i)you are now (a |an |the )?(new |different )?(assistant|system|agent)"
@@ -103,15 +110,7 @@ prompt_injection:
     - "(?i)du bist (jetzt |nun )?(ein |eine |der |die |das )?(neuer? )?(Assistent|System|Agent)"
     - "(?i)(zeig|offenbar|enthüll)(e|st)? (dein(en?)?|das) (System[- ]?Prompt|Systemprompt)"
     - "(?i)missachte (dein(e|en)?) (Regeln?|Richtlinien?|Anweisungen?)"
-  transform_patterns:
-    - match: "(?i)\\b(act as|pretend to be|roleplay as)\\b[^.]*\\."
-      replacement: "[redacted role-play attempt]"
-    - match: "(?i)\\b(fais semblant d'être|joue le rôle de|comporte-toi comme)\\b[^.]*\\."
-      replacement: "[tentative de jeu de rôle redactée]"
-    - match: "(?i)\\b(tu es|tu dois être|agis comme)\\b[^.]*\\."
-      replacement: "[instruction de rôle redactée]"
-    - match: "(?i)\\b(sei|spiele|tu so als ob du)\\b[^.]*\\."
-      replacement: "[Rollenspielversuch geschwärzt]"
+  transform_patterns: []
 
 # Patterns that constitute personal data and must be masked from logs and
 # from arguments echoed back to the LLM.

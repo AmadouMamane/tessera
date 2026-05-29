@@ -27,7 +27,7 @@ export function ThemeToggle() {
           variant="ghost"
           size="icon"
           aria-label="Theme"
-          aria-pressed={theme === "dark"}
+          aria-haspopup="menu"
         >
           <Icon className="h-4 w-4" />
         </Button>
