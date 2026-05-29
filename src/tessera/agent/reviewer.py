@@ -65,6 +65,11 @@ def _score_grounding(state: AgentState) -> float:
     tool_calls = state.get("tool_calls", [])
     if any(call.succeeded for call in tool_calls):
         return 0.9
+    # Policy-refusal drafts (e.g. third-party account access refused) are
+    # grounded by policy, not by retrieval — do not penalise as hallucination.
+    errors = state.get("errors", [])
+    if any("refused" in e or "refusal" in e or "policy" in e for e in errors):
+        return 0.9
     docs = state.get("retrieved_documents", [])
     if not docs:
         # A non-empty draft with zero supporting documents is the canonical

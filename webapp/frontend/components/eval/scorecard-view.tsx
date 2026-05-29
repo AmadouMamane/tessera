@@ -1,5 +1,4 @@
-import { Check, FileSearch, TrendingUp, X } from "lucide-react";
-import Link from "next/link";
+import { Check, FileSearch, X } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { Badge } from "@/components/ui/badge";
@@ -13,8 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { RunHistoryPanel } from "@/components/eval/run-history-panel";
 import { loadAllRuns, loadScorecard } from "@/lib/eval";
-import type { RunMeta, ScorecardDocument, ScorecardResult } from "@/lib/api/schemas";
+import type { ScorecardDocument, ScorecardResult } from "@/lib/api/schemas";
 
 const CATEGORY_LABELS: Record<string, string> = {
   prompt_injection: "Prompt Injection",
@@ -57,7 +57,7 @@ export async function ScorecardView({ locale, filename }: ScorecardViewProps) {
   return (
     <div className="flex flex-col gap-6">
       {/* Evolution history */}
-      {runs.length > 0 && <EvolutionPanel runs={runs} currentFile={filename} />}
+      {runs.length > 0 && <RunHistoryPanel runs={runs} currentFile={filename} />}
 
       {!scorecard ? (
         <Card>
@@ -97,88 +97,6 @@ function SummaryRow({ scorecard }: { scorecard: ScorecardDocument }) {
   );
 }
 
-function EvolutionPanel({ runs, currentFile }: { runs: RunMeta[]; currentFile?: string }) {
-  return (
-    <Card>
-      <CardContent className="p-0">
-        <div className="flex items-center gap-2 border-b border-[var(--border)] px-5 py-3">
-          <TrendingUp className="h-4 w-4 text-[var(--muted-foreground)]" />
-          <span className="text-sm font-medium">Run history</span>
-        </div>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Run</TableHead>
-                <TableHead>Lang</TableHead>
-                <TableHead>Cases</TableHead>
-                <TableHead>Passed</TableHead>
-                <TableHead>Pass rate</TableHead>
-                <TableHead>Trend</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {runs.map((run, idx) => {
-                const prev = runs[idx + 1];
-                const delta = prev
-                  ? run.summary.pass_rate - prev.summary.pass_rate
-                  : null;
-                const isCurrent = !currentFile
-                  ? idx === 0
-                  : run.filename === currentFile;
-                return (
-                  <TableRow
-                    key={run.filename}
-                    className={isCurrent ? "bg-[var(--muted)]/30" : "hover:bg-[var(--muted)]/10 cursor-pointer"}
-                  >
-                    <TableCell className="font-mono text-xs">
-                      <Link
-                        href={`?run=${run.filename}`}
-                        className="hover:underline"
-                      >
-                        {formatRunAt(run.run_at)}
-                      </Link>
-                      {isCurrent && (
-                        <Badge tone="info" className="ml-2 text-[10px]">current</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Badge tone="neutral">{run.lang?.toUpperCase() ?? "ALL"}</Badge>
-                    </TableCell>
-                    <TableCell>{run.summary.total}</TableCell>
-                    <TableCell>{run.summary.passed}</TableCell>
-                    <TableCell className="font-semibold">
-                      {(run.summary.pass_rate * 100).toFixed(0)}%
-                    </TableCell>
-                    <TableCell>
-                      {delta !== null ? (
-                        <span
-                          className={
-                            delta > 0
-                              ? "text-green-600 dark:text-green-400"
-                              : delta < 0
-                                ? "text-red-600 dark:text-red-400"
-                                : "text-[var(--muted-foreground)]"
-                          }
-                        >
-                          {delta > 0 ? "+" : ""}
-                          {(delta * 100).toFixed(0)}pp
-                        </span>
-                      ) : (
-                        <span className="text-[var(--muted-foreground)]">—</span>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 function ResultsByCategory({ results }: { results: ScorecardResult[] }) {
   const byCategory = groupBy(results, (r) => r.category || "other");
   return (
@@ -203,12 +121,19 @@ function ResultsByCategory({ results }: { results: ScorecardResult[] }) {
                 <PassRateBar rate={rate} />
               </div>
               {/* Cases */}
-              <Table>
+              <Table className="table-fixed">
+                <colgroup>
+                  <col className="w-[22%]" />
+                  <col className="w-[7%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[35%]" />
+                  <col className="w-[28%]" />
+                </colgroup>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Case</TableHead>
-                    <TableHead>Lang</TableHead>
-                    <TableHead>Result</TableHead>
+                    <TableHead className="text-center">Lang</TableHead>
+                    <TableHead className="text-center">Result</TableHead>
                     <TableHead>Expected</TableHead>
                     <TableHead>Failure reason</TableHead>
                   </TableRow>
@@ -216,20 +141,20 @@ function ResultsByCategory({ results }: { results: ScorecardResult[] }) {
                 <TableBody>
                   {items.map((result) => (
                     <TableRow key={`${result.case_id}-${result.language}`}>
-                      <TableCell>
-                        <div className="font-mono text-xs">{result.case_id}</div>
+                      <TableCell className="max-w-0 overflow-hidden align-top">
+                        <div className="w-full font-mono text-xs leading-[18px]">{result.case_id.replace(/_/g, "_​")}</div>
                         {result.title && (
-                          <div className="mt-0.5 text-xs text-[var(--muted-foreground)]">
+                          <div className="mt-0.5 w-full break-words text-xs leading-[18px] text-[var(--muted-foreground)]">
                             {result.title}
                           </div>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="align-top text-center">
                         <Badge tone={result.language === "fr" ? "navy" : result.language === "de" ? "gold" : "info"}>
                           {result.language.toUpperCase()}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="align-top text-center">
                         {result.passed ? (
                           <Badge tone="success" className="gap-1">
                             <Check className="h-3 w-3" /> Pass
@@ -240,17 +165,16 @@ function ResultsByCategory({ results }: { results: ScorecardResult[] }) {
                           </Badge>
                         )}
                       </TableCell>
-                      <TableCell className="max-w-[200px] text-xs text-[var(--muted-foreground)]">
-                        {result.expected_behavior
-                          ? result.expected_behavior.slice(0, 100) +
-                            (result.expected_behavior.length > 100 ? "…" : "")
-                          : "—"}
+                      <TableCell className="max-w-0 overflow-hidden align-top text-xs text-[var(--muted-foreground)]">
+                        <div className="w-full break-words leading-[18px] text-justify">
+                          {result.expected_behavior ?? "—"}
+                        </div>
                       </TableCell>
-                      <TableCell className="max-w-[220px]">
+                      <TableCell className="max-w-0 overflow-hidden align-top">
                         {result.reasons.length > 0 ? (
-                          <ul className="space-y-1">
+                          <ul className="w-full space-y-1">
                             {result.reasons.map((r, i) => (
-                              <li key={i} className="text-xs text-red-600 dark:text-red-400">
+                              <li key={i} className="break-words text-xs leading-[18px] text-justify text-red-600 dark:text-red-400">
                                 {r}
                               </li>
                             ))}
@@ -302,7 +226,7 @@ function SummaryTile({ label, value, tone }: SummaryTileProps) {
           : "text-[var(--foreground)]";
   return (
     <Card>
-      <CardContent className="flex flex-col gap-1 py-5">
+      <CardContent className="flex flex-col items-center gap-1 py-5">
         <span className="text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
           {label}
         </span>
@@ -310,13 +234,6 @@ function SummaryTile({ label, value, tone }: SummaryTileProps) {
       </CardContent>
     </Card>
   );
-}
-
-function formatRunAt(raw: string): string {
-  // 20260529T092300Z → 2026-05-29 09:23
-  const m = raw.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})/);
-  if (!m) return raw;
-  return `${m[1]}-${m[2]}-${m[3]} ${m[4]}:${m[5]}`;
 }
 
 function groupBy<T>(arr: T[], key: (item: T) => string): Record<string, T[]> {

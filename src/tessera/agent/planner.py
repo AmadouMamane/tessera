@@ -50,7 +50,7 @@ _INTENT_RULES: dict[LanguageCode, list[tuple[re.Pattern[str], Intent]]] = {
         # Urgent card cases must be matched before generic card_block.
         (
             re.compile(
-                r"\b(vol[eé]|perdu|avalé.*distributeur|distributeur.*avalé"
+                r"\b(vol(?:é[e]?|er?)|perdu[e]?|avalé.*distributeur|distributeur.*avalé"
                 r"|paiements?.*(n'ai pas|pas effectué)|fraude.*carte|carte.*fraude"
                 r"|immédiatement.*bloquer|bloquer.*immédiatement)\b",
                 re.IGNORECASE,
@@ -227,6 +227,15 @@ def plan_for(text: str, language: LanguageCode) -> tuple[list[WorkerName], str]:
             if w not in seen:
                 seen.add(w)
                 workers.append(w)
+
+    # ESCALATION is terminal — running it alongside other workers causes
+    # a race condition where the account_lookup path can overwrite the
+    # escalation response. When any intent requires ESCALATION, return it
+    # as the sole worker.
+    if WorkerName.ESCALATION in seen:
+        escalation_intent = next(i for i in intents if WorkerName.ESCALATION in i.workers)
+        return [WorkerName.ESCALATION], escalation_intent.rationale
+
     rationale = "; ".join(i.rationale for i in intents)
     return workers, rationale
 
