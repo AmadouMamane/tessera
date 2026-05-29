@@ -43,6 +43,11 @@ export const ChatEndEventSchema = z.object({
 });
 export type ChatEndEvent = z.infer<typeof ChatEndEventSchema>;
 
+export const ChatTokenEventSchema = z.object({
+  token: z.string(),
+});
+export type ChatTokenEvent = z.infer<typeof ChatTokenEventSchema>;
+
 export const ChatErrorEventSchema = z.object({
   error: z.string(),
 });

@@ -35,6 +35,8 @@ interface ChatState {
   lastError: string | null;
   start: (conversationId: string, turnId: string) => void;
   appendUser: (content: string) => ChatMessage;
+  startAssistant: (turnId: string) => void;
+  appendToken: (token: string) => void;
   finalizeAssistant: (message: Omit<ChatMessage, "createdAt" | "role">) => void;
   setError: (message: string) => void;
   setStreaming: (streaming: boolean) => void;
@@ -68,14 +70,39 @@ export const useChatStore = create<ChatState>()(
         return message;
       },
 
-      finalizeAssistant: (payload) =>
+      // Add an empty assistant bubble as soon as the first token arrives.
+      startAssistant: (turnId) =>
         set((state) => ({
           messages: [
             ...state.messages,
-            { ...payload, role: "assistant", createdAt: Date.now() },
+            { id: turnId, role: "assistant", content: "", createdAt: Date.now() },
           ],
-          isStreaming: false,
         })),
+
+      // Append a token to the last assistant message (in-place mutation via
+      // object replacement so Zustand detects the change).
+      appendToken: (token) =>
+        set((state) => {
+          const messages = [...state.messages];
+          const last = messages[messages.length - 1];
+          if (last?.role === "assistant") {
+            messages[messages.length - 1] = { ...last, content: last.content + token };
+          }
+          return { messages };
+        }),
+
+      finalizeAssistant: (payload) =>
+        set((state) => {
+          // If startAssistant was called we already have a bubble — replace it.
+          const messages = [...state.messages];
+          const lastIdx = messages.findLastIndex((m) => m.role === "assistant");
+          if (lastIdx !== -1 && messages[lastIdx].id === payload.id) {
+            messages[lastIdx] = { ...messages[lastIdx], ...payload, role: "assistant" };
+          } else {
+            messages.push({ ...payload, role: "assistant", createdAt: Date.now() });
+          }
+          return { messages, isStreaming: false };
+        }),
 
       setError: (lastError) =>
         set({ lastError, isStreaming: false }),

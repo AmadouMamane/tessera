@@ -16,8 +16,11 @@ from fastapi import APIRouter, Body
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.responses import StreamingResponse
 
-from tessera.agent import compile_graph
-from tessera.agent.state import new_state
+from langgraph.checkpoint.memory import MemorySaver
+
+from tessera.agent import build_graph
+from tessera.agent import reporter as reporter_module
+from tessera.agent.state import NodeName, new_state
 from tessera.observability.metrics import AGENT_TURN_DURATION, AGENT_TURNS_TOTAL
 from tessera.settings import LanguageCode, get_settings
 
@@ -25,6 +28,17 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator
 
 router = APIRouter(tags=["chat"])
+
+# One MemorySaver per process; thread_id = turn_id so turns never collide.
+_checkpointer = MemorySaver()
+
+
+def _streaming_graph() -> object:
+    """Compile a graph that pauses before the reporter so we can stream tokens."""
+    return build_graph().compile(
+        checkpointer=_checkpointer,
+        interrupt_before=[NodeName.REPORTER.value],
+    )
 
 
 class ChatRequest(BaseModel):
@@ -74,41 +88,63 @@ async def _stream_turn(request: ChatRequest) -> AsyncIterator[bytes]:
         language_confidence=pinned_confidence,
     )
 
-    graph = compile_graph()
+    graph = _streaming_graph()
+    config: dict[str, object] = {"configurable": {"thread_id": str(turn_id)}}
     started = time.perf_counter()
-    yield _sse(
-        "turn.start",
-        {"conversation_id": str(conversation_id), "turn_id": str(turn_id)},
-    )
+    yield _sse("turn.start", {"conversation_id": str(conversation_id), "turn_id": str(turn_id)})
 
+    # Phase 1: run graph up to (but not including) the reporter node.
+    # Escalation and injection-block paths complete fully here.
     try:
-        final_state = await graph.ainvoke(initial)
+        await graph.ainvoke(initial, config=config)  # type: ignore[union-attr]
     except Exception as exc:
         AGENT_TURNS_TOTAL.labels(language=language.value, outcome="error").inc()
         yield _sse("turn.error", {"error": str(exc)})
         return
 
+    snapshot = graph.get_state(config)  # type: ignore[union-attr]
+    state = snapshot.values
+
+    # Phase 2: stream reporter when the graph is paused before it.
+    # Otherwise (escalation / injection block) final_response is already set.
+    final_response: str
+    if NodeName.REPORTER.value in (snapshot.next or ()):
+        docs = state.get("retrieved_documents", [])
+        draft = state.get("draft_response", "")
+        tokens: list[str] = []
+        if docs:
+            async for token in reporter_module.astream_synthesise(state):
+                tokens.append(token)
+                yield _sse("turn.token", {"token": token})
+            citations_footer = reporter_module.format_citations(
+                state.get("citations", []), state["language"]
+            )
+            final_response = "".join(tokens) + citations_footer
+        elif draft:
+            final_response = reporter_module.render(state)
+        else:
+            from tessera.agent.reporter import _FALLBACK_RESPONSES  # noqa: PLC0415
+            final_response = _FALLBACK_RESPONSES[state["language"]]
+    else:
+        final_response = str(state.get("final_response", ""))
+
     duration = time.perf_counter() - started
-    AGENT_TURN_DURATION.labels(language=language.value).observe(duration)
-    outcome: Literal["complete", "escalated"] = (
-        "escalated" if final_state.get("needs_escalation") else "complete"
-    )
-    AGENT_TURNS_TOTAL.labels(language=language.value, outcome=outcome).inc()
+    resolved_language: LanguageCode = state.get("language", language)
+    AGENT_TURN_DURATION.labels(language=resolved_language.value).observe(duration)
+    needs_escalation = bool(state.get("needs_escalation", False))
+    outcome: Literal["complete", "escalated"] = "escalated" if needs_escalation else "complete"
+    AGENT_TURNS_TOTAL.labels(language=resolved_language.value, outcome=outcome).inc()
 
     envelope = ChatEnvelope(
         conversation_id=conversation_id,
         turn_id=turn_id,
-        language=final_state.get("language", language),
-        final_response=final_state.get("final_response", ""),
-        needs_escalation=final_state.get("needs_escalation", False),
-        confidence=final_state.get("confidence"),
+        language=resolved_language,
+        final_response=final_response,
+        needs_escalation=needs_escalation,
+        confidence=state.get("confidence"),
         citations=[
-            {
-                "source": c.source,
-                "locator": c.locator,
-                "language": c.language.value,
-            }
-            for c in final_state.get("citations", [])
+            {"source": c.source, "locator": c.locator, "language": c.language.value}
+            for c in state.get("citations", [])
         ],
         finish_reason=outcome,
     )

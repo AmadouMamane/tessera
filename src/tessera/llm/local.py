@@ -11,7 +11,7 @@ from tessera.llm.router import ChatMessage, ChatResponse
 from tessera.settings import get_settings
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import AsyncIterator, Sequence
 
 __all__ = ["OllamaBackend"]
 
@@ -28,6 +28,40 @@ class OllamaBackend:
         self._timeout = settings.timeout_seconds
         self._keep_alive = f"{settings.keep_alive_seconds}s"
         self._client = ollama.AsyncClient(host=self._host)
+
+    async def stream_chat(
+        self,
+        messages: Sequence[ChatMessage],
+        *,
+        temperature: float = 0.2,
+        max_output_tokens: int | None = None,
+    ) -> AsyncIterator[str]:
+        """Yield tokens from Ollama as they arrive."""
+        options: dict[str, object] = {"temperature": temperature}
+        if max_output_tokens is not None:
+            options["num_predict"] = max_output_tokens
+        payload = [{"role": m.role, "content": m.content} for m in messages]
+        input_tokens = 0
+        output_tokens = 0
+        async for chunk in await self._client.chat(
+            model=self.model,
+            messages=payload,
+            options=options,
+            keep_alive=self._keep_alive,
+            stream=True,
+        ):
+            token: str = chunk["message"]["content"]
+            if token:
+                yield token
+            if chunk.get("done"):
+                input_tokens = int(chunk.get("prompt_eval_count", 0) or 0)
+                output_tokens = int(chunk.get("eval_count", 0) or 0)
+        get_budget_tracker().record(
+            backend=self.name,
+            model=self.model,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+        )
 
     async def chat(
         self,

@@ -60,7 +60,16 @@ export function MessageBubble({ message }: MessageBubbleProps) {
               : "bg-[var(--card)] text-[var(--card-foreground)] border border-[var(--border)]",
           )}
         >
-          <p className="whitespace-pre-wrap text-pretty">{message.content}</p>
+          <p className="whitespace-pre-wrap text-pretty">
+            {message.content}
+            {/* Blinking cursor while tokens are still arriving */}
+            {!isUser && message.content !== "" && !message.citations && (
+              <span
+                aria-hidden
+                className="ml-0.5 inline-block h-4 w-0.5 translate-y-0.5 animate-pulse bg-current opacity-70"
+              />
+            )}
+          </p>
         </div>
 
         {message.citations && message.citations.length > 0 ? (

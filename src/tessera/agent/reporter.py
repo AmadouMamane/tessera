@@ -23,9 +23,9 @@ from tessera.llm.router import ChatMessage, get_chat_backend
 from tessera.settings import LanguageCode
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import AsyncIterator, Iterable
 
-__all__ = ["load_prompts", "render", "run"]
+__all__ = ["astream_synthesise", "format_citations", "load_prompts", "render", "run"]
 
 
 _FALLBACK_RESPONSES: Final[dict[LanguageCode, str]] = {
@@ -68,7 +68,7 @@ def load_prompts(language: LanguageCode) -> dict[str, str]:
     return {str(key): str(value) for key, value in parsed.items()}
 
 
-def _format_citations(citations: Iterable[Citation], language: LanguageCode) -> str:
+def format_citations(citations: Iterable[Citation], language: LanguageCode) -> str:
     """Render citations into a compact, language-aware footer."""
     citations = list(citations)
     if not citations:
@@ -121,6 +121,38 @@ async def _synthesise(state: AgentState) -> str:
     return response.content.strip()
 
 
+async def astream_synthesise(state: AgentState) -> AsyncIterator[str]:
+    """Streaming variant of ``_synthesise`` — yields tokens as they arrive.
+
+    Used by the chat route to emit ``turn.token`` SSE events without waiting
+    for the full LLM response. The caller is responsible for collecting the
+    tokens and assembling the final string for ``turn.end``.
+    """
+    language = state["language"]
+    prompts = load_prompts(language)
+    system_prompt = prompts.get("system", "You are a helpful banking assistant.")
+    docs = state.get("retrieved_documents", [])
+    context = "\n\n".join(f"[{doc.source}]\n{doc.text}" for doc in docs[:6])
+    draft = state.get("draft_response", "")
+    tool_context = f"\nInformation récupérée en base : {draft}\n" if draft else ""
+    user_message = (
+        f"Question du client : {state['user_input']}\n"
+        f"{tool_context}"
+        f"\nDocuments disponibles :\n{context}\n\n"
+        "Réponds de façon concise et précise en adressant tous les aspects de la question, "
+        "en te basant sur les documents et les données disponibles."
+    )
+    backend = get_chat_backend()
+    async for token in backend.stream_chat(
+        [
+            ChatMessage(role="system", content=system_prompt),
+            ChatMessage(role="user", content=user_message),
+        ],
+        temperature=0.2,
+    ):
+        yield token
+
+
 def render(state: AgentState) -> str:
     """Render the final user-facing response for ``state`` (sync path only)."""
     language = state["language"]
@@ -131,11 +163,11 @@ def render(state: AgentState) -> str:
     prompts = load_prompts(language)
     template = prompts.get("reporter")
     if template is None:
-        return draft + _format_citations(state.get("citations", []), language)
+        return draft + format_citations(state.get("citations", []), language)
 
     return template.format(
         draft=draft,
-        citations=_format_citations(state.get("citations", []), language).strip(),
+        citations=format_citations(state.get("citations", []), language).strip(),
     ).rstrip()
 
 
@@ -149,7 +181,7 @@ async def run(state: AgentState) -> dict[str, object]:
         # Retrieved documents are present — always synthesise via LLM so
         # every aspect of the question (tool result + regulation) is addressed.
         final = await _synthesise(state)
-        citations_footer = _format_citations(state.get("citations", []), language)
+        citations_footer = format_citations(state.get("citations", []), language)
         if citations_footer:
             final = final + citations_footer
     elif draft:

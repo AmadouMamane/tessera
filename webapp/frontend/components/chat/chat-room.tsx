@@ -26,6 +26,8 @@ export function ChatRoom() {
     isStreaming,
     appendUser,
     start,
+    startAssistant,
+    appendToken,
     finalizeAssistant,
     setError,
     reset,
@@ -45,6 +47,7 @@ export function ChatRoom() {
       const controller = new AbortController();
       abortRef.current = controller;
       try {
+        let streamingStarted = false;
         await streamChat(
           {
             message: text,
@@ -55,6 +58,14 @@ export function ChatRoom() {
             signal: controller.signal,
             onStart: ({ conversation_id, turn_id }) =>
               start(conversation_id, turn_id),
+            onToken: (token) => {
+              if (!streamingStarted) {
+                // Create the assistant bubble on the first token.
+                startAssistant(crypto.randomUUID());
+                streamingStarted = true;
+              }
+              appendToken(token);
+            },
             onEnd: (envelope) =>
               finalizeAssistant({
                 id: envelope.turn_id,
@@ -78,7 +89,7 @@ export function ChatRoom() {
         if (abortRef.current === controller) abortRef.current = null;
       }
     },
-    [appendUser, conversationId, finalizeAssistant, locale, setError, start],
+    [appendUser, appendToken, conversationId, finalizeAssistant, locale, setError, start, startAssistant],
   );
 
   return (

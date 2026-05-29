@@ -9,7 +9,7 @@ from tessera.llm.router import ChatMessage, ChatResponse
 from tessera.settings import get_settings
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import AsyncIterator, Sequence
 
     from vertexai.generative_models import GenerativeModel
 
@@ -61,6 +61,26 @@ class VertexAIBackend:
             }
             for message in messages
         ]
+
+    async def stream_chat(
+        self,
+        messages: Sequence[ChatMessage],
+        *,
+        temperature: float = 0.2,
+        max_output_tokens: int | None = None,
+    ) -> AsyncIterator[str]:
+        """Yield tokens from Vertex AI as they arrive."""
+        model = self._ensure_model()
+        max_tokens = max_output_tokens or self._max_output_tokens
+        stream = await model.generate_content_async(
+            self._convert(messages),
+            generation_config={"temperature": temperature, "max_output_tokens": max_tokens},
+            stream=True,
+        )
+        async for chunk in stream:
+            text = chunk.text if (chunk.candidates and chunk.text) else ""
+            if text:
+                yield text
 
     async def chat(
         self,

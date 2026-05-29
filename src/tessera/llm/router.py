@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Literal, Protocol, runtime_checkable
 from tessera.settings import LLMProfile, get_settings
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import AsyncIterator, Sequence
 
 __all__ = [
     "ChatBackend",
@@ -60,6 +60,16 @@ class ChatBackend(Protocol):
         max_output_tokens: int | None = None,
     ) -> ChatResponse:
         """Produce a single response for the given message sequence."""
+        ...
+
+    def stream_chat(
+        self,
+        messages: Sequence[ChatMessage],
+        *,
+        temperature: float = 0.2,
+        max_output_tokens: int | None = None,
+    ) -> AsyncIterator[str]:
+        """Yield tokens as they are generated (streaming path)."""
         ...
 
 

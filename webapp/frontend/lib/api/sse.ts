@@ -14,6 +14,7 @@ import {
   ChatEndEventSchema,
   ChatErrorEventSchema,
   ChatStartEventSchema,
+  ChatTokenEventSchema,
   type ChatEndEvent,
 } from "./schemas";
 
@@ -25,6 +26,7 @@ export interface ChatTurnRequest {
 
 export interface ChatTurnCallbacks {
   onStart?: (event: { conversation_id: string; turn_id: string }) => void;
+  onToken?: (token: string) => void;
   onEnd?: (envelope: ChatEndEvent) => void;
   onError?: (message: string) => void;
 }
@@ -39,7 +41,7 @@ export interface StreamChatOptions extends ChatTurnCallbacks {
  */
 export async function streamChat(
   payload: ChatTurnRequest,
-  { signal, onStart, onEnd, onError }: StreamChatOptions = {},
+  { signal, onStart, onToken, onEnd, onError }: StreamChatOptions = {},
 ): Promise<void> {
   await fetchEventSource("/api/chat", {
     method: "POST",
@@ -65,6 +67,11 @@ export async function streamChat(
         case "turn.start": {
           const parsed = ChatStartEventSchema.safeParse(data);
           if (parsed.success) onStart?.(parsed.data);
+          return;
+        }
+        case "turn.token": {
+          const parsed = ChatTokenEventSchema.safeParse(data);
+          if (parsed.success) onToken?.(parsed.data.token);
           return;
         }
         case "turn.end": {
