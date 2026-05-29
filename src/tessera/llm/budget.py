@@ -12,10 +12,12 @@ the place to extend when new models come on-stream.
 
 from __future__ import annotations
 
+import json
 import threading
 from dataclasses import dataclass
 from decimal import Decimal
 from functools import lru_cache
+from pathlib import Path
 
 __all__ = ["BudgetSnapshot", "BudgetTracker", "get_budget_tracker"]
 
@@ -56,14 +58,54 @@ _PRICES: dict[tuple[str, str], _Price] = {
 }
 
 
-class BudgetTracker:
-    """Thread-safe accumulator of token usage and indicative cost."""
+_BUDGET_FILE = Path("/tmp/tessera/budget.json")
 
-    def __init__(self) -> None:
+
+class BudgetTracker:
+    """Thread-safe accumulator of token usage and indicative cost.
+
+    Persists totals to ``_BUDGET_FILE`` after every ``record()`` call so
+    that cumulative usage survives backend restarts (important for the
+    dashboard view — the user should see a growing counter, not a reset).
+    """
+
+    def __init__(self, *, persist_path: Path | None = _BUDGET_FILE) -> None:
         self._lock = threading.Lock()
         self._input_tokens: int = 0
         self._output_tokens: int = 0
         self._cost_eur: Decimal = Decimal("0")
+        self._persist_path: Path | None = persist_path  # None → no persistence
+        self._load()
+
+    def _load(self) -> None:
+        """Restore persisted totals from disk on startup."""
+        if self._persist_path is None:
+            return
+        try:
+            data = json.loads(self._persist_path.read_text())
+            self._input_tokens = int(data.get("input_tokens", 0))
+            self._output_tokens = int(data.get("output_tokens", 0))
+            self._cost_eur = Decimal(str(data.get("cost_eur", "0")))
+        except (FileNotFoundError, KeyError, ValueError, json.JSONDecodeError):
+            pass  # first start or corrupt file — start at zero
+
+    def _persist(self) -> None:
+        """Write current totals to disk (caller holds self._lock)."""
+        if self._persist_path is None:
+            return
+        try:
+            self._persist_path.parent.mkdir(parents=True, exist_ok=True)
+            self._persist_path.write_text(
+                json.dumps(
+                    {
+                        "input_tokens": self._input_tokens,
+                        "output_tokens": self._output_tokens,
+                        "cost_eur": str(self._cost_eur),
+                    }
+                )
+            )
+        except OSError:
+            pass  # read-only filesystem — degrade gracefully
 
     def record(
         self,
@@ -88,6 +130,7 @@ class BudgetTracker:
             self._input_tokens += input_tokens
             self._output_tokens += output_tokens
             self._cost_eur += cost
+            self._persist()
 
     def snapshot(self) -> BudgetSnapshot:
         """Return the current totals."""
@@ -104,6 +147,7 @@ class BudgetTracker:
             self._input_tokens = 0
             self._output_tokens = 0
             self._cost_eur = Decimal("0")
+            self._persist()
 
 
 @lru_cache(maxsize=1)

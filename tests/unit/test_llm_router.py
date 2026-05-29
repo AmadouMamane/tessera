@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 class TestBudgetTracker:
     def test_records_accumulate(self) -> None:
-        tracker = BudgetTracker()
+        tracker = BudgetTracker(persist_path=None)
         tracker.record(
             backend="vertex-ai",
             model="gemini-2.0-flash-001",
@@ -28,7 +28,7 @@ class TestBudgetTracker:
         assert snapshot.estimated_cost_eur > Decimal("0")
 
     def test_unknown_model_costs_zero(self) -> None:
-        tracker = BudgetTracker()
+        tracker = BudgetTracker(persist_path=None)
         tracker.record(
             backend="unknown",
             model="mystery-model",
@@ -39,7 +39,7 @@ class TestBudgetTracker:
         assert snapshot.estimated_cost_eur == Decimal("0")
 
     def test_reset_zeroes_counters(self) -> None:
-        tracker = BudgetTracker()
+        tracker = BudgetTracker(persist_path=None)
         tracker.record(
             backend="ollama",
             model="llama3.3:70b",
