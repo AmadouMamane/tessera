@@ -115,6 +115,9 @@ export const ScorecardResultSchema = z.object({
   final_response: z.string(),
   needs_escalation: z.boolean(),
   invoked_tools: z.array(z.string()).default([]),
+  category: z.string().default(""),
+  title: z.string().default(""),
+  expected_behavior: z.string().default(""),
 });
 export type ScorecardResult = z.infer<typeof ScorecardResultSchema>;
 
@@ -127,7 +130,17 @@ export const ScorecardSummarySchema = z.object({
 export type ScorecardSummary = z.infer<typeof ScorecardSummarySchema>;
 
 export const ScorecardDocumentSchema = z.object({
+  run_at: z.string().optional(),
+  lang: z.string().nullable().optional(),
   summary: ScorecardSummarySchema,
   results: z.array(ScorecardResultSchema),
 });
 export type ScorecardDocument = z.infer<typeof ScorecardDocumentSchema>;
+
+export const RunMetaSchema = z.object({
+  filename: z.string(),
+  run_at: z.string(),
+  lang: z.string().nullable(),
+  summary: ScorecardSummarySchema,
+});
+export type RunMeta = z.infer<typeof RunMetaSchema>;

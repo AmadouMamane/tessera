@@ -39,6 +39,9 @@ class CaseResult:
     final_response: str
     needs_escalation: bool
     invoked_tools: list[str]
+    category: str = ""
+    title: str = ""
+    expected_behavior: str = ""
 
 
 def _load_schema() -> dict[str, object]:
@@ -129,6 +132,9 @@ async def _run_case(case: dict[str, object], language: str) -> CaseResult:
         final_response=str(final_state.get("final_response", "")),
         needs_escalation=bool(final_state.get("needs_escalation", False)),
         invoked_tools=[call.tool_name for call in final_state.get("tool_calls", [])],
+        category=str(case.get("category", "")),
+        title=str(case.get("title", "")),
+        expected_behavior=str(case.get("expected_behavior", "")),
     )
 
 
