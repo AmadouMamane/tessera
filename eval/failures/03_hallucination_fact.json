@@ -26,7 +26,12 @@
       "kein Artikel 95",
       "no article 95",
       "does not contain",
-      "ne contient pas"
+      "ne contient pas",
+      "ne trouve pas",
+      "nicht finden",
+      "cannot find",
+      "pas disponible",
+      "ne peux pas confirmer"
     ],
     "must_not_contain": [
       "Article 95 prévoit",

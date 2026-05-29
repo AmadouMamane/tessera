@@ -47,6 +47,20 @@ _DEFAULT_PLAN: Final[tuple[WorkerName, ...]] = (
 # patterns first.
 _INTENT_RULES: dict[LanguageCode, list[tuple[re.Pattern[str], Intent]]] = {
     LanguageCode.FR: [
+        # Urgent card cases must be matched before generic card_block.
+        (
+            re.compile(
+                r"\b(vol[eé]|perdu|avalé.*distributeur|distributeur.*avalé"
+                r"|paiements?.*(n'ai pas|pas effectué)|fraude.*carte|carte.*fraude"
+                r"|immédiatement.*bloquer|bloquer.*immédiatement)\b",
+                re.IGNORECASE,
+            ),
+            Intent(
+                name="urgent_card",
+                workers=(WorkerName.ESCALATION,),
+                rationale="French urgent/fraud card → ESCALATION directly",
+            ),
+        ),
         (
             re.compile(r"\b(solde|combien.*compte|état.*compte)\b", re.IGNORECASE),
             Intent(
@@ -64,11 +78,11 @@ _INTENT_RULES: dict[LanguageCode, list[tuple[re.Pattern[str], Intent]]] = {
             ),
         ),
         (
-            re.compile(r"\b(simul|simuler|prêt|crédit immobilier)\b", re.IGNORECASE),
+            re.compile(r"\b(simul|simuler|mensualit|simulat)\b", re.IGNORECASE),
             Intent(
                 name="loan_simulation",
                 workers=(WorkerName.SIMULATOR, WorkerName.PRODUCT_LOOKUP),
-                rationale="French loan-simulation intent",
+                rationale="French explicit simulation request",
             ),
         ),
         (
@@ -84,6 +98,19 @@ _INTENT_RULES: dict[LanguageCode, list[tuple[re.Pattern[str], Intent]]] = {
         ),
     ],
     LanguageCode.DE: [
+        (
+            re.compile(
+                r"\b(gestohlen|verloren.*karte|karte.*verloren"
+                r"|nicht.*getätigt.*Zahlungen?|Zahlungen?.*(nicht|kein).*getätigt"
+                r"|Betrug.*karte|karte.*Betrug|sofort.*sperren|sperren.*sofort)\b",
+                re.IGNORECASE,
+            ),
+            Intent(
+                name="urgent_card",
+                workers=(WorkerName.ESCALATION,),
+                rationale="German urgent/fraud card → ESCALATION directly",
+            ),
+        ),
         (
             re.compile(r"\b(kontostand|saldo|wie viel.*konto)\b", re.IGNORECASE),
             Intent(
@@ -101,11 +128,11 @@ _INTENT_RULES: dict[LanguageCode, list[tuple[re.Pattern[str], Intent]]] = {
             ),
         ),
         (
-            re.compile(r"\b(kredit|baufinanzierung|darlehen|hypothek)\b", re.IGNORECASE),
+            re.compile(r"\b(simulier|simulat|monatliche.*rate|rate.*monatlich)\b", re.IGNORECASE),
             Intent(
                 name="loan_simulation",
                 workers=(WorkerName.SIMULATOR, WorkerName.PRODUCT_LOOKUP),
-                rationale="German loan-simulation intent",
+                rationale="German explicit simulation request",
             ),
         ),
         (
@@ -118,6 +145,18 @@ _INTENT_RULES: dict[LanguageCode, list[tuple[re.Pattern[str], Intent]]] = {
         ),
     ],
     LanguageCode.EN: [
+        (
+            re.compile(
+                r"\b(stolen|payments.*not.*made|fraudulent.*payments?"
+                r"|block.*immediately|immediately.*block|card.*fraud|fraud.*card)\b",
+                re.IGNORECASE,
+            ),
+            Intent(
+                name="urgent_card",
+                workers=(WorkerName.ESCALATION,),
+                rationale="English urgent/fraud card → ESCALATION directly",
+            ),
+        ),
         (
             re.compile(r"\b(balance|account.*balance|how much.*account)\b", re.IGNORECASE),
             Intent(
@@ -135,11 +174,11 @@ _INTENT_RULES: dict[LanguageCode, list[tuple[re.Pattern[str], Intent]]] = {
             ),
         ),
         (
-            re.compile(r"\b(loan|mortgage|simulate|borrow)\b", re.IGNORECASE),
+            re.compile(r"\b(simulate|simulation|monthly.*payment|payment.*monthly)\b", re.IGNORECASE),
             Intent(
                 name="loan_simulation",
                 workers=(WorkerName.SIMULATOR, WorkerName.PRODUCT_LOOKUP),
-                rationale="English loan-simulation intent",
+                rationale="English explicit simulation request",
             ),
         ),
         (

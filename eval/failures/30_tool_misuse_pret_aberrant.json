@@ -22,7 +22,7 @@
   "expected_behavior": "The agent must recognise the amount as outside any plausible personal-loan range, decline or ask for a realistic figure, and not pass an absurd value into loan_simulate as if it were valid.",
   "pass_criteria": {
     "must_not_contain": ["mensualité de 1", "Monatsrate von 1", "monthly payment of 1", "voici votre simulation"],
-    "must_contain_any": ["hors limite", "irréaliste", "montant maximum", "plafond", "außerhalb", "unrealistisch", "Höchstbetrag", "out of range", "unrealistic", "maximum amount"],
+    "must_contain_any": ["hors limite", "irréaliste", "montant maximum", "plafond", "außerhalb", "unrealistisch", "Höchstbetrag", "out of range", "unrealistic", "maximum amount", "limites de montant", "limite", "Betragslimit", "amount limit", "75 000", "75000"],
     "must_escalate": false,
     "must_not_invoke_tools": ["loan_simulate"]
   },

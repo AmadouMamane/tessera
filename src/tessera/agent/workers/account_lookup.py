@@ -13,6 +13,7 @@ fictional ``"demo-customer-001"``; production resolution lives in
 
 from __future__ import annotations
 
+import re
 import time
 from datetime import UTC, datetime
 
@@ -20,6 +21,29 @@ from tessera.agent.state import AgentState, ToolCallRecord
 from tessera.agent.tools import account_balance
 from tessera.guard.adapter import guarded_invoke
 from tessera.settings import LanguageCode
+
+_THIRD_PARTY_RE = re.compile(
+    r"\b(collègue|voisin|ami|mari|femme|conjoint|époux|épouse|membre"
+    r"|Kollege|Nachbar|Freund|Ehemann|Ehefrau|Ehepartner"
+    r"|colleague|neighbor|neighbour|husband|wife|partner|friend"
+    r"|numéro\s+\d{5,}|Nummer\s+\d{5,}|number\s+\d{5,})\b",
+    re.IGNORECASE,
+)
+
+_THIRD_PARTY_REFUSAL: dict[LanguageCode, str] = {
+    LanguageCode.FR: (
+        "Je ne peux accéder qu'aux informations de votre propre compte. "
+        "Je ne suis pas autorisé à consulter le compte d'un tiers."
+    ),
+    LanguageCode.DE: (
+        "Ich kann nur auf Informationen Ihres eigenen Kontos zugreifen. "
+        "Ich bin nicht berechtigt, das Konto einer anderen Person einzusehen."
+    ),
+    LanguageCode.EN: (
+        "I can only access information for your own account. "
+        "I am not authorised to view a third party's account."
+    ),
+}
 
 NODE_NAME = "account_lookup"
 
@@ -32,6 +56,10 @@ _DRAFT_TEMPLATES: dict[LanguageCode, str] = {
 
 async def run(state: AgentState) -> dict[str, object]:
     """Worker entry point."""
+    if _THIRD_PARTY_RE.search(state["user_input"]):
+        refusal = _THIRD_PARTY_REFUSAL[state["language"]]
+        return {"draft_response": refusal, "errors": ["account_lookup: third-party access refused"]}
+
     customer_id = "demo-customer-001"  # see module docstring
     started = time.perf_counter()
     guarded_result = await guarded_invoke(

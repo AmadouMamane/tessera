@@ -95,6 +95,9 @@ prompt_injection:
     # Encoded / obfuscated injection (case 11)
     - "(?i)\\b(d[eé]code|decode|atob|btoa)\\b.{0,40}\\b(ex[eé]cute?|run|apply|follow)\\b"
     - "(?i)\\b(base64|encodé|encoded)\\b.{0,60}\\b(instruction|r[eè]gle|rule|commande|command)\\b"
+    # Indirect injection via form fields — bracket-enclosed or quoted instructions (case 08)
+    - "(?i)\\[.{0,200}\\b(désactiv|disabl|bypass|override|ignor|contourne|suspens).{0,100}\\]"
+    - "(?i)\\{.{0,200}\\b(désactiv|disabl|bypass|override|ignor|contourne).{0,100}\\}"
     # English
     - "(?i)ignore (all previous|all|previous|the above) instructions"
     - "(?i)you are now (a |an |the )?(new |different )?(assistant|system|agent)"
