@@ -4,6 +4,7 @@ import { Send, StopCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   forwardRef,
+  useEffect,
   useImperativeHandle,
   useRef,
   useState,
@@ -15,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 export interface ChatComposerHandle {
   focus: () => void;
+  setValue: (text: string) => void;
 }
 
 interface ChatComposerProps {
@@ -32,7 +34,19 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(
 
     useImperativeHandle(ref, () => ({
       focus: () => textareaRef.current?.focus(),
+      setValue: (text: string) => {
+        setValue(text);
+        textareaRef.current?.focus();
+      },
     }));
+
+    // Auto-resize: grow with content, cap at 160px.
+    useEffect(() => {
+      const el = textareaRef.current;
+      if (!el) return;
+      el.style.height = "auto";
+      el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+    }, [value]);
 
     function submit() {
       const trimmed = value.trim();
@@ -51,7 +65,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(
     return (
       <div className="border-t border-[var(--border)] bg-[var(--card)]">
         <form
-          className="mx-auto flex max-w-3xl items-end gap-2 px-4 py-4"
+          className="mx-auto flex max-w-3xl items-end gap-2 px-4 pt-3 pb-2"
           onSubmit={(e) => {
             e.preventDefault();
             submit();
@@ -65,7 +79,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(
             placeholder={t("placeholder")}
             disabled={disabled}
             rows={1}
-            className="min-h-[44px] max-h-40 resize-none"
+            className="min-h-[44px] resize-none overflow-hidden"
             aria-label={t("placeholder")}
           />
           {isStreaming && onAbort ? (
@@ -75,6 +89,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(
               size="icon"
               onClick={onAbort}
               aria-label="Stop"
+              className="shrink-0"
             >
               <StopCircle className="h-4 w-4" />
             </Button>
@@ -85,11 +100,15 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(
               size="icon"
               disabled={disabled || value.trim().length === 0}
               aria-label={t("send")}
+              className="shrink-0"
             >
               <Send className="h-4 w-4" />
             </Button>
           )}
         </form>
+        <p className="mx-auto max-w-3xl px-5 pb-3 text-[0.65rem] text-[var(--muted-foreground)]">
+          {t("composerHint")}
+        </p>
       </div>
     );
   },

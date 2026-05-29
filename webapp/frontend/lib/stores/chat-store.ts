@@ -97,7 +97,8 @@ export const useChatStore = create<ChatState>()(
           const lastIdx = messages.findLastIndex((m) => m.role === "assistant");
           if (lastIdx !== -1) {
             // Streaming path: replace the in-progress bubble with final metadata.
-            messages[lastIdx] = { ...messages[lastIdx], ...payload, role: "assistant" };
+            const existing = messages[lastIdx]!;
+            messages[lastIdx] = { ...existing, ...payload, role: "assistant" };
           } else {
             // Non-streaming path (injection block, no tokens emitted).
             messages.push({ ...payload, role: "assistant", createdAt: Date.now() });

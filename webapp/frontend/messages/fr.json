@@ -39,7 +39,12 @@
     "sources": "Sources",
     "escalated": "Cette conversation a été transmise à un conseiller.",
     "confidence": "Confiance",
-    "languageHint": "Langue détectée"
+    "languageHint": "Langue détectée",
+    "copy": "Copier",
+    "copied": "Copié !",
+    "scrollToBottom": "Défiler vers le bas",
+    "startWith": "Pour commencer",
+    "composerHint": "Entrée pour envoyer · Maj+Entrée pour aller à la ligne"
   },
   "audit": {
     "title": "Journal d'audit",
