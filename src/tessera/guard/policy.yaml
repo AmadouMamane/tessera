@@ -64,6 +64,14 @@ tools:
     allow: true
     requires_confirmation: false
     max_calls_per_turn: 5
+    arguments:
+      amount:
+        # Max 10M EUR — rejects aberrant values like 1 000 000 000
+        pattern: "^[0-9]{1,7}(\\.[0-9]{1,2})?$"
+        redact_in_audit: false
+      years:
+        pattern: "^([1-9]|[12][0-9]|30)$"
+        redact_in_audit: false
 
   ticket_escalate:
     allow: true
@@ -77,6 +85,9 @@ tools:
 # the turn entirely; ``transform_patterns`` strip the offending substring.
 prompt_injection:
   deny_patterns:
+    # Encoded / obfuscated injection
+    - "(?i)(base64|decode|atob|btoa|eval|exec).*instruction"
+    - "[A-Za-z0-9+/]{30,}={0,2}"   # raw base64 blob ≥ 30 chars
     # English
     - "(?i)ignore (all previous|all|previous|the above) instructions"
     - "(?i)you are now (a |an |the )?(new |different )?(assistant|system|agent)"
