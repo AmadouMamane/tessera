@@ -1,4 +1,5 @@
-import { Check, ChevronDown, ChevronRight, FileSearch, TrendingUp, X } from "lucide-react";
+import { Check, FileSearch, TrendingUp, X } from "lucide-react";
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 import { Badge } from "@/components/ui/badge";
@@ -128,10 +129,15 @@ function EvolutionPanel({ runs, currentFile }: { runs: RunMeta[]; currentFile?: 
                 return (
                   <TableRow
                     key={run.filename}
-                    className={isCurrent ? "bg-[var(--muted)]/30" : ""}
+                    className={isCurrent ? "bg-[var(--muted)]/30" : "hover:bg-[var(--muted)]/10 cursor-pointer"}
                   >
                     <TableCell className="font-mono text-xs">
-                      {formatRunAt(run.run_at)}
+                      <Link
+                        href={`?run=${run.filename}`}
+                        className="hover:underline"
+                      >
+                        {formatRunAt(run.run_at)}
+                      </Link>
                       {isCurrent && (
                         <Badge tone="info" className="ml-2 text-[10px]">current</Badge>
                       )}
