@@ -264,13 +264,13 @@ def run(state: AgentState) -> dict[str, object]:
     returns a confident result, or keeps the existing values if the caller
     already pinned them (useful in tests and replays).
     """
+    # Injection check runs unconditionally — before any language pinning logic.
     input_check = check_user_input(state["user_input"])
     guard_decisions: list[GuardDecisionRecord] = list(
         state.get("guard_decisions") or []
     ) + list(input_check.decisions)
 
     if not input_check.allowed:
-        # Detect language for the blocked response even though the turn is denied.
         lang = state.get("language") or get_settings().default_language
         return {
             "guard_decisions": guard_decisions,
@@ -280,6 +280,7 @@ def run(state: AgentState) -> dict[str, object]:
             "plan_rationale": "input blocked by prompt-injection guard",
         }
 
+    # Language detection is skipped when the caller pinned the language.
     if state.get("language_confidence", 0.0) > _PINNED_CONFIDENCE:
         return {"guard_decisions": guard_decisions}
 
