@@ -29,7 +29,7 @@ import {
 import { fetchAudit } from "@/lib/api/client";
 import type { AuditEntry, AuditOutcome } from "@/lib/api/schemas";
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 20;
 const OUTCOMES: ReadonlyArray<AuditOutcome> = ["allowed", "denied", "error"];
 
 export function AuditTable() {
