@@ -37,9 +37,17 @@ def _iter_data_files(corpus_filter: str | None) -> Iterable[tuple[Path, str, Lan
             continue
         if name.startswith("regulations_"):
             corpus = "regulations"
-            # naming convention: regulations_<jurisdiction>.json — language is FR/DE/EN
-            # for the demo we assume EN texts unless the file declares otherwise.
-            language = LanguageCode.EN
+            # Authoritative language per issuing body:
+            # DORA / GDPR → EN (EU Official Journal primary text)
+            # BaFin        → DE (German national authority)
+            # CNIL         → FR (French national authority)
+            _REGULATION_LANGUAGES: dict[str, LanguageCode] = {
+                "regulations_dora.json": LanguageCode.EN,
+                "regulations_gdpr.json": LanguageCode.EN,
+                "regulations_bafin.json": LanguageCode.DE,
+                "regulations_cnil.json": LanguageCode.FR,
+            }
+            language = _REGULATION_LANGUAGES.get(name, LanguageCode.EN)
         else:
             base = name.removesuffix(".json")
             *_, lang_code = base.rsplit("_", 1)

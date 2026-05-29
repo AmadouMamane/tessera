@@ -6,7 +6,8 @@
       "category": "dora",
       "language": "en",
       "locator": "DORA Article 5 - Governance and organisation"
-    }
+    },
+    "language": "en"
   },
   {
     "source": "DORA/art-6",
@@ -15,7 +16,8 @@
       "category": "dora",
       "language": "en",
       "locator": "DORA Article 6 - ICT risk management framework"
-    }
+    },
+    "language": "en"
   },
   {
     "source": "DORA/art-10",
@@ -24,7 +26,8 @@
       "category": "dora",
       "language": "en",
       "locator": "DORA Article 10 - Detection of anomalous activities"
-    }
+    },
+    "language": "en"
   },
   {
     "source": "DORA/art-17",
@@ -33,7 +36,8 @@
       "category": "dora",
       "language": "en",
       "locator": "DORA Article 17 - ICT-related incident management process"
-    }
+    },
+    "language": "en"
   },
   {
     "source": "DORA/art-19",
@@ -42,7 +46,8 @@
       "category": "dora",
       "language": "en",
       "locator": "DORA Article 19 - Reporting of major ICT-related incidents"
-    }
+    },
+    "language": "en"
   },
   {
     "source": "DORA/art-26",
@@ -51,7 +56,8 @@
       "category": "dora",
       "language": "en",
       "locator": "DORA Article 26 - Threat-led penetration testing (TLPT)"
-    }
+    },
+    "language": "en"
   },
   {
     "source": "DORA/art-28",
@@ -60,7 +66,8 @@
       "category": "dora",
       "language": "en",
       "locator": "DORA Article 28 - Management of ICT third-party risk"
-    }
+    },
+    "language": "en"
   },
   {
     "source": "DORA/art-30",
@@ -69,7 +76,8 @@
       "category": "dora",
       "language": "en",
       "locator": "DORA Article 30 - Key contractual provisions"
-    }
+    },
+    "language": "en"
   },
   {
     "source": "DORA/art-45",
@@ -78,7 +86,8 @@
       "category": "dora",
       "language": "en",
       "locator": "DORA Article 45 - Information-sharing arrangements on cyber threats"
-    }
+    },
+    "language": "en"
   },
   {
     "source": "DORA/recital-3",
@@ -87,7 +96,8 @@
       "category": "dora",
       "language": "en",
       "locator": "DORA Recital 3 - Context and objectives"
-    }
+    },
+    "language": "en"
   },
   {
     "source": "EBA/rts-its-incident-classification",
@@ -96,7 +106,8 @@
       "category": "dora",
       "language": "en",
       "locator": "EBA RTS/ITS - Classification and reporting of ICT incidents"
-    }
+    },
+    "language": "en"
   },
   {
     "source": "DORA/timeline-application",
@@ -105,6 +116,7 @@
       "category": "dora",
       "language": "en",
       "locator": "DORA - Timeline and application date (17 January 2025)"
-    }
+    },
+    "language": "en"
   }
 ]

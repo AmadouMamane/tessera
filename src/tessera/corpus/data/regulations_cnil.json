@@ -6,7 +6,8 @@
       "category": "cnil",
       "language": "fr",
       "locator": "CNIL - Délibération sur le scoring bancaire"
-    }
+    },
+    "language": "fr"
   },
   {
     "source": "CNIL/recommandation-conservation-donnees",
@@ -15,7 +16,8 @@
       "category": "cnil",
       "language": "fr",
       "locator": "CNIL - Recommandations sur la conservation des données clients"
-    }
+    },
+    "language": "fr"
   },
   {
     "source": "CNIL/fiche-droit-acces-banque",
@@ -24,7 +26,8 @@
       "category": "cnil",
       "language": "fr",
       "locator": "CNIL - Fiche pratique sur le droit d'accès en banque"
-    }
+    },
+    "language": "fr"
   },
   {
     "source": "CNIL/sanctions-secteur-bancaire",
@@ -33,7 +36,8 @@
       "category": "cnil",
       "language": "fr",
       "locator": "CNIL - Sanctions prononcées dans le secteur bancaire"
-    }
+    },
+    "language": "fr"
   },
   {
     "source": "CNIL/guide-cookies-bancaires",
@@ -42,7 +46,8 @@
       "category": "cnil",
       "language": "fr",
       "locator": "CNIL - Lignes directrices sur les cookies et traceurs"
-    }
+    },
+    "language": "fr"
   },
   {
     "source": "CNIL/recommandation-authentification-forte-dsp2",
@@ -51,7 +56,8 @@
       "category": "cnil",
       "language": "fr",
       "locator": "CNIL - Recommandations sur l'authentification forte (DSP2)"
-    }
+    },
+    "language": "fr"
   },
   {
     "source": "CNIL/deliberation-donnees-biometriques",
@@ -60,7 +66,8 @@
       "category": "cnil",
       "language": "fr",
       "locator": "CNIL - Délibération sur les données biométriques"
-    }
+    },
+    "language": "fr"
   },
   {
     "source": "CNIL/referentiel-organismes-credit",
@@ -69,6 +76,7 @@
       "category": "cnil",
       "language": "fr",
       "locator": "CNIL - Référentiel pour les organismes de crédit"
-    }
+    },
+    "language": "fr"
   }
 ]
