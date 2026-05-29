@@ -85,8 +85,6 @@ async def audit_list(
         entries = [e for e in entries if e.target == target]
     if outcome:
         entries = [e for e in entries if e.outcome == outcome]
-    if cursor >= len(entries) and entries:
-        raise HTTPException(status_code=416, detail="cursor beyond end of log")
     slice_ = entries[cursor : cursor + limit]
     return AuditPage(
         entries=slice_,
