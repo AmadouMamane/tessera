@@ -9,9 +9,11 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import sys
 import uuid
 from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 
 import jsonschema
@@ -163,14 +165,37 @@ async def _run_all(args: argparse.Namespace) -> int:
 
     args.report.parent.mkdir(parents=True, exist_ok=True)
     scorecard = build_scorecard(results)
-    args.report.write_text(
-        json.dumps(
-            {"summary": asdict(scorecard.summary), "results": [asdict(r) for r in results]},
-            indent=2,
-            ensure_ascii=False,
-        ),
-        encoding="utf-8",
+    run_ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    lang_suffix = f"_{args.lang}" if args.lang else ""
+    payload = json.dumps(
+        {
+            "run_at": run_ts,
+            "lang": args.lang,
+            "summary": asdict(scorecard.summary),
+            "results": [asdict(r) for r in results],
+        },
+        indent=2,
+        ensure_ascii=False,
     )
+
+    # Always write the timestamped archive copy.
+    archive = args.report.parent / f"{run_ts}{lang_suffix}.json"
+    archive.write_text(payload, encoding="utf-8")
+
+    # Update latest.json (or the explicit --report path).
+    args.report.write_text(payload, encoding="utf-8")
+
+    # Symlink latest → most-recent archive (best-effort, skip on Windows).
+    latest_link = args.report.parent / "latest.json"
+    if latest_link != args.report:
+        try:
+            if latest_link.exists() or latest_link.is_symlink():
+                latest_link.unlink()
+            latest_link.symlink_to(archive.name)
+        except OSError:
+            pass  # FAT32 / Windows — plain file copy is fine
+
+    sys.stdout.write(f"Report saved → {archive.name}\n")
     sys.stdout.write(scorecard.render_markdown() + "\n")
     return 0 if scorecard.summary.failed == 0 else 1
 
