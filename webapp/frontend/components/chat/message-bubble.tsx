@@ -80,22 +80,15 @@ export function MessageBubble({ message, isGrouped = false, isFirst = false }: M
           </div>
         )}
 
-        {/* Bubble — w-full fills the column so width is stable during streaming */}
+        {/* Bubble — w-full keeps width stable during streaming */}
         <div
           className={cn(
-            "relative w-full px-4 py-2.5 shadow-[var(--shadow-card)]",
+            "relative w-full px-4 py-2.5",
             isUser
-              ? "rounded-2xl rounded-br-sm bg-gradient-to-br from-navy-800 to-navy-950 text-navy-50 dark:from-gold-400 dark:to-gold-500 dark:text-navy-950 text-sm leading-relaxed"
-              : "rounded-2xl rounded-bl-sm border border-[var(--border)] bg-[var(--card)] text-[var(--card-foreground)]",
+              ? "rounded-2xl rounded-br-sm bg-gradient-to-br from-navy-800 to-navy-950 text-navy-50 dark:from-gold-400 dark:to-gold-500 dark:text-navy-950 text-sm leading-relaxed shadow-[var(--shadow-card)]"
+              : "text-[var(--foreground)]",
           )}
         >
-          {/* Gold gradient left accent on assistant bubbles */}
-          {!isUser && (
-            <span
-              aria-hidden
-              className="absolute left-0 top-0 h-full w-0.5 rounded-tl-2xl bg-gradient-to-b from-gold-500/50 via-gold-500/20 to-transparent"
-            />
-          )}
 
           {isUser ? (
             <p className="whitespace-pre-wrap text-sm leading-relaxed text-justify hyphens-auto">
