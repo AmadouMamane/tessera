@@ -95,7 +95,7 @@ synthesis_context: |
   Documents disponibles :
   {context}
 
-  Réponds de façon concise et précise en adressant tous les aspects de la question, en te basant sur les documents et les données disponibles.
+  Réponds de façon concise et précise en adressant tous les aspects de la question, en t'appuyant sur les documents et données ci-dessus ET sur les informations que le client a fournies plus tôt dans la conversation (par ex. son prénom, un montant ou une situation qu'il a lui-même indiqués). N'invente jamais un fait bancaire (taux, délai, référence réglementaire) absent des documents ; mais tu peux reprendre ce que le client t'a dit dans l'échange.
 
 synthesis_tool_context: "Information récupérée en base : {draft}"
 

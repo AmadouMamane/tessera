@@ -84,7 +84,7 @@ synthesis_context: |
   Available documents:
   {context}
 
-  Answer concisely and precisely, addressing all aspects of the question based on the available documents and data.
+  Answer concisely and precisely, addressing all aspects of the question, drawing on the documents and data above AND on information the customer provided earlier in the conversation (e.g. their name, an amount or a situation they stated themselves). Never invent a banking fact (rate, delay, regulatory reference) that is absent from the documents; but you may use what the customer told you in the conversation.
 
 synthesis_tool_context: "Information retrieved from database: {draft}"
 
