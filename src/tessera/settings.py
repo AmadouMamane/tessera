@@ -32,6 +32,7 @@ __all__ = [
     "Environment",
     "LanguageCode",
     "LLMProfile",
+    "MemorySettings",
     "Settings",
     "get_settings",
 ]
@@ -166,6 +167,44 @@ class APISettings(BaseSettings):
     bearer_token: SecretStr | None = None
 
 
+class MemorySettings(BaseSettings):
+    """Agent memory configuration — see ADR 0007.
+
+    ``backend`` selects the :class:`~tessera.memory.protocol.MemoryBackend`
+    implementation; everything else is shared knob territory the active backend
+    is free to read or ignore. The default (``window``) is lossless and free,
+    matching the short-conversation common case of retail banking support.
+    """
+
+    model_config = SettingsConfigDict(env_prefix="TESSERA_MEMORY_", extra="ignore")
+
+    backend: Literal[
+        "window",  # Tier 0 — sliding window (default)
+        "summary",  # Tier 1 — summary buffer + entity ledger
+        "persistent",  # Tier 2 — cross-session, pgvector Store
+        "langmem",  # external adapter (extra: memory-langmem)
+        "mem0",  # external adapter (extra: memory-mem0)
+        "zep",  # external adapter (extra: memory-zep)
+    ] = "window"
+
+    # Recency window: number of prior (user/assistant) messages kept verbatim.
+    history_window: int = 6
+    # Token budget above which Tier 1 compacts older turns into a summary.
+    token_budget: int = 2_000
+    # Whether long-term (Tier 2) writes are allowed absent an explicit consent
+    # flag. Conservative default: no long-term retention without consent.
+    consent_default: bool = False
+    # Number of long-term items retrieved and injected per turn (Tier 2).
+    long_term_top_k: int = 5
+
+    @field_validator("history_window", "long_term_top_k", "token_budget")
+    @classmethod
+    def _non_negative(cls, value: int) -> int:
+        if value < 0:
+            raise ValueError(f"memory size knobs must be >= 0; got {value!r}")
+        return value
+
+
 # ---------------------------------------------------------------------------
 # Root settings
 # ---------------------------------------------------------------------------
@@ -189,6 +228,7 @@ class Settings(BaseSettings):
         guard: Runtime guardrail settings.
         observability: Logging, tracing, and metrics settings.
         api: HTTP layer settings.
+        memory: Agent memory settings (ADR 0007).
     """
 
     model_config = SettingsConfigDict(
@@ -211,6 +251,7 @@ class Settings(BaseSettings):
     guard: GuardSettings = Field(default_factory=GuardSettings)
     observability: ObservabilitySettings = Field(default_factory=ObservabilitySettings)
     api: APISettings = Field(default_factory=APISettings)
+    memory: MemorySettings = Field(default_factory=MemorySettings)
 
     def resolved_llm_profile(self) -> LLMProfile:
         """Materialise ``LLMProfile.AUTO`` into a concrete profile.

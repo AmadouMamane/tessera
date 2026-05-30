@@ -22,6 +22,7 @@ __all__ = [
     "ChatMessage",
     "ChatResponse",
     "get_chat_backend",
+    "get_summary_backend",
 ]
 
 
@@ -88,3 +89,14 @@ def get_chat_backend() -> ChatBackend:
     from tessera.llm.local import OllamaBackend
 
     return OllamaBackend()
+
+
+def get_summary_backend() -> ChatBackend:
+    """Return the backend used for cheap, background summarisation (ADR 0007).
+
+    Summarisation runs off the hot path and does not need the frontier-grade
+    model. This is the single seam where a smaller, cheaper model (e.g. a local
+    Llama 3.2 3B, or Gemini Flash) is wired in; until that is configured it
+    reuses the primary chat backend so the feature is fully functional.
+    """
+    return get_chat_backend()

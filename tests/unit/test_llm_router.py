@@ -60,7 +60,7 @@ class TestProfileResolution:
 
     def test_get_chat_backend_returns_ollama_by_default(
         self,
-        monkeypatch: pytest.MonkeyPatch,  # noqa: ARG002
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         get_chat_backend.cache_clear()
         backend = get_chat_backend()

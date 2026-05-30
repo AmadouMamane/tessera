@@ -7,7 +7,9 @@ to minimise dependencies and to keep the wire format trivially auditable.
 
 from __future__ import annotations
 
+import asyncio
 import json
+import sys
 import time
 import uuid
 from typing import TYPE_CHECKING, Annotated, Literal
@@ -19,16 +21,57 @@ from starlette.responses import StreamingResponse
 
 from tessera.agent import build_graph, reporter as reporter_module
 from tessera.agent.state import ConversationMessage, NodeName, new_state
+from tessera.memory import get_memory_backend, scope_for
+from tessera.memory.protocol import TurnRecord
+from tessera.memory.transcript import append_messages, load_transcript
 from tessera.observability.metrics import AGENT_TURN_DURATION, AGENT_TURNS_TOTAL
 from tessera.settings import LanguageCode, get_settings
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncIterator
+    from collections.abc import AsyncIterator, Coroutine
 
 router = APIRouter(tags=["chat"])
 
-# One MemorySaver per process; thread_id = turn_id so turns never collide.
+# Strong references to in-flight background memory-formation tasks, so the event
+# loop does not garbage-collect them before they finish (ADR 0007, Mechanism B).
+_BACKGROUND_TASKS: set[asyncio.Task[None]] = set()
+
+
+def _spawn_background(coro: Coroutine[object, object, None]) -> None:
+    """Run a fire-and-forget coroutine, keeping a reference until it completes."""
+    task = asyncio.create_task(coro)
+    _BACKGROUND_TASKS.add(task)
+    task.add_done_callback(_BACKGROUND_TASKS.discard)
+
+# The checkpointer is keyed per turn (thread_id = turn_id) on purpose: it only
+# powers the intra-turn streaming pause (interrupt before the reporter). Keying
+# it by conversation would bleed one turn's per-turn accumulator channels
+# (retrieved_documents, citations, tool_calls…) into the next, since their
+# reducers concatenate. Cross-turn continuity is the transcript's job instead —
+# see tessera.memory.transcript and ADR 0007, Mechanism A.
 _checkpointer = MemorySaver()
+
+
+async def _prior_messages(
+    conversation_id: uuid.UUID, request: ChatRequest
+) -> list[ConversationMessage] | None:
+    """Resolve prior-turn context, preferring the durable server-side transcript.
+
+    The client-supplied ``history`` is only a cold-start hint: it is used when
+    the server has no transcript for this conversation (e.g. a transcript
+    imported from elsewhere). If the transcript store is unreachable we degrade
+    to the hint rather than failing the turn.
+    """
+    try:
+        stored = await load_transcript(conversation_id)
+    except Exception as exc:  # degrade gracefully, never block a turn
+        sys.stderr.write(f"tessera.memory.transcript: load failed: {exc}\n")
+        stored = []
+    if stored:
+        return stored
+    if request.history:
+        return [ConversationMessage(role=h.role, content=h.content) for h in request.history]
+    return None
 
 
 def _streaming_graph() -> object:
@@ -92,16 +135,14 @@ async def _stream_turn(request: ChatRequest) -> AsyncIterator[bytes]:
     language = request.language or get_settings().default_language
     pinned_confidence = 1.0 if request.language is not None else 0.0
 
-    prior_messages = [
-        ConversationMessage(role=h.role, content=h.content) for h in (request.history or [])
-    ]
+    prior_messages = await _prior_messages(conversation_id, request)
     initial = new_state(
         conversation_id=conversation_id,
         turn_id=turn_id,
         user_input=request.message,
         language=language,
         language_confidence=pinned_confidence,
-        prior_messages=prior_messages or None,
+        prior_messages=prior_messages,
     )
 
     graph = _streaming_graph()
@@ -112,13 +153,13 @@ async def _stream_turn(request: ChatRequest) -> AsyncIterator[bytes]:
     # Phase 1: run graph up to (but not including) the reporter node.
     # Escalation and injection-block paths complete fully here.
     try:
-        await graph.ainvoke(initial, config=config)  # type: ignore[union-attr]
+        await graph.ainvoke(initial, config=config)  # type: ignore[attr-defined]
     except Exception as exc:
         AGENT_TURNS_TOTAL.labels(language=language.value, outcome="error").inc()
         yield _sse("turn.error", {"error": str(exc)})
         return
 
-    snapshot = graph.get_state(config)  # type: ignore[union-attr]
+    snapshot = graph.get_state(config)  # type: ignore[attr-defined]
     state = snapshot.values
 
     # Phase 2: stream reporter when the graph is paused before it.
@@ -151,6 +192,30 @@ async def _stream_turn(request: ChatRequest) -> AsyncIterator[bytes]:
     needs_escalation = bool(state.get("needs_escalation", False))
     outcome: Literal["complete", "escalated"] = "escalated" if needs_escalation else "complete"
     AGENT_TURNS_TOTAL.labels(language=resolved_language.value, outcome=outcome).inc()
+
+    # Persist this turn to the durable transcript (ADR 0007, Mechanism A). A
+    # transcript failure must never break the user's response, so it degrades
+    # to a logged warning.
+    user_msg = ConversationMessage(role="user", content=request.message)
+    assistant_msg = ConversationMessage(role="assistant", content=final_response)
+    try:
+        await append_messages(conversation_id, turn_id, [user_msg, assistant_msg])
+    except Exception as exc:  # audit/persistence must not block a turn
+        sys.stderr.write(f"tessera.memory.transcript: append failed: {exc}\n")
+
+    # Mechanism B (ADR 0007): form summary/long-term memory off the hot path.
+    # No-op for the window backend; real work for summary/persistent backends.
+    _spawn_background(
+        get_memory_backend().record(
+            scope=scope_for(conversation_id, resolved_language),
+            turn=TurnRecord(
+                user_input=request.message,
+                final_response=final_response,
+                messages=[*(prior_messages or []), user_msg, assistant_msg],
+                language=resolved_language,
+            ),
+        )
+    )
 
     envelope = ChatEnvelope(
         conversation_id=conversation_id,

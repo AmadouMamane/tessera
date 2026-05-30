@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from tessera.agent.state import AgentState, new_state
+from tessera.memory import get_memory_backend
 from tessera.settings import LanguageCode, get_settings
 
 if TYPE_CHECKING:
@@ -35,8 +36,10 @@ def _isolated_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[N
     # Audit reads via API need a file path:
     monkeypatch.setenv("TESSERA_AUDIT_FILE", str(tmp_path / "audit.log"))
     get_settings.cache_clear()
+    get_memory_backend.cache_clear()
     yield
     get_settings.cache_clear()
+    get_memory_backend.cache_clear()
 
 
 @pytest.fixture

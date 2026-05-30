@@ -1,0 +1,311 @@
+"""Tier 2 — cross-session long-term memory over pgvector (ADR 0007).
+
+Durable memory keyed by *subject* (the customer proxy), holding semantic facts
+and episodic incident summaries that survive across conversations. It reuses
+Tessera's own embedding + pgvector layer (the same one behind document
+retrieval) rather than LangGraph's ``BaseStore`` vector index: that keeps the
+whole embedding path under one roof, avoids version-specific index wiring, and
+lets us own the governance columns (TTL, importance) directly. This is a
+deliberate refinement of the ADR's "BaseStore" wording, recorded in the ADR's
+Tier 2 note.
+
+Writes are de-duplicated by cosine similarity (an upsert, not an append) so the
+store does not accumulate near-identical rows — the classic failure mode of
+naive memory layers. Every row carries an ``expires_at`` so retention is
+enforced by construction, and reads go through :mod:`tessera.memory.governance`
+so a poisoned or PII-laden memory is screened before it reaches the prompt.
+"""
+
+from __future__ import annotations
+
+import sys
+from dataclasses import replace
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Final
+
+from psycopg import sql
+from psycopg.rows import dict_row
+
+from tessera.memory import governance
+from tessera.memory.entities import ledger_from_json, ledger_to_json
+from tessera.memory.protocol import EntityLedger, MemoryContext, MemoryItem
+from tessera.memory.summary import SummaryBackend
+from tessera.retrieval import embeddings
+from tessera.retrieval.store import get_pool
+from tessera.settings import get_settings
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from tessera.agent.state import ConversationMessage
+    from tessera.memory.protocol import MemoryScope, TurnRecord
+
+__all__ = [
+    "PersistentBackend",
+    "delete_subject",
+    "ensure_longterm_schema",
+    "purge_expired",
+    "rank_memories",
+    "search_memory",
+    "upsert_memory",
+]
+
+_TABLE: Final[sql.Identifier] = sql.Identifier("long_term_memory")
+# Above this cosine similarity, a new candidate is treated as the same memory
+# and updated in place rather than inserted as a duplicate.
+_DEDUP_THRESHOLD: Final[float] = 0.95
+# Recency half-life (days) used when blending relevance, recency, and importance.
+_RECALL_HALF_LIFE_DAYS: Final[float] = 30.0
+# How many cosine candidates to fetch per requested item before re-ranking.
+_CANDIDATE_MULTIPLIER: Final[int] = 4
+
+
+async def ensure_longterm_schema() -> None:
+    """Create the long-term memory table and its indexes idempotently."""
+    dim = embeddings.embedding_dimension()
+    pool = get_pool()
+    if pool.closed:
+        await pool.open()
+    create = sql.SQL(
+        """
+        CREATE TABLE IF NOT EXISTS {table} (
+            id          bigserial   PRIMARY KEY,
+            subject_id  text        NOT NULL,
+            kind        text        NOT NULL,
+            text        text        NOT NULL,
+            entities    jsonb       NOT NULL DEFAULT '{{}}'::jsonb,
+            embedding   vector({dim}) NOT NULL,
+            importance  real        NOT NULL DEFAULT 0.5,
+            created_at  timestamptz NOT NULL DEFAULT now(),
+            expires_at  timestamptz NOT NULL,
+            metadata    jsonb       NOT NULL DEFAULT '{{}}'::jsonb
+        );
+        """
+    ).format(table=_TABLE, dim=sql.Literal(dim))
+    index = sql.SQL(
+        "CREATE INDEX IF NOT EXISTS {idx} ON {table} USING hnsw (embedding vector_cosine_ops);"
+    ).format(idx=sql.Identifier("long_term_memory_embedding_hnsw"), table=_TABLE)
+    subject_index = sql.SQL(
+        "CREATE INDEX IF NOT EXISTS {idx} ON {table} (subject_id, kind);"
+    ).format(idx=sql.Identifier("long_term_memory_subject"), table=_TABLE)
+    async with pool.connection() as conn, conn.cursor() as cur:
+        await cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+        await cur.execute(create)
+        await cur.execute(index)
+        await cur.execute(subject_index)
+        await conn.commit()
+
+
+async def upsert_memory(
+    *,
+    subject_id: str,
+    kind: str,
+    text: str,
+    entities: EntityLedger,
+    importance: float = 0.5,
+) -> None:
+    """Insert a memory, or update the nearest existing one if highly similar.
+
+    De-duplication keeps the store from filling with paraphrases of the same
+    fact: if the most similar existing memory of the same kind is within
+    :data:`_DEDUP_THRESHOLD`, that row is refreshed instead of a new one added.
+    """
+    embedding = (await embeddings.embed([text]))[0]
+    expires_at = datetime.now(UTC) + governance.ttl_for(kind)
+    nearest = sql.SQL(
+        """
+        SELECT id, 1 - (embedding <=> %s::vector) AS sim
+        FROM {table}
+        WHERE subject_id = %s AND kind = %s
+        ORDER BY embedding <=> %s::vector
+        LIMIT 1;
+        """
+    ).format(table=_TABLE)
+    insert = sql.SQL(
+        """
+        INSERT INTO {table} (subject_id, kind, text, entities, embedding, importance, expires_at)
+        VALUES (%s, %s, %s, %s::jsonb, %s::vector, %s, %s);
+        """
+    ).format(table=_TABLE)
+    update = sql.SQL(
+        """
+        UPDATE {table}
+        SET text = %s, entities = %s::jsonb, embedding = %s::vector,
+            importance = %s, created_at = now(), expires_at = %s
+        WHERE id = %s;
+        """
+    ).format(table=_TABLE)
+
+    pool = get_pool()
+    if pool.closed:
+        await pool.open()
+    entities_json = ledger_to_json(entities)
+    async with pool.connection() as conn, conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute(nearest, (embedding, subject_id, kind, embedding))
+        row = await cur.fetchone()
+        if row is not None and float(row["sim"]) >= _DEDUP_THRESHOLD:
+            await cur.execute(
+                update, (text, entities_json, embedding, importance, expires_at, row["id"])
+            )
+        else:
+            await cur.execute(
+                insert,
+                (subject_id, kind, text, entities_json, embedding, importance, expires_at),
+            )
+        await conn.commit()
+
+
+def rank_memories(
+    items: list[MemoryItem],
+    *,
+    top_k: int,
+    now: datetime | None = None,
+) -> list[MemoryItem]:
+    """Re-rank candidates by relevance, recency, and importance (ADR 0007).
+
+    This is the Generative-Agents memory-stream idea: vector similarity alone
+    over-weights stale-but-similar memories. We blend the retrieval relevance
+    with an exponential recency decay (half-life :data:`_RECALL_HALF_LIFE_DAYS`)
+    and the memory's stored importance, then keep the best ``top_k``.
+    """
+    reference = now or datetime.now(UTC)
+
+    def _combined(item: MemoryItem) -> float:
+        age_days = max((reference - item.created_at).total_seconds() / 86_400.0, 0.0)
+        recency: float = 0.5 ** (age_days / _RECALL_HALF_LIFE_DAYS)
+        return item.score * recency * (0.5 + item.importance)
+
+    return sorted(items, key=_combined, reverse=True)[:top_k]
+
+
+async def search_memory(*, subject_id: str, query: str, top_k: int) -> list[MemoryItem]:
+    """Return the best ``top_k`` non-expired memories for a subject.
+
+    Over-fetches by cosine similarity, then re-ranks the candidate pool with
+    :func:`rank_memories` so recency and importance shape the final selection.
+    """
+    if top_k <= 0:
+        return []
+    query_embedding = (await embeddings.embed([query]))[0]
+    candidate_pool = top_k * _CANDIDATE_MULTIPLIER
+    search = sql.SQL(
+        """
+        SELECT kind, text, entities, importance, created_at,
+               1 - (embedding <=> %s::vector) AS score
+        FROM {table}
+        WHERE subject_id = %s AND expires_at > now()
+        ORDER BY embedding <=> %s::vector
+        LIMIT %s;
+        """
+    ).format(table=_TABLE)
+    pool = get_pool()
+    if pool.closed:
+        await pool.open()
+    async with pool.connection() as conn, conn.cursor(row_factory=dict_row) as cur:
+        await cur.execute(search, (query_embedding, subject_id, query_embedding, candidate_pool))
+        rows = await cur.fetchall()
+    candidates = [
+        MemoryItem(
+            kind="semantic" if row["kind"] == "semantic" else "episodic",
+            text=str(row["text"]),
+            entities=ledger_from_json(row["entities"]),
+            score=float(row["score"]),
+            created_at=row["created_at"],
+            importance=float(row["importance"]),
+        )
+        for row in rows
+    ]
+    return rank_memories(candidates, top_k=top_k)
+
+
+async def delete_subject(subject_id: str) -> int:
+    """Delete every long-term memory for ``subject_id``; return the row count."""
+    query = sql.SQL("DELETE FROM {table} WHERE subject_id = %s;").format(table=_TABLE)
+    pool = get_pool()
+    if pool.closed:
+        await pool.open()
+    async with pool.connection() as conn, conn.cursor() as cur:
+        await cur.execute(query, (subject_id,))
+        deleted = cur.rowcount or 0
+        await conn.commit()
+    return deleted
+
+
+async def purge_expired() -> int:
+    """Delete all memories past their retention window; return the row count."""
+    query = sql.SQL("DELETE FROM {table} WHERE expires_at <= now();").format(table=_TABLE)
+    pool = get_pool()
+    if pool.closed:
+        await pool.open()
+    async with pool.connection() as conn, conn.cursor() as cur:
+        await cur.execute(query)
+        deleted = cur.rowcount or 0
+        await conn.commit()
+    return deleted
+
+
+class PersistentBackend(SummaryBackend):
+    """Tier 2 backend — window + summary + entity ledger + long-term recall."""
+
+    def __init__(self, *, history_window: int | None = None, top_k: int | None = None) -> None:
+        """Initialise the persistent backend.
+
+        Args:
+            history_window: Forwarded to the window/summary layers.
+            top_k: Number of long-term items to recall per turn; defaults to
+                ``settings.memory.long_term_top_k``.
+        """
+        super().__init__(history_window=history_window)
+        self._top_k = top_k if top_k is not None else get_settings().memory.long_term_top_k
+
+    async def load(
+        self,
+        *,
+        scope: MemoryScope,
+        messages: Sequence[ConversationMessage],
+        query: str,
+    ) -> MemoryContext:
+        """Return the summary context plus screened long-term recall."""
+        base = await super().load(scope=scope, messages=messages, query=query)
+        long_term = await self._recall(scope, query)
+        return MemoryContext(
+            recent_verbatim=base.recent_verbatim,
+            summary=base.summary,
+            entities=base.entities,
+            long_term=long_term,
+        )
+
+    async def _recall(self, scope: MemoryScope, query: str) -> list[MemoryItem]:
+        try:
+            items = await search_memory(subject_id=scope.subject_id, query=query, top_k=self._top_k)
+        except Exception as exc:  # recall must never break a turn (e.g. embed offline)
+            sys.stderr.write(f"tessera.memory.persistent: recall failed: {exc}\n")
+            return []
+        # Memory is untrusted data: screen on read too, dropping poisoned items
+        # and masking residual PII (ADR 0007, anti-poisoning).
+        screened: list[MemoryItem] = []
+        for item in items:
+            result = governance.screen_memory(item.text)
+            if result.allowed:
+                screened.append(replace(item, text=result.text))
+        governance.audit_memory(
+            action="memory.read",
+            subject_id=scope.subject_id,
+            decision="allow",
+            rationale=f"recalled {len(screened)}/{len(items)} item(s) after screening",
+        )
+        return screened
+
+    async def record(self, *, scope: MemoryScope, turn: TurnRecord) -> None:
+        """Update the summary, then form long-term memories (both cold-path)."""
+        await super().record(scope=scope, turn=turn)
+        try:
+            from tessera.memory.reflector import form_memories
+
+            await form_memories(scope, turn)
+        except Exception as exc:
+            sys.stderr.write(f"tessera.memory.persistent: reflection failed: {exc}\n")
+
+    async def forget(self, *, scope: MemoryScope) -> None:
+        """Erase every trace of the subject (GDPR Art. 17)."""
+        await governance.erase_subject(scope.conversation_id)

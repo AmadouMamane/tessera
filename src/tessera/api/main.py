@@ -23,7 +23,11 @@ from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 from tessera import __version__
 from tessera.api.middleware import AuthMiddleware, RequestIdMiddleware
-from tessera.api.routes import audit, chat, health
+from tessera.api.routes import audit, chat, health, memory
+from tessera.memory.governance import ensure_consent_schema
+from tessera.memory.persistent import ensure_longterm_schema
+from tessera.memory.summary import ensure_summary_schema
+from tessera.memory.transcript import ensure_transcript_schema
 from tessera.observability import logging as obs_logging, metrics, traces
 from tessera.retrieval.store import get_pool
 from tessera.settings import get_settings
@@ -43,6 +47,10 @@ async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     pool = get_pool()
     try:
         await pool.open()
+        await ensure_transcript_schema()  # ADR 0007, Mechanism A
+        await ensure_summary_schema()  # ADR 0007, Tier 1
+        await ensure_longterm_schema()  # ADR 0007, Tier 2
+        await ensure_consent_schema()  # ADR 0007, governance
         yield
     finally:
         await pool.close()
@@ -79,6 +87,7 @@ def build_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(chat.router)
     app.include_router(audit.router)
+    app.include_router(memory.router)
 
     FastAPIInstrumentor.instrument_app(app)
     return app

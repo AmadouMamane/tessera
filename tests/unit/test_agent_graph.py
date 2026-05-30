@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from tessera.agent import build_graph
-from tessera.agent.planner import classify_all_intents, classify_intent, plan_for
+from tessera.agent.planner import classify_intent, plan_for
 from tessera.agent.reporter import render
 from tessera.agent.reviewer import review
 from tessera.agent.router import detect_language
@@ -172,10 +172,10 @@ class TestReporter:
 
 class TestInjectionGuard:
     def test_french_injection_blocked_at_router(self) -> None:
+        import uuid
+
         from tessera.agent.router import run as router_run
         from tessera.agent.state import new_state
-
-        import uuid
 
         state = new_state(
             conversation_id=uuid.uuid4(),
@@ -195,10 +195,10 @@ class TestInjectionGuard:
                "ne peux pas" in str(result["final_response"]).lower()
 
     def test_german_injection_blocked_at_router(self) -> None:
+        import uuid
+
         from tessera.agent.router import run as router_run
         from tessera.agent.state import new_state
-
-        import uuid
 
         state = new_state(
             conversation_id=uuid.uuid4(),
