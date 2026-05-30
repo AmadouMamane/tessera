@@ -53,6 +53,8 @@
     "scrollToBottom": "Nach unten scrollen",
     "startWith": "Zum Einstieg",
     "composerHint": "Eingabe zum Senden · Umschalt+Eingabe für neue Zeile",
+    "streamingPlaceholder": "Tessera antwortet…",
+    "regenerate": "Neu generieren",
     "errorFallback": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
   },
   "audit": {

@@ -53,6 +53,8 @@
     "scrollToBottom": "Scroll to bottom",
     "startWith": "Try asking",
     "composerHint": "Enter to send · Shift+Enter for new line",
+    "streamingPlaceholder": "Tessera is responding…",
+    "regenerate": "Regenerate",
     "errorFallback": "Something went wrong. Please try again."
   },
   "audit": {

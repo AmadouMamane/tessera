@@ -1,6 +1,6 @@
 "use client";
 
-import { type LucideIcon, AlertCircle, ArrowDown, Clock, CreditCard, Landmark, Lock, RotateCcw, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
+import { type LucideIcon, AlertCircle, ArrowDown, Clock, CreditCard, Landmark, Lock, RefreshCw, RotateCcw, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -60,6 +60,7 @@ export function ChatRoom() {
     appendToken,
     finalizeAssistant,
     setError,
+    removeLastExchange,
     reset,
   } = useChatStore();
 
@@ -139,13 +140,21 @@ export function ChatRoom() {
 
       try {
         let assistantId: string | null = null;
+        let bubbleCreated = false;
         // Batch tokens within a single animation frame so the DOM updates at most
         // once per frame (≤60/s) instead of once per raw SSE token. This eliminates
         // the micro-jitter caused by sub-frame height changes as each token lands.
+        // startAssistant is also deferred to flushTokens so the bubble is created
+        // and populated in the same render cycle — no empty-bubble flash between
+        // the TypingDots disappearing and the first tokens appearing.
         let tokenBuffer = "";
         let rafId: number | null = null;
         function flushTokens() {
-          if (tokenBuffer.length > 0) {
+          if (assistantId !== null && tokenBuffer.length > 0) {
+            if (!bubbleCreated) {
+              ensureAssistantBubble(assistantId);
+              bubbleCreated = true;
+            }
             appendToken(tokenBuffer);
             tokenBuffer = "";
           }
@@ -163,10 +172,7 @@ export function ChatRoom() {
             onStart: ({ conversation_id, turn_id }) =>
               start(conversation_id, turn_id),
             onToken: (token) => {
-              if (assistantId === null) {
-                assistantId = crypto.randomUUID();
-                ensureAssistantBubble(assistantId);
-              }
+              if (assistantId === null) assistantId = crypto.randomUUID();
               tokenBuffer += token;
               if (rafId === null) {
                 rafId = requestAnimationFrame(flushTokens);
@@ -206,6 +212,16 @@ export function ChatRoom() {
     },
     [appendUser, appendToken, conversationId, finalizeAssistant, locale, setError, start, startAssistant, t],
   );
+
+  const handleRegenerate = useCallback(() => {
+    if (isStreaming) return;
+    const lastAsstIdx = messages.findLastIndex((m) => m.role === "assistant");
+    if (lastAsstIdx === -1) return;
+    const lastUserMsg = messages.slice(0, lastAsstIdx).reverse().find((m) => m.role === "user");
+    if (!lastUserMsg) return;
+    removeLastExchange();
+    void sendMessage(lastUserMsg.content);
+  }, [isStreaming, messages, removeLastExchange, sendMessage]);
 
   const suggestions = SUGGESTED_PROMPTS[locale] ?? SUGGESTED_PROMPTS.en ?? [];
 
@@ -268,24 +284,31 @@ export function ChatRoom() {
                 />
               );
             })}
-            {/* Typing indicator — matches assistant bubble shape and identity */}
+            {/* Typing indicator — borderless to match assistant messages */}
             {isStreaming && messages[messages.length - 1]?.role === "user" && (
-              <div className="flex items-start gap-3 animate-in fade-in-0 slide-in-from-bottom-2 duration-200">
+              <div className="mt-5 flex items-start gap-3 animate-in fade-in-0 slide-in-from-bottom-2 duration-200">
                 <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-navy-900 text-gold-400 dark:bg-gold-500 dark:text-navy-950">
                   <Sparkles className="h-4 w-4 animate-pulse" />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <span className="px-1 text-[0.7rem] font-medium text-[var(--muted-foreground)]">
+                  <span className="text-[0.7rem] font-medium text-[var(--muted-foreground)]">
                     {t("assistantSaid")}
                   </span>
-                  <div className="relative rounded-2xl rounded-bl-sm border border-[var(--border)] bg-[var(--card)] px-4 py-3 shadow-[var(--shadow-card)]">
-                    <span
-                      aria-hidden
-                      className="absolute left-0 top-0 h-full w-0.5 rounded-tl-2xl bg-gradient-to-b from-gold-500/50 via-gold-500/20 to-transparent"
-                    />
-                    <TypingDots />
-                  </div>
+                  <TypingDots />
                 </div>
+              </div>
+            )}
+            {/* Regenerate button — shown after a completed assistant response */}
+            {!isStreaming && messages[messages.length - 1]?.role === "assistant" && messages.length >= 2 && (
+              <div className="mt-3 pl-11">
+                <button
+                  type="button"
+                  onClick={handleRegenerate}
+                  className="flex items-center gap-1.5 text-[0.65rem] text-[var(--muted-foreground)]/40 transition-colors hover:text-[var(--muted-foreground)]"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  {t("regenerate")}
+                </button>
               </div>
             )}
             <div ref={scrollAnchorRef} aria-hidden />

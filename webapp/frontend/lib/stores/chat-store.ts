@@ -40,6 +40,7 @@ interface ChatState {
   finalizeAssistant: (message: Omit<ChatMessage, "createdAt" | "role">) => void;
   setError: (message: string) => void;
   setStreaming: (streaming: boolean) => void;
+  removeLastExchange: () => void;
   reset: () => void;
 }
 
@@ -110,6 +111,18 @@ export const useChatStore = create<ChatState>()(
         set({ lastError, isStreaming: false }),
 
       setStreaming: (isStreaming) => set({ isStreaming }),
+
+      // Removes the last [user, assistant] pair so sendMessage can re-send cleanly.
+      removeLastExchange: () =>
+        set((state) => {
+          const msgs = [...state.messages];
+          const lastAsstIdx = msgs.findLastIndex((m) => m.role === "assistant");
+          if (lastAsstIdx === -1) return {};
+          msgs.splice(lastAsstIdx, 1);
+          const lastUserIdx = msgs.findLastIndex((m) => m.role === "user");
+          if (lastUserIdx !== -1) msgs.splice(lastUserIdx, 1);
+          return { messages: msgs };
+        }),
 
       reset: () =>
         set({

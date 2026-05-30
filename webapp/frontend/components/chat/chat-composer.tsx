@@ -78,8 +78,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(
               value={value}
               onChange={(e) => setValue(e.target.value)}
               onKeyDown={handleKey}
-              placeholder={t("placeholder")}
-              disabled={disabled}
+              placeholder={isStreaming ? t("streamingPlaceholder") : t("placeholder")}
               rows={1}
               className="min-h-[36px] flex-1 resize-none overflow-hidden border-0 bg-transparent px-0 py-1 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
               aria-label={t("placeholder")}
@@ -108,7 +107,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(
               </Button>
             )}
           </div>
-          {value.trim().length === 0 && (
+          {value.trim().length === 0 && !isStreaming && (
             <p className="mt-1.5 px-1 text-[0.65rem] text-[var(--muted-foreground)] animate-in fade-in-0 duration-150">
               {t("composerHint")}
             </p>

@@ -61,7 +61,7 @@ export function MessageBubble({ message, isGrouped = false, isFirst = false }: M
       <div className="flex w-[80%] flex-col gap-1.5">
         {/* Name + timestamp + badges — hidden for grouped messages */}
         {!isGrouped && (
-          <div className={cn("flex items-baseline gap-2 px-1", isUser && "justify-end")}>
+          <div className={cn("flex items-baseline gap-2", isUser ? "justify-end px-1" : "")}>
             <span className="text-[0.7rem] font-medium text-[var(--muted-foreground)]">
               {isUser ? t("youSaid") : t("assistantSaid")}
             </span>
@@ -110,7 +110,7 @@ export function MessageBubble({ message, isGrouped = false, isFirst = false }: M
             className={cn(
               "self-start flex items-center gap-1 px-1 text-[0.62rem] transition-all duration-150",
               "text-[var(--muted-foreground)]/40 hover:text-[var(--muted-foreground)]",
-              "opacity-0 group-hover:opacity-100",
+              "opacity-20 group-hover:opacity-100",
               copied && "!opacity-100 text-green-600 dark:text-green-400",
             )}
           >
