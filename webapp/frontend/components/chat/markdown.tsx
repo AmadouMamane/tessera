@@ -208,36 +208,50 @@ function CodeBlock({ lang, text }: { lang: string; text: string }) {
 interface MarkdownProps {
   children: string;
   className?: string;
+  trailingCursor?: boolean;
 }
 
-export function Markdown({ children, className }: MarkdownProps) {
+const Cursor = () => (
+  <span
+    aria-hidden
+    className="ml-0.5 inline-block h-3.5 w-0.5 translate-y-0.5 animate-pulse bg-current opacity-60"
+  />
+);
+
+export function Markdown({ children, className, trailingCursor = false }: MarkdownProps) {
   const blocks = parseBlocks(children);
+  const lastIdx = blocks.length - 1;
+  // Cursor is inline-eligible only for text blocks (p, headings).
+  // For list/code/blockquote/hr we fall back to a standalone cursor after all blocks.
+  const lastIsInline = lastIdx >= 0 && ["p", "h1", "h2", "h3"].includes(blocks[lastIdx]!.type);
 
   return (
     <div className={cn("space-y-2 text-sm leading-relaxed [&_p]:text-justify [&_p]:hyphens-auto [&_li]:text-justify [&_li]:hyphens-auto", className)}>
       {blocks.map((block, bi) => {
         const key = `b${bi}`;
+        const isLast = bi === lastIdx;
+        const cur = isLast && trailingCursor && lastIsInline ? <Cursor /> : null;
         switch (block.type) {
           case "h1":
             return (
               <p key={key} className="text-base font-bold">
-                {renderInline(block.text, key)}
+                {renderInline(block.text, key)}{cur}
               </p>
             );
           case "h2":
             return (
               <p key={key} className="font-bold">
-                {renderInline(block.text, key)}
+                {renderInline(block.text, key)}{cur}
               </p>
             );
           case "h3":
             return (
               <p key={key} className="font-semibold">
-                {renderInline(block.text, key)}
+                {renderInline(block.text, key)}{cur}
               </p>
             );
           case "p":
-            return <p key={key}>{renderInline(block.text, key)}</p>;
+            return <p key={key}>{renderInline(block.text, key)}{cur}</p>;
           case "ul":
             return (
               <ul
@@ -277,6 +291,7 @@ export function Markdown({ children, className }: MarkdownProps) {
             return <CodeBlock key={key} lang={block.lang} text={block.text} />;
         }
       })}
+      {trailingCursor && !lastIsInline && blocks.length > 0 && <Cursor />}
     </div>
   );
 }

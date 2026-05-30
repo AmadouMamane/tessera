@@ -83,9 +83,9 @@ export function MessageBubble({ message, isGrouped = false, isFirst = false }: M
         {/* Bubble — w-full keeps width stable during streaming */}
         <div
           className={cn(
-            "relative w-full px-4 py-2.5",
+            "relative w-full",
             isUser
-              ? "rounded-2xl rounded-br-sm bg-gradient-to-br from-navy-800 to-navy-950 text-navy-50 dark:from-gold-400 dark:to-gold-500 dark:text-navy-950 text-sm leading-relaxed shadow-[var(--shadow-card)]"
+              ? "px-4 py-2.5 rounded-2xl rounded-br-sm bg-gradient-to-br from-navy-800 to-navy-950 text-navy-50 dark:from-gold-400 dark:to-gold-500 dark:text-navy-950 text-sm leading-relaxed shadow-[var(--shadow-card)]"
               : "text-[var(--foreground)]",
           )}
         >
@@ -95,16 +95,9 @@ export function MessageBubble({ message, isGrouped = false, isFirst = false }: M
               {message.content}
             </p>
           ) : (
-            <>
-              <Markdown>{message.content}</Markdown>
-              {/* Blinking cursor while tokens are still arriving */}
-              {message.content !== "" && !message.citations && (
-                <span
-                  aria-hidden
-                  className="ml-0.5 inline-block h-3.5 w-0.5 translate-y-0.5 animate-pulse bg-current opacity-60"
-                />
-              )}
-            </>
+            <Markdown trailingCursor={message.content !== "" && !message.citations}>
+              {message.content}
+            </Markdown>
           )}
         </div>
 
