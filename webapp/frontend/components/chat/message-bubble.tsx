@@ -34,7 +34,7 @@ export function MessageBubble({ message, isGrouped = false, isFirst = false }: M
   return (
     <article
       className={cn(
-        "group flex gap-3 animate-in fade-in-0 slide-in-from-bottom-2 duration-200",
+        "group flex w-full gap-3 animate-in fade-in-0 slide-in-from-bottom-2 duration-200",
         !isFirst && (isGrouped ? "mt-1" : "mt-5"),
         isUser ? "flex-row-reverse" : "flex-row",
       )}

@@ -63,15 +63,18 @@ export function ChatRoom() {
     reset,
   } = useChatStore();
 
-  // Scroll-to-bottom on new message unless user scrolled up.
+  // Scroll-to-bottom: watch the full messages reference so this fires on every
+  // token append (appendToken creates a new array ref each time). During streaming
+  // we use an instant scrollTop assignment — smooth scroll fights a moving target
+  // and produces the visible "jitter" the user sees on each new line.
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
     const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
     if (isNearBottom || isStreaming) {
-      scrollAnchorRef.current?.scrollIntoView({ behavior: "smooth" });
+      el.scrollTop = el.scrollHeight;
     }
-  }, [messages.length, isStreaming]);
+  }, [messages, isStreaming]);
 
   // Track scroll position for FAB.
   useEffect(() => {
@@ -136,6 +139,19 @@ export function ChatRoom() {
 
       try {
         let assistantId: string | null = null;
+        // Batch tokens within a single animation frame so the DOM updates at most
+        // once per frame (≤60/s) instead of once per raw SSE token. This eliminates
+        // the micro-jitter caused by sub-frame height changes as each token lands.
+        let tokenBuffer = "";
+        let rafId: number | null = null;
+        function flushTokens() {
+          if (tokenBuffer.length > 0) {
+            appendToken(tokenBuffer);
+            tokenBuffer = "";
+          }
+          rafId = null;
+        }
+
         await streamChat(
           {
             message: text,
@@ -151,9 +167,17 @@ export function ChatRoom() {
                 assistantId = crypto.randomUUID();
                 ensureAssistantBubble(assistantId);
               }
-              appendToken(token);
+              tokenBuffer += token;
+              if (rafId === null) {
+                rafId = requestAnimationFrame(flushTokens);
+              }
             },
             onEnd: (envelope) => {
+              // Flush any tokens buffered in the pending frame before finalizing.
+              if (rafId !== null) {
+                cancelAnimationFrame(rafId);
+                flushTokens();
+              }
               // For non-streaming responses (injection block, escalation) no
               // tokens are emitted so no assistant bubble was created yet.
               if (assistantId === null) {
@@ -167,7 +191,10 @@ export function ChatRoom() {
                 confidence: envelope.confidence,
               });
             },
-            onError: (message) => showErrorInConversation(message),
+            onError: (message) => {
+              if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
+              showErrorInConversation(message);
+            },
           },
         );
       } catch (err) {
@@ -192,7 +219,7 @@ export function ChatRoom() {
         role="log"
         aria-live="polite"
         aria-label={t("title")}
-        className="relative flex flex-1 flex-col overflow-y-auto bg-[radial-gradient(ellipse_70%_45%_at_50%_15%,oklch(0.72_0.142_80/0.04),transparent)] px-4 py-6 sm:px-8 dark:bg-[radial-gradient(ellipse_70%_45%_at_50%_15%,oklch(0.72_0.142_80/0.07),transparent)]"
+        className="relative flex flex-1 flex-col overflow-y-auto [overflow-anchor:none] bg-[radial-gradient(ellipse_70%_45%_at_50%_15%,oklch(0.72_0.142_80/0.04),transparent)] px-4 py-6 sm:px-8 dark:bg-[radial-gradient(ellipse_70%_45%_at_50%_15%,oklch(0.72_0.142_80/0.07),transparent)]"
       >
         {/* fix 2: "Nouvelle conversation" as absolute overlay, only when there are messages */}
         {messages.length > 0 && (
@@ -225,7 +252,7 @@ export function ChatRoom() {
           </div>
         ) : (
           /* pt-8 so messages don't slide under the absolute button */
-          <div className="mx-auto flex max-w-3xl flex-col pt-8">
+          <div className="mx-auto w-full flex max-w-3xl flex-col pt-8">
             {messages.map((m, idx) => {
               const prev = messages[idx - 1];
               const isGrouped =
