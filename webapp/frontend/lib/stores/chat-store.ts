@@ -114,11 +114,12 @@ export const useChatStore = create<ChatState>()(
       setStreaming: (isStreaming) => set({ isStreaming }),
 
       // Removes the given message and everything after it so an inline edit can re-send.
+      // Also resets conversationId so the backend starts a clean branch.
       truncateFromMessage: (messageId) =>
         set((state) => {
           const idx = state.messages.findIndex((m) => m.id === messageId);
           if (idx === -1) return {};
-          return { messages: state.messages.slice(0, idx) };
+          return { messages: state.messages.slice(0, idx), conversationId: null };
         }),
 
       // Removes the last [user, assistant] pair so sendMessage can re-send cleanly.

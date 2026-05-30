@@ -58,6 +58,8 @@
     "edit": "Bearbeiten",
     "confirm": "Senden",
     "cancel": "Abbrechen",
+    "editHint": "Eingabe zum Senden · Esc zum Abbrechen",
+    "editWillTruncate": "Die folgenden Nachrichten werden gelöscht",
     "errorFallback": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
   },
   "audit": {

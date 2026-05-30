@@ -13,6 +13,8 @@ interface MessageBubbleProps {
   message: ChatMessage;
   isGrouped?: boolean;
   isFirst?: boolean;
+  isStreaming?: boolean;
+  isLastUserMessage?: boolean;
   onEdit?: (id: string, newContent: string) => void;
 }
 
@@ -20,7 +22,7 @@ function formatTime(ts: number): string {
   return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-export function MessageBubble({ message, isGrouped = false, isFirst = false, onEdit }: MessageBubbleProps) {
+export function MessageBubble({ message, isGrouped = false, isFirst = false, isStreaming = false, isLastUserMessage = true, onEdit }: MessageBubbleProps) {
   const t = useTranslations("chat");
   const isUser = message.role === "user";
   const [copied, setCopied] = useState(false);
@@ -151,7 +153,7 @@ export function MessageBubble({ message, isGrouped = false, isFirst = false, onE
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={handleEditKey}
                 rows={1}
-                className="w-full resize-none bg-transparent text-sm leading-relaxed text-navy-50 dark:text-navy-950 placeholder-navy-300 dark:placeholder-navy-700 focus:outline-none"
+                className="w-full resize-none bg-transparent text-sm leading-relaxed text-navy-50 dark:text-navy-950 focus:outline-none"
               />
             ) : (
               <p className="whitespace-pre-wrap text-sm leading-relaxed text-justify hyphens-auto">
@@ -163,28 +165,40 @@ export function MessageBubble({ message, isGrouped = false, isFirst = false, onE
           )}
         </div>
 
-        {/* User actions: copy + edit — self-end aligns to the right of the bubble */}
+        {/* User actions: copy + edit */}
         {isUser && message.content && (
           isEditing ? (
-            <div className="self-end flex items-center gap-2">
-              <button
-                type="button"
-                onClick={cancelEdit}
-                className="flex items-center gap-1 text-[0.62rem] text-[var(--muted-foreground)]/60 hover:text-[var(--muted-foreground)] transition-colors duration-150"
-              >
-                {t("cancel")}
-              </button>
-              <button
-                type="button"
-                onClick={confirmEdit}
-                disabled={!draft.trim() || draft.trim() === message.content}
-                className="flex items-center gap-1 text-[0.62rem] font-medium text-gold-600 dark:text-gold-500 hover:text-gold-700 dark:hover:text-gold-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
-              >
-                {t("confirm")}
-              </button>
+            <div className="self-end flex flex-col items-end gap-1">
+              {/* Truncation warning — only when this is not the last user message */}
+              {!isLastUserMessage && (
+                <p className="text-[0.6rem] text-amber-400 dark:text-amber-500 select-none">
+                  ⚠ {t("editWillTruncate")}
+                </p>
+              )}
+              <div className="flex items-center gap-2">
+                <p className="text-[0.6rem] text-navy-300/60 dark:text-navy-700/60 select-none">
+                  {t("editHint")}
+                </p>
+                <button
+                  type="button"
+                  onClick={cancelEdit}
+                  className="flex items-center gap-1 text-[0.62rem] text-[var(--muted-foreground)]/60 hover:text-[var(--muted-foreground)] transition-colors duration-150"
+                >
+                  {t("cancel")}
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmEdit}
+                  disabled={!draft.trim() || draft.trim() === message.content}
+                  className="flex items-center gap-1 text-[0.62rem] font-medium text-gold-600 dark:text-gold-500 hover:text-gold-700 dark:hover:text-gold-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
+                >
+                  {t("confirm")}
+                </button>
+              </div>
             </div>
           ) : (
-            <div className="self-end flex items-center gap-2 opacity-20 group-hover:opacity-100 transition-opacity duration-150">
+            /* On desktop: fade-in on hover. On touch (hover:none): always visible. */
+            <div className="self-end flex items-center gap-2 opacity-20 group-hover:opacity-100 [@media(hover:none)]:!opacity-100 transition-opacity duration-150">
               <button
                 type="button"
                 onClick={handleUserCopy}
@@ -202,8 +216,9 @@ export function MessageBubble({ message, isGrouped = false, isFirst = false, onE
                 <button
                   type="button"
                   onClick={startEdit}
+                  disabled={isStreaming}
                   aria-label={t("edit")}
-                  className="flex items-center gap-1 text-[0.62rem] text-[var(--muted-foreground)]/60 hover:text-[var(--muted-foreground)] transition-colors duration-150"
+                  className="flex items-center gap-1 text-[0.62rem] text-[var(--muted-foreground)]/60 hover:text-[var(--muted-foreground)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150"
                 >
                   <Pencil className="h-3 w-3" />
                   {t("edit")}

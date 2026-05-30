@@ -85,6 +85,28 @@ def format_citations(citations: Iterable[Citation], language: LanguageCode) -> s
     return "\n".join(lines)
 
 
+def _build_chat_messages(
+    state: AgentState,
+    system_prompt: str,
+    current_user_content: str,
+) -> list[ChatMessage]:
+    """Assemble the full message list for the LLM, including prior turns.
+
+    Prior turns come from ``state["messages"]`` which was populated by
+    ``new_state`` using the ``history`` field of the API request. The last
+    item in that list is the current user input; everything before it is
+    injected as prior turns so the LLM has multi-turn context.
+    """
+    msgs: list[ChatMessage] = [ChatMessage(role="system", content=system_prompt)]
+    history = state.get("messages", [])
+    # All messages except the last (the current user turn, rebuilt with context below).
+    for msg in history[:-1]:
+        if msg.role in ("user", "assistant"):
+            msgs.append(ChatMessage(role=msg.role, content=msg.content))
+    msgs.append(ChatMessage(role="user", content=current_user_content))
+    return msgs
+
+
 async def _synthesise(state: AgentState) -> str:
     """Call the LLM to produce a grounded answer from all available sources.
 
@@ -102,7 +124,7 @@ async def _synthesise(state: AgentState) -> str:
     draft = state.get("draft_response", "")
     tool_context = f"\nInformation récupérée en base : {draft}\n" if draft else ""
 
-    user_message = (
+    current_user_content = (
         f"Question du client : {state['user_input']}\n"
         f"{tool_context}"
         f"\nDocuments disponibles :\n{context}\n\n"
@@ -112,10 +134,7 @@ async def _synthesise(state: AgentState) -> str:
 
     backend = get_chat_backend()
     response = await backend.chat(
-        [
-            ChatMessage(role="system", content=system_prompt),
-            ChatMessage(role="user", content=user_message),
-        ],
+        _build_chat_messages(state, system_prompt, current_user_content),
         temperature=0.2,
     )
     return response.content.strip()
@@ -135,7 +154,7 @@ async def astream_synthesise(state: AgentState) -> AsyncIterator[str]:
     context = "\n\n".join(f"[{doc.source}]\n{doc.text}" for doc in docs[:6])
     draft = state.get("draft_response", "")
     tool_context = f"\nInformation récupérée en base : {draft}\n" if draft else ""
-    user_message = (
+    current_user_content = (
         f"Question du client : {state['user_input']}\n"
         f"{tool_context}"
         f"\nDocuments disponibles :\n{context}\n\n"
@@ -144,10 +163,7 @@ async def astream_synthesise(state: AgentState) -> AsyncIterator[str]:
     )
     backend = get_chat_backend()
     async for token in backend.stream_chat(
-        [
-            ChatMessage(role="system", content=system_prompt),
-            ChatMessage(role="user", content=user_message),
-        ],
+        _build_chat_messages(state, system_prompt, current_user_content),
         temperature=0.2,
     ):
         yield token

@@ -22,6 +22,7 @@ export interface ChatTurnRequest {
   message: string;
   conversation_id?: string;
   language?: "fr" | "de" | "en";
+  history?: Array<{ role: "user" | "assistant"; content: string }>;
 }
 
 export interface ChatTurnCallbacks {

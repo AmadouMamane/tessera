@@ -13,14 +13,12 @@ import uuid
 from typing import TYPE_CHECKING, Annotated, Literal
 
 from fastapi import APIRouter, Body
+from langgraph.checkpoint.memory import MemorySaver
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.responses import StreamingResponse
 
-from langgraph.checkpoint.memory import MemorySaver
-
-from tessera.agent import build_graph
-from tessera.agent import reporter as reporter_module
-from tessera.agent.state import NodeName, new_state
+from tessera.agent import build_graph, reporter as reporter_module
+from tessera.agent.state import ConversationMessage, NodeName, new_state
 from tessera.observability.metrics import AGENT_TURN_DURATION, AGENT_TURNS_TOTAL
 from tessera.settings import LanguageCode, get_settings
 
@@ -41,6 +39,15 @@ def _streaming_graph() -> object:
     )
 
 
+class HistoryMessage(BaseModel):
+    """A single prior-turn message sent by the client for multi-turn context."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=8_000)
+
+
 class ChatRequest(BaseModel):
     """Incoming chat request body."""
 
@@ -51,6 +58,11 @@ class ChatRequest(BaseModel):
     language: LanguageCode | None = Field(
         default=None,
         description="Optional language hint; the router will still verify.",
+    )
+    history: list[HistoryMessage] | None = Field(
+        default=None,
+        description="Prior conversation turns for multi-turn context injection.",
+        max_length=40,
     )
 
 
@@ -80,12 +92,16 @@ async def _stream_turn(request: ChatRequest) -> AsyncIterator[bytes]:
     language = request.language or get_settings().default_language
     pinned_confidence = 1.0 if request.language is not None else 0.0
 
+    prior_messages = [
+        ConversationMessage(role=h.role, content=h.content) for h in (request.history or [])
+    ]
     initial = new_state(
         conversation_id=conversation_id,
         turn_id=turn_id,
         user_input=request.message,
         language=language,
         language_confidence=pinned_confidence,
+        prior_messages=prior_messages or None,
     )
 
     graph = _streaming_graph()
@@ -123,7 +139,8 @@ async def _stream_turn(request: ChatRequest) -> AsyncIterator[bytes]:
         elif draft:
             final_response = reporter_module.render(state)
         else:
-            from tessera.agent.reporter import _FALLBACK_RESPONSES  # noqa: PLC0415
+            from tessera.agent.reporter import _FALLBACK_RESPONSES
+
             final_response = _FALLBACK_RESPONSES[state["language"]]
     else:
         final_response = str(state.get("final_response", ""))

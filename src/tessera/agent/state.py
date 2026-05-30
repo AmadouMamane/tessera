@@ -213,6 +213,7 @@ def new_state(
     user_input: str,
     language: LanguageCode,
     language_confidence: float = 1.0,
+    prior_messages: list[ConversationMessage] | None = None,
 ) -> AgentState:
     """Construct a fresh :class:`AgentState` ready to enter the graph.
 
@@ -222,17 +223,22 @@ def new_state(
         user_input: The raw user message in its detected language.
         language: The detected language (FR/DE/EN).
         language_confidence: Probability assigned by the language detector.
+        prior_messages: Optional conversation history from previous turns.
+            When provided, these messages are prepended so the reporter can
+            inject multi-turn context into the LLM prompt.
 
     Returns:
         A state dict with all accumulator fields initialised to empty lists.
     """
+    messages: list[ConversationMessage] = list(prior_messages or [])
+    messages.append(ConversationMessage(role="user", content=user_input))
     return AgentState(
         conversation_id=conversation_id,
         turn_id=turn_id,
         user_input=user_input,
         language=language,
         language_confidence=language_confidence,
-        messages=[ConversationMessage(role="user", content=user_input)],
+        messages=messages,
         plan=[],
         retrieved_documents=[],
         tool_calls=[],

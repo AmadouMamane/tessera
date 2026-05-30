@@ -58,6 +58,8 @@
     "edit": "Edit",
     "confirm": "Send",
     "cancel": "Cancel",
+    "editHint": "Enter to send · Esc to cancel",
+    "editWillTruncate": "The following messages will be removed",
     "errorFallback": "Something went wrong. Please try again."
   },
   "audit": {

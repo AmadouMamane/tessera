@@ -58,6 +58,8 @@
     "edit": "Modifier",
     "confirm": "Envoyer",
     "cancel": "Annuler",
+    "editHint": "Entrée pour envoyer · Échap pour annuler",
+    "editWillTruncate": "Les messages suivants seront supprimés",
     "errorFallback": "Une erreur est survenue. Veuillez réessayer."
   },
   "audit": {

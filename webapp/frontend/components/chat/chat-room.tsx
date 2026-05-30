@@ -51,7 +51,6 @@ export function ChatRoom() {
   const [showScrollBtn, setShowScrollBtn] = useState(false);
 
   const {
-    conversationId,
     messages,
     isStreaming,
     appendUser,
@@ -115,6 +114,15 @@ export function ChatRoom() {
 
   const sendMessage = useCallback(
     async (text: string) => {
+      // Snapshot history BEFORE appendUser modifies the store, and read
+      // conversationId directly from the store so truncateFromMessage's
+      // synchronous reset is always visible here.
+      const snap = useChatStore.getState();
+      const history = snap.messages
+        .filter((m) => m.role === "user" || m.role === "assistant")
+        .map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+      const currentConvId = snap.conversationId;
+
       appendUser(text);
       const controller = new AbortController();
       abortRef.current = controller;
@@ -166,7 +174,8 @@ export function ChatRoom() {
           {
             message: text,
             language: locale,
-            conversation_id: conversationId ?? undefined,
+            conversation_id: currentConvId ?? undefined,
+            history: history.length > 0 ? history : undefined,
           },
           {
             signal: controller.signal,
@@ -211,7 +220,7 @@ export function ChatRoom() {
         if (abortRef.current === controller) abortRef.current = null;
       }
     },
-    [appendUser, appendToken, conversationId, finalizeAssistant, locale, setError, start, startAssistant, t],
+    [appendUser, appendToken, finalizeAssistant, locale, setError, start, startAssistant, t],
   );
 
   const handleInlineEdit = useCallback(
@@ -285,12 +294,17 @@ export function ChatRoom() {
                 !!prev &&
                 prev.role === m.role &&
                 m.createdAt - prev.createdAt < 120_000;
+              const isLastUserMsg =
+                m.role === "user" &&
+                !messages.slice(idx + 1).some((later) => later.role === "user");
               return (
                 <MessageBubble
                   key={m.id}
                   message={m}
                   isGrouped={isGrouped}
                   isFirst={idx === 0}
+                  isStreaming={isStreaming}
+                  isLastUserMessage={isLastUserMsg}
                   onEdit={m.role === "user" ? handleInlineEdit : undefined}
                 />
               );
