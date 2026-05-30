@@ -55,6 +55,7 @@
     "composerHint": "Eingabe zum Senden · Umschalt+Eingabe für neue Zeile",
     "streamingPlaceholder": "Tessera antwortet…",
     "regenerate": "Neu generieren",
+    "edit": "Bearbeiten",
     "errorFallback": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
   },
   "audit": {

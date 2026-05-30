@@ -281,6 +281,7 @@ export function ChatRoom() {
                   message={m}
                   isGrouped={isGrouped}
                   isFirst={idx === 0}
+                  onEdit={m.role === "user" ? (content) => composerRef.current?.setValue(content) : undefined}
                 />
               );
             })}

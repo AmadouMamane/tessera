@@ -55,6 +55,7 @@
     "composerHint": "Entrée pour envoyer · Maj+Entrée pour aller à la ligne",
     "streamingPlaceholder": "Tessera répond…",
     "regenerate": "Régénérer",
+    "edit": "Modifier",
     "errorFallback": "Une erreur est survenue. Veuillez réessayer."
   },
   "audit": {

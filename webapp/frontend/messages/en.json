@@ -55,6 +55,7 @@
     "composerHint": "Enter to send · Shift+Enter for new line",
     "streamingPlaceholder": "Tessera is responding…",
     "regenerate": "Regenerate",
+    "edit": "Edit",
     "errorFallback": "Something went wrong. Please try again."
   },
   "audit": {

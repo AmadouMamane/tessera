@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, BookOpen, Check, Copy, Sparkles, User2 } from "lucide-react";
+import { AlertTriangle, BookOpen, Check, Copy, Pencil, Sparkles, User2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -13,21 +13,30 @@ interface MessageBubbleProps {
   message: ChatMessage;
   isGrouped?: boolean;
   isFirst?: boolean;
+  onEdit?: (content: string) => void;
 }
 
 function formatTime(ts: number): string {
   return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-export function MessageBubble({ message, isGrouped = false, isFirst = false }: MessageBubbleProps) {
+export function MessageBubble({ message, isGrouped = false, isFirst = false, onEdit }: MessageBubbleProps) {
   const t = useTranslations("chat");
   const isUser = message.role === "user";
   const [copied, setCopied] = useState(false);
+  const [userCopied, setUserCopied] = useState(false);
 
   function handleCopy() {
     void navigator.clipboard.writeText(message.content).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
+    });
+  }
+
+  function handleUserCopy() {
+    void navigator.clipboard.writeText(message.content).then(() => {
+      setUserCopied(true);
+      setTimeout(() => setUserCopied(false), 1500);
     });
   }
 
@@ -95,13 +104,41 @@ export function MessageBubble({ message, isGrouped = false, isFirst = false }: M
               {message.content}
             </p>
           ) : (
-            <Markdown trailingCursor={message.content !== "" && !message.citations}>
-              {message.content}
-            </Markdown>
+            <Markdown>{message.content}</Markdown>
           )}
         </div>
 
-        {/* Copy — self-start prevents it from stretching to full column width */}
+        {/* User actions: copy + edit — self-end aligns to the right of the bubble */}
+        {isUser && message.content && (
+          <div className="self-end flex items-center gap-2 opacity-20 group-hover:opacity-100 transition-opacity duration-150">
+            <button
+              type="button"
+              onClick={handleUserCopy}
+              aria-label={userCopied ? t("copied") : t("copy")}
+              className={cn(
+                "flex items-center gap-1 text-[0.62rem] transition-colors duration-150",
+                "text-[var(--muted-foreground)]/60 hover:text-[var(--muted-foreground)]",
+                userCopied && "!opacity-100 text-green-600 dark:text-green-400",
+              )}
+            >
+              {userCopied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+              {userCopied ? t("copied") : t("copy")}
+            </button>
+            {onEdit && (
+              <button
+                type="button"
+                onClick={() => onEdit(message.content)}
+                aria-label={t("edit")}
+                className="flex items-center gap-1 text-[0.62rem] text-[var(--muted-foreground)]/60 hover:text-[var(--muted-foreground)] transition-colors duration-150"
+              >
+                <Pencil className="h-3 w-3" />
+                {t("edit")}
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Assistant copy — self-start prevents stretching to full column width */}
         {!isUser && message.content && (
           <button
             type="button"
