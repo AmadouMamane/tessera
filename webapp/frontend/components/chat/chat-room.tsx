@@ -60,6 +60,7 @@ export function ChatRoom() {
     appendToken,
     finalizeAssistant,
     setError,
+    truncateFromMessage,
     removeLastExchange,
     reset,
   } = useChatStore();
@@ -213,6 +214,15 @@ export function ChatRoom() {
     [appendUser, appendToken, conversationId, finalizeAssistant, locale, setError, start, startAssistant, t],
   );
 
+  const handleInlineEdit = useCallback(
+    (messageId: string, newContent: string) => {
+      if (isStreaming) return;
+      truncateFromMessage(messageId);
+      void sendMessage(newContent);
+    },
+    [isStreaming, truncateFromMessage, sendMessage],
+  );
+
   const handleRegenerate = useCallback(() => {
     if (isStreaming) return;
     const lastAsstIdx = messages.findLastIndex((m) => m.role === "assistant");
@@ -281,7 +291,7 @@ export function ChatRoom() {
                   message={m}
                   isGrouped={isGrouped}
                   isFirst={idx === 0}
-                  onEdit={m.role === "user" ? (content) => composerRef.current?.setValue(content) : undefined}
+                  onEdit={m.role === "user" ? handleInlineEdit : undefined}
                 />
               );
             })}

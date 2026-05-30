@@ -2,7 +2,7 @@
 
 import { AlertTriangle, BookOpen, Check, Copy, Pencil, Sparkles, User2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Markdown } from "./markdown";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ interface MessageBubbleProps {
   message: ChatMessage;
   isGrouped?: boolean;
   isFirst?: boolean;
-  onEdit?: (content: string) => void;
+  onEdit?: (id: string, newContent: string) => void;
 }
 
 function formatTime(ts: number): string {
@@ -25,6 +25,25 @@ export function MessageBubble({ message, isGrouped = false, isFirst = false, onE
   const isUser = message.role === "user";
   const [copied, setCopied] = useState(false);
   const [userCopied, setUserCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      const el = textareaRef.current;
+      el.focus();
+      el.selectionStart = el.selectionEnd = el.value.length;
+    }
+  }, [isEditing]);
+
+  // Auto-resize textarea as draft grows.
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [draft]);
 
   function handleCopy() {
     void navigator.clipboard.writeText(message.content).then(() => {
@@ -38,6 +57,32 @@ export function MessageBubble({ message, isGrouped = false, isFirst = false, onE
       setUserCopied(true);
       setTimeout(() => setUserCopied(false), 1500);
     });
+  }
+
+  function startEdit() {
+    setDraft(message.content);
+    setIsEditing(true);
+  }
+
+  function confirmEdit() {
+    const trimmed = draft.trim();
+    if (trimmed && trimmed !== message.content && onEdit) {
+      onEdit(message.id, trimmed);
+    }
+    setIsEditing(false);
+  }
+
+  function cancelEdit() {
+    setIsEditing(false);
+  }
+
+  function handleEditKey(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      confirmEdit();
+    } else if (e.key === "Escape") {
+      cancelEdit();
+    }
   }
 
   return (
@@ -98,11 +143,21 @@ export function MessageBubble({ message, isGrouped = false, isFirst = false, onE
               : "text-[var(--foreground)]",
           )}
         >
-
           {isUser ? (
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-justify hyphens-auto">
-              {message.content}
-            </p>
+            isEditing ? (
+              <textarea
+                ref={textareaRef}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={handleEditKey}
+                rows={1}
+                className="w-full resize-none bg-transparent text-sm leading-relaxed text-navy-50 dark:text-navy-950 placeholder-navy-300 dark:placeholder-navy-700 focus:outline-none"
+              />
+            ) : (
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-justify hyphens-auto">
+                {message.content}
+              </p>
+            )
           ) : (
             <Markdown>{message.content}</Markdown>
           )}
@@ -110,32 +165,52 @@ export function MessageBubble({ message, isGrouped = false, isFirst = false, onE
 
         {/* User actions: copy + edit — self-end aligns to the right of the bubble */}
         {isUser && message.content && (
-          <div className="self-end flex items-center gap-2 opacity-20 group-hover:opacity-100 transition-opacity duration-150">
-            <button
-              type="button"
-              onClick={handleUserCopy}
-              aria-label={userCopied ? t("copied") : t("copy")}
-              className={cn(
-                "flex items-center gap-1 text-[0.62rem] transition-colors duration-150",
-                "text-[var(--muted-foreground)]/60 hover:text-[var(--muted-foreground)]",
-                userCopied && "!opacity-100 text-green-600 dark:text-green-400",
-              )}
-            >
-              {userCopied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-              {userCopied ? t("copied") : t("copy")}
-            </button>
-            {onEdit && (
+          isEditing ? (
+            <div className="self-end flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => onEdit(message.content)}
-                aria-label={t("edit")}
+                onClick={cancelEdit}
                 className="flex items-center gap-1 text-[0.62rem] text-[var(--muted-foreground)]/60 hover:text-[var(--muted-foreground)] transition-colors duration-150"
               >
-                <Pencil className="h-3 w-3" />
-                {t("edit")}
+                {t("cancel")}
               </button>
-            )}
-          </div>
+              <button
+                type="button"
+                onClick={confirmEdit}
+                disabled={!draft.trim() || draft.trim() === message.content}
+                className="flex items-center gap-1 text-[0.62rem] font-medium text-gold-600 dark:text-gold-500 hover:text-gold-700 dark:hover:text-gold-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-150"
+              >
+                {t("confirm")}
+              </button>
+            </div>
+          ) : (
+            <div className="self-end flex items-center gap-2 opacity-20 group-hover:opacity-100 transition-opacity duration-150">
+              <button
+                type="button"
+                onClick={handleUserCopy}
+                aria-label={userCopied ? t("copied") : t("copy")}
+                className={cn(
+                  "flex items-center gap-1 text-[0.62rem] transition-colors duration-150",
+                  "text-[var(--muted-foreground)]/60 hover:text-[var(--muted-foreground)]",
+                  userCopied && "!opacity-100 text-green-600 dark:text-green-400",
+                )}
+              >
+                {userCopied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                {userCopied ? t("copied") : t("copy")}
+              </button>
+              {onEdit && (
+                <button
+                  type="button"
+                  onClick={startEdit}
+                  aria-label={t("edit")}
+                  className="flex items-center gap-1 text-[0.62rem] text-[var(--muted-foreground)]/60 hover:text-[var(--muted-foreground)] transition-colors duration-150"
+                >
+                  <Pencil className="h-3 w-3" />
+                  {t("edit")}
+                </button>
+              )}
+            </div>
+          )
         )}
 
         {/* Assistant copy — self-start prevents stretching to full column width */}

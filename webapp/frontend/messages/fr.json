@@ -56,6 +56,8 @@
     "streamingPlaceholder": "Tessera répond…",
     "regenerate": "Régénérer",
     "edit": "Modifier",
+    "confirm": "Envoyer",
+    "cancel": "Annuler",
     "errorFallback": "Une erreur est survenue. Veuillez réessayer."
   },
   "audit": {

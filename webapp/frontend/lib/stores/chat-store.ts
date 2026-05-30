@@ -40,6 +40,7 @@ interface ChatState {
   finalizeAssistant: (message: Omit<ChatMessage, "createdAt" | "role">) => void;
   setError: (message: string) => void;
   setStreaming: (streaming: boolean) => void;
+  truncateFromMessage: (messageId: string) => void;
   removeLastExchange: () => void;
   reset: () => void;
 }
@@ -111,6 +112,14 @@ export const useChatStore = create<ChatState>()(
         set({ lastError, isStreaming: false }),
 
       setStreaming: (isStreaming) => set({ isStreaming }),
+
+      // Removes the given message and everything after it so an inline edit can re-send.
+      truncateFromMessage: (messageId) =>
+        set((state) => {
+          const idx = state.messages.findIndex((m) => m.id === messageId);
+          if (idx === -1) return {};
+          return { messages: state.messages.slice(0, idx) };
+        }),
 
       // Removes the last [user, assistant] pair so sendMessage can re-send cleanly.
       removeLastExchange: () =>
