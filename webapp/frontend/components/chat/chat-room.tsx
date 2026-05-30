@@ -147,6 +147,8 @@ export function ChatRoom() {
         toast.error(rawError);
       }
 
+      let errorHandled = false;
+
       try {
         let assistantId: string | null = null;
         let bubbleCreated = false;
@@ -209,13 +211,13 @@ export function ChatRoom() {
             },
             onError: (message) => {
               if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
-              showErrorInConversation(message);
+              if (!errorHandled) { errorHandled = true; showErrorInConversation(message); }
             },
           },
         );
       } catch (err) {
         if (controller.signal.aborted) return;
-        showErrorInConversation(err instanceof Error ? err.message : String(err));
+        if (!errorHandled) { errorHandled = true; showErrorInConversation(err instanceof Error ? err.message : String(err)); }
       } finally {
         if (abortRef.current === controller) abortRef.current = null;
       }
