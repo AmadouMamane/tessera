@@ -111,7 +111,7 @@ function StatusCard({
         <CardTitle className="font-sans text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
           {title}
         </CardTitle>
-        <div className="text-[var(--muted-foreground)] [&_svg]:h-4 [&_svg]:w-4">
+        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-navy-900 text-gold-400 dark:bg-gold-500/10 dark:text-gold-400 [&_svg]:h-4 [&_svg]:w-4">
           {icon}
         </div>
       </CardHeader>

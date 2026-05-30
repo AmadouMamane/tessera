@@ -55,7 +55,7 @@ export default async function LocaleLayout({
       suppressHydrationWarning
       className={cn(inter.variable, serif.variable, mono.variable)}
     >
-      <body className="min-h-screen font-sans antialiased">
+      <body className="h-screen overflow-hidden font-sans antialiased">
         <NextIntlClientProvider locale={locale as Locale} messages={messages}>
           <Providers>{children}</Providers>
         </NextIntlClientProvider>

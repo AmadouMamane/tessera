@@ -25,7 +25,7 @@ export function EmptyState({
       )}
     >
       {icon ? (
-        <div className="text-[var(--muted-foreground)] [&_svg]:size-8">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-navy-900 text-gold-400 dark:bg-gold-500/10 dark:text-gold-400 [&_svg]:h-5 [&_svg]:w-5">
           {icon}
         </div>
       ) : null}

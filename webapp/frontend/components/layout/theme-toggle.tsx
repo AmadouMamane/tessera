@@ -1,24 +1,40 @@
 "use client";
 
 import { Monitor, Moon, Sun } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+
+function withTransition(callback: () => void) {
+  document.documentElement.classList.add("theme-transitioning");
+  callback();
+  const timer = setTimeout(
+    () => document.documentElement.classList.remove("theme-transitioning"),
+    200,
+  );
+  return () => clearTimeout(timer);
+}
 
 export function ThemeToggle() {
   const { setTheme, resolvedTheme } = useTheme();
+  const t = useTranslations("common.theme");
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
   const Icon =
-    !mounted || resolvedTheme === "light" ? Sun : resolvedTheme === "dark" ? Moon : Monitor;
+    !mounted || resolvedTheme === "light"
+      ? Sun
+      : resolvedTheme === "dark"
+        ? Moon
+        : Monitor;
 
   return (
     <DropdownMenu>
@@ -26,24 +42,24 @@ export function ThemeToggle() {
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Theme"
+          aria-label={t("label")}
           aria-haspopup="menu"
         >
           <Icon className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[8rem]">
-        <DropdownMenuItem onSelect={() => setTheme("light")}>
+        <DropdownMenuItem onSelect={() => withTransition(() => setTheme("light"))}>
           <Sun className="mr-2 h-4 w-4" />
-          Light
+          {t("light")}
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => setTheme("dark")}>
+        <DropdownMenuItem onSelect={() => withTransition(() => setTheme("dark"))}>
           <Moon className="mr-2 h-4 w-4" />
-          Dark
+          {t("dark")}
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={() => setTheme("system")}>
+        <DropdownMenuItem onSelect={() => withTransition(() => setTheme("system"))}>
           <Monitor className="mr-2 h-4 w-4" />
-          System
+          {t("system")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, ShieldOff, ShieldCheck, ShieldAlert, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, ShieldAlert, ShieldCheck, ShieldOff, X } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useState } from "react";
 
@@ -106,7 +106,7 @@ export function AuditTable() {
               {entries.map((entry, idx) => (
                 <TableRow
                   key={`${entry.occurred_at}-${idx}`}
-                  className="cursor-pointer"
+                  className="group cursor-pointer transition-colors hover:bg-[var(--muted)]/40"
                   onClick={() => setSelected(entry)}
                 >
                   <TableCell className="font-mono text-xs">
@@ -124,10 +124,8 @@ export function AuditTable() {
                   <TableCell className="text-right text-xs text-[var(--muted-foreground)]">
                     {entry.decisions.length}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" tabIndex={-1}>
-                      {tCommon("details")}
-                    </Button>
+                  <TableCell className="w-8 text-right">
+                    <ChevronRight className="ml-auto h-4 w-4 text-[var(--muted-foreground)] opacity-0 transition-opacity duration-150 group-hover:opacity-100" />
                   </TableCell>
                 </TableRow>
               ))}
@@ -144,7 +142,14 @@ export function AuditTable() {
         />
       </CardContent>
       {selected ? (
-        <DetailsDrawer entry={selected} onClose={() => setSelected(null)} />
+        <>
+          <div
+            aria-hidden
+            className="fixed inset-0 z-30 bg-[var(--background)]/60 backdrop-blur-sm animate-in fade-in-0 duration-200"
+            onClick={() => setSelected(null)}
+          />
+          <DetailsDrawer entry={selected} onClose={() => setSelected(null)} />
+        </>
       ) : null}
     </Card>
   );
@@ -265,17 +270,81 @@ function DetailsDrawer({
   onClose: () => void;
 }) {
   const t = useTranslations("common");
+  const tAudit = useTranslations("audit");
+  const formatter = useFormatter();
+
   return (
-    <div className="fixed inset-y-0 right-0 z-40 w-full max-w-md border-l border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-card-elevated)]">
+    <div className="animate-in slide-in-from-right-full fixed inset-y-0 right-0 z-40 flex w-full max-w-md flex-col border-l border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-card-elevated)] duration-300">
+      {/* Header */}
       <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
-        <p className="font-serif text-sm font-semibold">{entry.target}</p>
+        <div className="flex items-center gap-2">
+          <OutcomeBadge outcome={entry.outcome} />
+          <p className="font-serif text-sm font-semibold">{entry.target}</p>
+        </div>
         <Button variant="ghost" size="icon" onClick={onClose} aria-label={t("close")}>
           <X className="h-4 w-4" />
         </Button>
       </div>
-      <pre className="max-h-[80vh] overflow-auto p-5 font-mono text-xs leading-relaxed text-[var(--foreground)]">
-        {JSON.stringify(entry, null, 2)}
-      </pre>
+
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto p-5 space-y-5">
+        {/* Meta row */}
+        <div className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)]">
+          <span className="font-mono tabular-nums">
+            {formatter.dateTime(new Date(entry.occurred_at), {
+              dateStyle: "medium",
+              timeStyle: "medium",
+            })}
+          </span>
+        </div>
+
+        {/* Decisions */}
+        {entry.decisions.length > 0 && (
+          <section>
+            <p className="mb-2 text-[0.65rem] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
+              {tAudit("columns.decisions")}
+            </p>
+            <ul className="space-y-2">
+              {entry.decisions.map((d, i) => (
+                <li
+                  key={i}
+                  className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 px-4 py-3 text-xs"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-mono font-medium text-[var(--foreground)]">{d.policy_rule}</span>
+                    <span className={d.decision === "allow"
+                      ? "font-medium text-green-700 dark:text-green-400"
+                      : d.decision === "deny"
+                        ? "font-medium text-red-700 dark:text-red-400"
+                        : "font-medium text-amber-700 dark:text-amber-400"
+                    }>
+                      {d.decision}
+                    </span>
+                  </div>
+                  {d.rationale && (
+                    <p className="mt-1 leading-relaxed text-[var(--muted-foreground)]">{d.rationale}</p>
+                  )}
+                  {d.redactions.length > 0 && (
+                    <p className="mt-1 text-[var(--muted-foreground)]/60">
+                      Redacted: {d.redactions.join(", ")}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Raw payload — collapsible */}
+        <section>
+          <p className="mb-2 text-[0.65rem] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
+            Payload
+          </p>
+          <pre className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-3 py-2.5 font-mono text-[0.72rem] leading-relaxed text-[var(--foreground)] dark:bg-navy-800/60">
+            {JSON.stringify(entry, null, 2)}
+          </pre>
+        </section>
+      </div>
     </div>
   );
 }

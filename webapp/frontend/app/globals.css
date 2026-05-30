@@ -98,6 +98,9 @@
     0 4px 12px -2px oklch(0.18 0.018 260 / 0.06);
   --shadow-card-elevated: 0 2px 4px 0 oklch(0.18 0.018 260 / 0.06),
     0 12px 32px -4px oklch(0.18 0.018 260 / 0.1);
+  --shadow-card-glow: 0 0 0 1px oklch(0.72 0.142 80 / 0.07),
+    0 2px 4px -1px oklch(0.12 0.03 265 / 0.08),
+    0 16px 48px -8px oklch(0.12 0.03 265 / 0.28);
   --shadow-focus: 0 0 0 3px oklch(0.72 0.142 80 / 0.35);
 
   /* -- Animation ----------------------------------------------------------- */
@@ -209,6 +212,20 @@
   .text-balance { text-wrap: balance; }
   .text-pretty  { text-wrap: pretty; }
 
+  /* Canvas: dot grid + radial gold halo */
+  .bg-canvas-glow {
+    background-image:
+      radial-gradient(oklch(0.18 0.018 260 / 0.07) 1px, transparent 1px),
+      radial-gradient(ellipse 80% 55% at 50% 0%, oklch(0.72 0.142 80 / 0.025), transparent);
+    background-size: 28px 28px, 100% 100%;
+  }
+  .dark .bg-canvas-glow {
+    background-image:
+      radial-gradient(oklch(0.96 0.005 250 / 0.04) 1px, transparent 1px),
+      radial-gradient(ellipse 80% 55% at 50% 0%, oklch(0.72 0.142 80 / 0.07), transparent);
+    background-size: 28px 28px, 100% 100%;
+  }
+
   .ring-focus {
     outline: none;
     box-shadow: var(--shadow-focus);
@@ -218,6 +235,25 @@
   .border-inset {
     box-shadow: inset 0 0 0 1px var(--border);
   }
+}
+
+/* Smooth dark/light mode switch — applied only during the transition */
+.theme-transitioning,
+.theme-transitioning *,
+.theme-transitioning *::before,
+.theme-transitioning *::after {
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    fill 150ms ease,
+    stroke 150ms ease !important;
+  transition-delay: 0ms !important;
+}
+
+@keyframes border-shimmer {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 1;   }
 }
 
 @keyframes shimmer {

@@ -1,8 +1,10 @@
 {
   "app": {
     "title": "Tessera",
-    "subtitle": "Crédit Aurore banking support",
-    "tagline": "Multilingual agent grounded in EU regulatory corpora."
+    "subtitle": "Banking support",
+    "bank": "Crédit Aurore",
+    "tagline": "Active firewall · EU-hosted data",
+    "operational": "Operational"
   },
   "nav": {
     "chat": "Chat",
@@ -25,11 +27,17 @@
     "of": "of",
     "results": "results",
     "next": "Next",
-    "previous": "Previous"
+    "previous": "Previous",
+    "theme": {
+      "label": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    }
   },
   "chat": {
     "title": "Chat",
-    "description": "Ask Tessera anything. Responses are checked by the internal firewall and recorded in the audit trail.",
+    "description": "Ask Tessera anything.",
     "placeholder": "Ask your question…",
     "send": "Send",
     "clear": "New chat",
@@ -44,7 +52,8 @@
     "copied": "Copied!",
     "scrollToBottom": "Scroll to bottom",
     "startWith": "Try asking",
-    "composerHint": "Enter to send · Shift+Enter for new line"
+    "composerHint": "Enter to send · Shift+Enter for new line",
+    "errorFallback": "Something went wrong. Please try again."
   },
   "audit": {
     "title": "Audit trail",
@@ -79,10 +88,27 @@
       "case": "Case",
       "language": "Language",
       "result": "Result",
-      "reason": "Reason"
+      "expected": "Expected behaviour",
+      "failureReason": "Failure reason"
     },
     "passed": "Pass",
-    "failed": "Fail"
+    "failed": "Fail",
+    "runHistory": {
+      "title": "Run history",
+      "runSingular": "run",
+      "runPlural": "runs",
+      "current": "current",
+      "prevPage": "Previous page",
+      "nextPage": "Next page",
+      "columns": {
+        "run": "Run",
+        "lang": "Lang",
+        "cases": "Cases",
+        "passed": "Passed",
+        "passRate": "Pass rate",
+        "trend": "Trend"
+      }
+    }
   },
   "health": {
     "title": "Service health",

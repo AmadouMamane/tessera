@@ -63,52 +63,57 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(
     }
 
     return (
-      <div className="border-t border-[var(--border)] bg-[var(--card)]">
+      <div className="border-t border-[var(--border)] bg-[var(--card)] px-4 pb-3 pt-3">
         <form
-          className="mx-auto flex max-w-3xl items-end gap-2 px-4 pt-3 pb-2"
+          className="mx-auto max-w-3xl"
           onSubmit={(e) => {
             e.preventDefault();
             submit();
           }}
         >
-          <Textarea
-            ref={textareaRef}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onKeyDown={handleKey}
-            placeholder={t("placeholder")}
-            disabled={disabled}
-            rows={1}
-            className="min-h-[44px] resize-none overflow-hidden"
-            aria-label={t("placeholder")}
-          />
-          {isStreaming && onAbort ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={onAbort}
-              aria-label="Stop"
-              className="shrink-0"
-            >
-              <StopCircle className="h-4 w-4" />
-            </Button>
-          ) : (
-            <Button
-              type="submit"
-              variant="primary"
-              size="icon"
-              disabled={disabled || value.trim().length === 0}
-              aria-label={t("send")}
-              className="shrink-0"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+          {/* Integrated pill — focus glow on the wrapper, not on the textarea */}
+          <div className="flex items-end gap-2 rounded-2xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-2 transition-all duration-200 focus-within:border-gold-500/50 focus-within:shadow-[0_0_0_3px_oklch(0.72_0.142_80/0.12)] dark:focus-within:border-gold-400/40 dark:focus-within:shadow-[0_0_0_3px_oklch(0.72_0.142_80/0.15)]">
+            <Textarea
+              ref={textareaRef}
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onKeyDown={handleKey}
+              placeholder={t("placeholder")}
+              disabled={disabled}
+              rows={1}
+              className="min-h-[36px] flex-1 resize-none overflow-hidden border-0 bg-transparent px-0 py-1 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+              aria-label={t("placeholder")}
+            />
+            {isStreaming && onAbort ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={onAbort}
+                aria-label="Stop"
+                className="mb-0.5 shrink-0 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+              >
+                <StopCircle className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                variant="primary"
+                size="icon"
+                disabled={disabled || value.trim().length === 0}
+                aria-label={t("send")}
+                className="mb-0.5 shrink-0"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          {value.trim().length === 0 && (
+            <p className="mt-1.5 px-1 text-[0.65rem] text-[var(--muted-foreground)] animate-in fade-in-0 duration-150">
+              {t("composerHint")}
+            </p>
           )}
         </form>
-        <p className="mx-auto max-w-3xl px-5 pb-3 text-[0.65rem] text-[var(--muted-foreground)]">
-          {t("composerHint")}
-        </p>
       </div>
     );
   },

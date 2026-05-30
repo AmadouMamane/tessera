@@ -9,6 +9,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +49,7 @@ interface RunHistoryPanelProps {
 }
 
 export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
+  const t = useTranslations("eval.runHistory");
   const [page, setPage] = useState(0);
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -94,9 +96,9 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
         <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-[var(--muted-foreground)]" />
-            <span className="text-sm font-medium">Run history</span>
+            <span className="text-sm font-medium">{t("title")}</span>
             <span className="text-xs text-[var(--muted-foreground)]">
-              ({runs.length} run{runs.length !== 1 ? "s" : ""})
+              ({runs.length} {runs.length !== 1 ? t("runPlural") : t("runSingular")})
             </span>
           </div>
           {totalPages > 1 && (
@@ -106,7 +108,7 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
                 size="icon"
                 onClick={() => setPage((p) => p - 1)}
                 disabled={page === 0}
-                aria-label="Previous page"
+                aria-label={t("prevPage")}
               >
                 <ChevronLeft />
               </Button>
@@ -118,7 +120,7 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
                 size="icon"
                 onClick={() => setPage((p) => p + 1)}
                 disabled={page >= totalPages - 1}
-                aria-label="Next page"
+                aria-label={t("nextPage")}
               >
                 <ChevronRight />
               </Button>
@@ -135,17 +137,17 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
                     onClick={() => handleSort("date")}
                     className="flex cursor-pointer items-center whitespace-nowrap hover:text-[var(--foreground)]"
                   >
-                    Run
+                    {t("columns.run")}
                     <SortIcon col="date" sortKey={sortKey} sortDir={sortDir} />
                   </button>
                 </TableHead>
-                <TableHead style={{ width: "14%" }} className="whitespace-nowrap text-center">Lang</TableHead>
+                <TableHead style={{ width: "14%" }} className="whitespace-nowrap text-center">{t("columns.lang")}</TableHead>
                 <TableHead style={{ width: "14%" }} className="whitespace-nowrap text-center">
                   <button
                     onClick={() => handleSort("cases")}
                     className="flex w-full cursor-pointer items-center justify-center hover:text-[var(--foreground)]"
                   >
-                    Cases
+                    {t("columns.cases")}
                     <SortIcon col="cases" sortKey={sortKey} sortDir={sortDir} />
                   </button>
                 </TableHead>
@@ -154,7 +156,7 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
                     onClick={() => handleSort("passed")}
                     className="flex w-full cursor-pointer items-center justify-center hover:text-[var(--foreground)]"
                   >
-                    Passed
+                    {t("columns.passed")}
                     <SortIcon col="passed" sortKey={sortKey} sortDir={sortDir} />
                   </button>
                 </TableHead>
@@ -163,11 +165,11 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
                     onClick={() => handleSort("pass_rate")}
                     className="flex w-full cursor-pointer items-center justify-center whitespace-nowrap hover:text-[var(--foreground)]"
                   >
-                    Pass rate
+                    {t("columns.passRate")}
                     <SortIcon col="pass_rate" sortKey={sortKey} sortDir={sortDir} />
                   </button>
                 </TableHead>
-                <TableHead style={{ width: "22%" }} className="whitespace-nowrap text-center pr-24">Trend</TableHead>
+                <TableHead style={{ width: "22%" }} className="whitespace-nowrap text-center pr-24">{t("columns.trend")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -187,8 +189,8 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
                     key={run.filename}
                     className={
                       isCurrent
-                        ? "bg-[var(--muted)]/30"
-                        : "hover:bg-[var(--muted)]/10 cursor-pointer"
+                        ? "border-l-2 border-l-gold-500/70 bg-[var(--muted)]/30 dark:border-l-gold-400/60"
+                        : "cursor-pointer transition-colors hover:bg-[var(--muted)]/20"
                     }
                   >
                     <TableCell className="font-mono text-xs">
@@ -200,7 +202,7 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
                       </Link>
                       {isCurrent && (
                         <Badge tone="info" className="ml-2 text-[10px]">
-                          current
+                          {t("current")}
                         </Badge>
                       )}
                     </TableCell>

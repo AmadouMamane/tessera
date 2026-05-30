@@ -1,8 +1,10 @@
 {
   "app": {
     "title": "Tessera",
-    "subtitle": "Bankberatung — Crédit Aurore",
-    "tagline": "Mehrsprachiger Agent, verankert im EU-Aufsichtsrecht."
+    "subtitle": "Bankberatung",
+    "bank": "Crédit Aurore",
+    "tagline": "Aktive Firewall · EU-Hosting",
+    "operational": "Betriebsbereit"
   },
   "nav": {
     "chat": "Chat",
@@ -25,11 +27,17 @@
     "of": "von",
     "results": "Ergebnissen",
     "next": "Weiter",
-    "previous": "Zurück"
+    "previous": "Zurück",
+    "theme": {
+      "label": "Design",
+      "light": "Hell",
+      "dark": "Dunkel",
+      "system": "System"
+    }
   },
   "chat": {
     "title": "Chat",
-    "description": "Stellen Sie Tessera Ihre Fragen. Antworten werden durch die interne Firewall geprüft und im Audit-Protokoll erfasst.",
+    "description": "Stellen Sie Tessera Ihre Fragen.",
     "placeholder": "Stellen Sie Ihre Frage …",
     "send": "Senden",
     "clear": "Neuer Chat",
@@ -44,7 +52,8 @@
     "copied": "Kopiert!",
     "scrollToBottom": "Nach unten scrollen",
     "startWith": "Zum Einstieg",
-    "composerHint": "Eingabe zum Senden · Umschalt+Eingabe für neue Zeile"
+    "composerHint": "Eingabe zum Senden · Umschalt+Eingabe für neue Zeile",
+    "errorFallback": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut."
   },
   "audit": {
     "title": "Audit-Protokoll",
@@ -79,10 +88,27 @@
       "case": "Fall",
       "language": "Sprache",
       "result": "Ergebnis",
-      "reason": "Begründung"
+      "expected": "Erwartetes Verhalten",
+      "failureReason": "Fehlerursache"
     },
     "passed": "Bestanden",
-    "failed": "Fehlgeschlagen"
+    "failed": "Fehlgeschlagen",
+    "runHistory": {
+      "title": "Ausführungshistorie",
+      "runSingular": "Ausführung",
+      "runPlural": "Ausführungen",
+      "current": "aktuell",
+      "prevPage": "Vorherige Seite",
+      "nextPage": "Nächste Seite",
+      "columns": {
+        "run": "Run",
+        "lang": "Sprache",
+        "cases": "Fälle",
+        "passed": "Bestanden",
+        "passRate": "Quote",
+        "trend": "Trend"
+      }
+    }
   },
   "health": {
     "title": "Servicestatus",

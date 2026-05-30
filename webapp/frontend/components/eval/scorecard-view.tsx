@@ -75,29 +75,79 @@ export async function ScorecardView({ locale, filename }: ScorecardViewProps) {
       ) : (
         <>
           {/* Summary tiles */}
-          <SummaryRow scorecard={scorecard} />
+          <SummaryRow
+            scorecard={scorecard}
+            labels={{
+              total: t("summary.total"),
+              passed: t("summary.passed"),
+              failed: t("summary.failed"),
+              rate: t("summary.rate"),
+            }}
+          />
           {/* Results by category */}
-          <ResultsByCategory results={scorecard.results} />
+          <ResultsByCategory
+            results={scorecard.results}
+            columns={{
+              case: t("columns.case"),
+              language: t("columns.language"),
+              result: t("columns.result"),
+              expected: t("columns.expected"),
+              failureReason: t("columns.failureReason"),
+            }}
+            passLabel={t("passed")}
+            failLabel={t("failed")}
+          />
         </>
       )}
     </div>
   );
 }
 
-function SummaryRow({ scorecard }: { scorecard: ScorecardDocument }) {
+interface SummaryLabels {
+  total: string;
+  passed: string;
+  failed: string;
+  rate: string;
+}
+
+function SummaryRow({
+  scorecard,
+  labels,
+}: {
+  scorecard: ScorecardDocument;
+  labels: SummaryLabels;
+}) {
   const { summary } = scorecard;
   const passRate = `${(summary.pass_rate * 100).toFixed(0)}%`;
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-      <SummaryTile label="Total" value={summary.total} />
-      <SummaryTile label="Passed" value={summary.passed} tone="success" />
-      <SummaryTile label="Failed" value={summary.failed} tone="danger" />
-      <SummaryTile label="Pass rate" value={passRate} tone="navy" />
+      <SummaryTile label={labels.total} value={summary.total} />
+      <SummaryTile label={labels.passed} value={summary.passed} tone="success" />
+      <SummaryTile label={labels.failed} value={summary.failed} tone="danger" />
+      <SummaryTile label={labels.rate} value={passRate} tone="navy" />
     </div>
   );
 }
 
-function ResultsByCategory({ results }: { results: ScorecardResult[] }) {
+interface CategoryColumns {
+  case: string;
+  language: string;
+  result: string;
+  expected: string;
+  failureReason: string;
+}
+
+function ResultsByCategory({
+  results,
+  columns,
+  passLabel,
+  failLabel,
+}: {
+  results: ScorecardResult[];
+  columns: CategoryColumns;
+  passLabel: string;
+  failLabel: string;
+}) {
   const byCategory = groupBy(results, (r) => r.category || "other");
   return (
     <div className="flex flex-col gap-4">
@@ -111,11 +161,11 @@ function ResultsByCategory({ results }: { results: ScorecardResult[] }) {
               {/* Category header */}
               <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
                 <div className="flex items-center gap-3">
-                  <Badge tone={(CATEGORY_TONE[category] as any) ?? "neutral"}>
+                  <Badge tone={(CATEGORY_TONE[category] as "danger" | "warning" | "navy" | "info") ?? "neutral"}>
                     {CATEGORY_LABELS[category] ?? category}
                   </Badge>
                   <span className="text-sm text-[var(--muted-foreground)]">
-                    {passed}/{total} passed
+                    {passed}/{total}
                   </span>
                 </div>
                 <PassRateBar rate={rate} />
@@ -131,11 +181,11 @@ function ResultsByCategory({ results }: { results: ScorecardResult[] }) {
                 </colgroup>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Case</TableHead>
-                    <TableHead className="text-center">Lang</TableHead>
-                    <TableHead className="text-center">Result</TableHead>
-                    <TableHead>Expected</TableHead>
-                    <TableHead>Failure reason</TableHead>
+                    <TableHead>{columns.case}</TableHead>
+                    <TableHead className="text-center">{columns.language}</TableHead>
+                    <TableHead className="text-center">{columns.result}</TableHead>
+                    <TableHead>{columns.expected}</TableHead>
+                    <TableHead>{columns.failureReason}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -157,11 +207,11 @@ function ResultsByCategory({ results }: { results: ScorecardResult[] }) {
                       <TableCell className="align-top text-center">
                         {result.passed ? (
                           <Badge tone="success" className="gap-1">
-                            <Check className="h-3 w-3" /> Pass
+                            <Check className="h-3 w-3" /> {passLabel}
                           </Badge>
                         ) : (
                           <Badge tone="danger" className="gap-1">
-                            <X className="h-3 w-3" /> Fail
+                            <X className="h-3 w-3" /> {failLabel}
                           </Badge>
                         )}
                       </TableCell>
@@ -197,14 +247,24 @@ function ResultsByCategory({ results }: { results: ScorecardResult[] }) {
 
 function PassRateBar({ rate }: { rate: number }) {
   const pct = Math.round(rate * 100);
-  const color =
-    pct >= 80 ? "bg-green-500" : pct >= 50 ? "bg-amber-500" : "bg-red-500";
+  const gradient =
+    pct >= 80
+      ? "bg-gradient-to-r from-green-600 to-green-400"
+      : pct >= 50
+        ? "bg-gradient-to-r from-amber-600 to-amber-400"
+        : "bg-gradient-to-r from-red-600 to-red-400";
+  const text =
+    pct >= 80
+      ? "text-green-700 dark:text-green-400"
+      : pct >= 50
+        ? "text-amber-700 dark:text-amber-400"
+        : "text-red-700 dark:text-red-400";
   return (
     <div className="flex items-center gap-2">
-      <div className="h-2 w-24 overflow-hidden rounded-full bg-[var(--muted)]">
-        <div className={`h-full ${color} transition-all`} style={{ width: `${pct}%` }} />
+      <div className="h-1.5 w-24 overflow-hidden rounded-full bg-[var(--muted)]">
+        <div className={`h-full ${gradient} transition-all duration-500`} style={{ width: `${pct}%` }} />
       </div>
-      <span className="w-8 text-right text-xs font-semibold">{pct}%</span>
+      <span className={`w-8 text-right text-xs font-semibold tabular-nums ${text}`}>{pct}%</span>
     </div>
   );
 }
@@ -216,7 +276,7 @@ interface SummaryTileProps {
 }
 
 function SummaryTile({ label, value, tone }: SummaryTileProps) {
-  const accent =
+  const valueColor =
     tone === "success"
       ? "text-green-700 dark:text-green-400"
       : tone === "danger"
@@ -224,13 +284,23 @@ function SummaryTile({ label, value, tone }: SummaryTileProps) {
         : tone === "navy"
           ? "text-navy-900 dark:text-gold-400"
           : "text-[var(--foreground)]";
+  const topBorder =
+    tone === "success"
+      ? "border-t-2 border-t-green-500"
+      : tone === "danger"
+        ? "border-t-2 border-t-red-500"
+        : tone === "navy"
+          ? "border-t-2 border-t-gold-500"
+          : "";
   return (
-    <Card>
+    <Card className={topBorder}>
       <CardContent className="flex flex-col items-center gap-1 py-5">
         <span className="text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
           {label}
         </span>
-        <span className={`font-serif text-3xl font-semibold ${accent}`}>{value}</span>
+        <span className={`font-serif text-3xl font-semibold tabular-nums ${valueColor}`}>
+          {value}
+        </span>
       </CardContent>
     </Card>
   );

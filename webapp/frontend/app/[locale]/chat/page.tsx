@@ -19,7 +19,7 @@ export default async function ChatPage({ params }: ChatPageProps) {
   const t = await getTranslations({ locale, namespace: "chat" });
 
   return (
-    <AppShell title={t("title")} description={t("description")}>
+    <AppShell title={t("title")}>
       <ChatRoom />
     </AppShell>
   );

@@ -1,8 +1,10 @@
 {
   "app": {
     "title": "Tessera",
-    "subtitle": "Assistance bancaire Crédit Aurore",
-    "tagline": "Agent multilingue, ancré dans la réglementation européenne."
+    "subtitle": "Assistance bancaire",
+    "bank": "Crédit Aurore",
+    "tagline": "Pare-feu actif · Données hébergées UE",
+    "operational": "Opérationnel"
   },
   "nav": {
     "chat": "Conversation",
@@ -25,11 +27,17 @@
     "of": "sur",
     "results": "résultats",
     "next": "Suivant",
-    "previous": "Précédent"
+    "previous": "Précédent",
+    "theme": {
+      "label": "Thème",
+      "light": "Clair",
+      "dark": "Sombre",
+      "system": "Système"
+    }
   },
   "chat": {
     "title": "Conversation",
-    "description": "Posez vos questions à Tessera. Les réponses sont vérifiées par le pare-feu interne et tracées dans le journal d'audit.",
+    "description": "Posez vos questions à Tessera.",
     "placeholder": "Posez votre question…",
     "send": "Envoyer",
     "clear": "Nouvelle conversation",
@@ -44,7 +52,8 @@
     "copied": "Copié !",
     "scrollToBottom": "Défiler vers le bas",
     "startWith": "Pour commencer",
-    "composerHint": "Entrée pour envoyer · Maj+Entrée pour aller à la ligne"
+    "composerHint": "Entrée pour envoyer · Maj+Entrée pour aller à la ligne",
+    "errorFallback": "Une erreur est survenue. Veuillez réessayer."
   },
   "audit": {
     "title": "Journal d'audit",
@@ -79,10 +88,27 @@
       "case": "Cas",
       "language": "Langue",
       "result": "Résultat",
-      "reason": "Justification"
+      "expected": "Comportement attendu",
+      "failureReason": "Motif d'échec"
     },
     "passed": "Réussi",
-    "failed": "Échec"
+    "failed": "Échec",
+    "runHistory": {
+      "title": "Historique des runs",
+      "runSingular": "run",
+      "runPlural": "runs",
+      "current": "actuel",
+      "prevPage": "Page précédente",
+      "nextPage": "Page suivante",
+      "columns": {
+        "run": "Run",
+        "lang": "Langue",
+        "cases": "Cas",
+        "passed": "Réussis",
+        "passRate": "Taux",
+        "trend": "Évolution"
+      }
+    }
   },
   "health": {
     "title": "État du service",
