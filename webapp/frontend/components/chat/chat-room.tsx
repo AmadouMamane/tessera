@@ -12,6 +12,22 @@ import { streamChat } from "@/lib/api/sse";
 import { useChatStore } from "@/lib/stores/chat-store";
 import type { Locale } from "@/i18n/routing";
 
+/**
+ * Stable per-browser long-term-memory identity (ADR 0007). Generated once and
+ * persisted in localStorage so the agent can recall durable facts across
+ * separate conversations. Replaced by a real customer id once auth exists.
+ */
+function getSubjectId(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  const KEY = "tessera.subjectId";
+  let id = window.localStorage.getItem(KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    window.localStorage.setItem(KEY, id);
+  }
+  return id;
+}
+
 type Suggestion = { text: string; Icon: LucideIcon };
 
 const SUGGESTED_PROMPTS: Record<string, Suggestion[]> = {
@@ -177,6 +193,7 @@ export function ChatRoom() {
             message: text,
             language: locale,
             conversation_id: currentConvId ?? undefined,
+            subject_id: getSubjectId(),
             history: history.length > 0 ? history : undefined,
           },
           {

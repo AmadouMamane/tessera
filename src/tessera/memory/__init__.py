@@ -41,15 +41,23 @@ __all__ = [
 ]
 
 
-def scope_for(conversation_id: UUID, language: LanguageCode) -> MemoryScope:
-    """Build a :class:`MemoryScope`, defaulting ``subject_id`` to the thread id.
+def scope_for(
+    conversation_id: UUID,
+    language: LanguageCode,
+    *,
+    subject_id: str | None = None,
+) -> MemoryScope:
+    """Build a :class:`MemoryScope`.
 
-    Until an authentication layer supplies a real customer identity, the
-    conversation id is the long-term subject proxy (ADR 0007, "Identity").
+    ``subject_id`` is the long-term identity key. When the caller supplies a
+    stable identifier (e.g. a client-persisted id, or a real authenticated
+    customer once auth exists), cross-session memory is keyed by it. Absent one,
+    it falls back to the conversation id — per-thread memory only (ADR 0007,
+    "Identity").
     """
     return MemoryScope(
         conversation_id=conversation_id,
-        subject_id=str(conversation_id),
+        subject_id=subject_id or str(conversation_id),
         language=language,
     )
 

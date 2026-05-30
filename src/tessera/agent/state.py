@@ -169,6 +169,9 @@ class AgentState(TypedDict):
     # --- Identity ---------------------------------------------------------
     conversation_id: UUID
     turn_id: UUID
+    # Long-term memory subject key (ADR 0007). Defaults to str(conversation_id)
+    # when the caller supplies no stable identifier.
+    subject_id: NotRequired[str]
 
     # --- Input ------------------------------------------------------------
     user_input: str
@@ -214,6 +217,7 @@ def new_state(
     language: LanguageCode,
     language_confidence: float = 1.0,
     prior_messages: list[ConversationMessage] | None = None,
+    subject_id: str | None = None,
 ) -> AgentState:
     """Construct a fresh :class:`AgentState` ready to enter the graph.
 
@@ -226,6 +230,8 @@ def new_state(
         prior_messages: Optional conversation history from previous turns.
             When provided, these messages are prepended so the reporter can
             inject multi-turn context into the LLM prompt.
+        subject_id: Optional stable long-term-memory identity key. Defaults to
+            ``str(conversation_id)`` (per-thread memory) when omitted.
 
     Returns:
         A state dict with all accumulator fields initialised to empty lists.
@@ -235,6 +241,7 @@ def new_state(
     return AgentState(
         conversation_id=conversation_id,
         turn_id=turn_id,
+        subject_id=subject_id or str(conversation_id),
         user_input=user_input,
         language=language,
         language_confidence=language_confidence,

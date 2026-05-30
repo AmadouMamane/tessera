@@ -21,6 +21,11 @@ import {
 export interface ChatTurnRequest {
   message: string;
   conversation_id?: string;
+  /**
+   * Stable long-term-memory identity key (ADR 0007). Persisted per browser so
+   * the agent can recall durable facts across separate conversations.
+   */
+  subject_id?: string;
   language?: "fr" | "de" | "en";
   history?: Array<{ role: "user" | "assistant"; content: string }>;
 }

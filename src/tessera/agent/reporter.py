@@ -122,7 +122,9 @@ async def _build_chat_messages(
     untrusted *context* — never as instructions (ADR 0007, anti-poisoning).
     """
     backend = get_memory_backend()
-    scope = scope_for(state["conversation_id"], state["language"])
+    scope = scope_for(
+        state["conversation_id"], state["language"], subject_id=state.get("subject_id")
+    )
     context = await backend.load(
         scope=scope,
         messages=state.get("messages", []),

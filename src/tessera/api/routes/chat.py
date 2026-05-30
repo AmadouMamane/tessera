@@ -98,6 +98,15 @@ class ChatRequest(BaseModel):
 
     message: str = Field(min_length=1, max_length=4_000)
     conversation_id: uuid.UUID | None = None
+    subject_id: str | None = Field(
+        default=None,
+        max_length=200,
+        description=(
+            "Stable long-term-memory identity key (ADR 0007). When supplied, "
+            "cross-session memory is keyed by it; otherwise it falls back to the "
+            "conversation id (per-thread memory only)."
+        ),
+    )
     language: LanguageCode | None = Field(
         default=None,
         description="Optional language hint; the router will still verify.",
@@ -143,6 +152,7 @@ async def _stream_turn(request: ChatRequest) -> AsyncIterator[bytes]:
         language=language,
         language_confidence=pinned_confidence,
         prior_messages=prior_messages,
+        subject_id=request.subject_id,
     )
 
     graph = _streaming_graph()
@@ -207,7 +217,7 @@ async def _stream_turn(request: ChatRequest) -> AsyncIterator[bytes]:
     # No-op for the window backend; real work for summary/persistent backends.
     _spawn_background(
         get_memory_backend().record(
-            scope=scope_for(conversation_id, resolved_language),
+            scope=scope_for(conversation_id, resolved_language, subject_id=request.subject_id),
             turn=TurnRecord(
                 user_input=request.message,
                 final_response=final_response,
