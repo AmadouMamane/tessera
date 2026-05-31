@@ -356,7 +356,7 @@ export function ChatRoom() {
             {/* Typing indicator — borderless to match assistant messages */}
             {isStreaming && messages[messages.length - 1]?.role === "user" && (
               <div className="mt-5 flex items-start gap-3 animate-in fade-in-0 slide-in-from-bottom-2 duration-200">
-                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-navy-900 text-gold-400 dark:bg-gold-500 dark:text-navy-950">
+                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-navy-800 to-navy-950 text-gold-400 shadow-[inset_0_1px_1px_oklch(0.72_0.142_80/0.2)] ring-1 ring-gold-500/15 dark:from-gold-500 dark:to-gold-600 dark:text-navy-950 dark:ring-gold-300/25">
                   <Sparkles className="h-4 w-4 animate-pulse" />
                 </div>
                 <div className="flex flex-col gap-1.5">

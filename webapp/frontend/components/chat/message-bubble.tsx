@@ -113,8 +113,8 @@ export function MessageBubble({
           className={cn(
             "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
             isUser
-              ? "bg-[var(--secondary)] text-[var(--muted-foreground)]"
-              : "bg-navy-900 text-gold-400 dark:bg-gold-500 dark:text-navy-950",
+              ? "bg-[var(--secondary)] text-[var(--muted-foreground)] ring-1 ring-[var(--border)]"
+              : "bg-gradient-to-br from-navy-800 to-navy-950 text-gold-400 shadow-[inset_0_1px_1px_oklch(0.72_0.142_80/0.2)] ring-1 ring-gold-500/15 dark:from-gold-500 dark:to-gold-600 dark:text-navy-950 dark:ring-gold-300/25",
           )}
         >
           {isUser ? <User2 className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
@@ -299,8 +299,9 @@ function CitationPills({
       {citations.map((c, idx) => (
         <span
           key={`${c.source}-${c.locator}-${idx}`}
-          className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--muted)]/40 px-2 py-0.5 text-[0.65rem] text-[var(--foreground)]"
+          className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--muted)]/40 px-2 py-0.5 text-[0.65rem] text-[var(--foreground)] transition-colors hover:border-gold-500/40 hover:bg-gold-500/5"
         >
+          <span className="h-1 w-1 rounded-full bg-gold-500/70 dark:bg-gold-400/70" />
           <span className="font-medium">{c.source}</span>
           {c.locator && <span className="text-[var(--muted-foreground)]">{c.locator}</span>}
         </span>
