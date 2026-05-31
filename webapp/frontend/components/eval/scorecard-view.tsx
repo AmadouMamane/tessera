@@ -302,21 +302,35 @@ function SummaryTile({ label, value, tone }: SummaryTileProps) {
         : tone === "navy"
           ? "text-navy-900 dark:text-gold-400"
           : "text-[var(--foreground)]";
-  const topBorder =
+  const accent =
     tone === "success"
-      ? "border-t-2 border-t-green-500"
+      ? "from-green-500/70"
       : tone === "danger"
-        ? "border-t-2 border-t-red-500"
+        ? "from-red-500/70"
         : tone === "navy"
-          ? "border-t-2 border-t-gold-500"
-          : "";
+          ? "from-gold-500/70"
+          : "from-[var(--border)]";
+  const glow =
+    tone === "success"
+      ? "bg-green-500/[0.07]"
+      : tone === "danger"
+        ? "bg-red-500/[0.07]"
+        : tone === "navy"
+          ? "bg-gold-500/[0.08]"
+          : "bg-transparent";
   return (
-    <Card className={topBorder}>
-      <CardContent className="flex flex-col items-center gap-1 py-5">
+    <Card className="group relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-card-elevated)]">
+      <div
+        className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${accent} via-transparent to-transparent`}
+      />
+      <div
+        className={`pointer-events-none absolute -right-8 -top-8 h-24 w-24 rounded-full blur-2xl ${glow}`}
+      />
+      <CardContent className="flex flex-col items-center gap-1.5 py-6">
         <span className="text-xs uppercase tracking-wider text-[var(--muted-foreground)]">
           {label}
         </span>
-        <span className={`font-serif text-3xl font-semibold tabular-nums ${valueColor}`}>
+        <span className={`font-serif text-4xl font-semibold tabular-nums ${valueColor}`}>
           {value}
         </span>
       </CardContent>

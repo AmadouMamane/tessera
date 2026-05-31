@@ -97,12 +97,15 @@ interface StatusCardProps {
 function StatusCard({ title, icon, loading, error, status, helper, custom }: StatusCardProps) {
   const t = useTranslations("health");
   return (
-    <Card>
+    <Card className="group relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-card-elevated)]">
+      {/* premium top hairline + corner glow */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-500/40 to-transparent" />
+      <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-gold-500/[0.06] blur-2xl transition-all duration-500 group-hover:bg-gold-500/[0.12]" />
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="font-sans text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
           {title}
         </CardTitle>
-        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-navy-900 text-gold-400 dark:bg-gold-500/10 dark:text-gold-400 [&_svg]:h-4 [&_svg]:w-4">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-navy-800 to-navy-950 text-gold-400 shadow-[inset_0_1px_1px_oklch(0.72_0.142_80/0.2)] ring-1 ring-gold-500/15 transition-transform duration-300 group-hover:scale-105 dark:from-gold-500/15 dark:to-gold-500/5 dark:ring-gold-400/20 [&_svg]:h-4 [&_svg]:w-4">
           {icon}
         </div>
       </CardHeader>

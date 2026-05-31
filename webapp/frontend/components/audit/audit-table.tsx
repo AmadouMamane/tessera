@@ -288,8 +288,10 @@ function DetailsDrawer({
       aria-label={`${tAudit("title")} — ${entry.target}`}
       className="animate-in slide-in-from-right-full fixed inset-y-0 right-0 z-40 flex w-full max-w-md flex-col border-l border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-card-elevated)] duration-300"
     >
+      {/* premium left accent hairline */}
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-px bg-gradient-to-b from-gold-500/50 via-gold-500/10 to-transparent" />
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
+      <div className="flex items-center justify-between border-b border-[var(--border)] bg-gradient-to-b from-[var(--muted)]/30 to-transparent px-5 py-3.5">
         <div className="flex items-center gap-2">
           <OutcomeBadge outcome={entry.outcome} />
           <p className="font-serif text-sm font-semibold">{entry.target}</p>
