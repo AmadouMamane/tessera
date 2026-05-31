@@ -1,0 +1,130 @@
+name: Supply chain
+
+# SBOM, image signing (cosign keyless) and SLSA provenance for the agent image
+# (ADR 0008). These run only in GitHub Actions and cannot be validated on a dev
+# laptop — they are reviewed, then exercised here.
+
+on:
+  push:
+    branches: ["main"]
+    tags: ["v*"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supply-chain-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sbom:
+    name: SBOM (CycloneDX)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate SBOM with Syft
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: sbom.cyclonedx.json
+
+      - name: Upload SBOM artefact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-cyclonedx
+          path: sbom.cyclonedx.json
+
+  detect-secrets:
+    name: detect-secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install detect-secrets
+        run: pip install detect-secrets==1.5.0
+
+      - name: Scan against baseline
+        run: |
+          if [ -f .secrets.baseline ]; then
+            detect-secrets scan --baseline .secrets.baseline
+          else
+            echo "No .secrets.baseline committed yet; running an audit-only scan."
+            detect-secrets scan > /dev/null
+          fi
+
+  sign-and-provenance:
+    name: cosign sign + SLSA provenance
+    # Image signing needs to push to GHCR and use OIDC — skip on fork PRs.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write  # OIDC for cosign keyless + SLSA
+    env:
+      IMAGE: ghcr.io/${{ github.repository }}/tessera-agent
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push (by digest)
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/docker/Dockerfile.agent
+          push: true
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign the image (keyless / OIDC)
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+        run: cosign sign --yes "${IMAGE}@${{ steps.build.outputs.digest }}"
+
+      - name: Attach CycloneDX SBOM attestation
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
+          format: cyclonedx-json
+          output-file: image.sbom.cyclonedx.json
+
+      - name: Attest SBOM with cosign
+        env:
+          COSIGN_EXPERIMENTAL: "1"
+        run: |
+          cosign attest --yes --predicate image.sbom.cyclonedx.json \
+            --type cyclonedx "${IMAGE}@${{ steps.build.outputs.digest }}"
+
+  # SLSA build provenance for the pushed image digest.
+  provenance:
+    needs: sign-and-provenance
+    if: github.event_name != 'pull_request'
+    permissions:
+      actions: read
+      id-token: write
+      packages: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_container_slsa3.yml@v2.0.0
+    with:
+      image: ghcr.io/${{ github.repository }}/tessera-agent
+      digest: ${{ needs.sign-and-provenance.outputs.digest }}
+    secrets:
+      registry-username: ${{ github.actor }}
+      registry-password: ${{ secrets.GITHUB_TOKEN }}

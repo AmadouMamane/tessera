@@ -1,0 +1,9 @@
+# Tessera — security contact (RFC 9116)
+# https://www.rfc-editor.org/rfc/rfc9116
+
+Contact: mailto:mamanesarki@yahoo.fr
+Policy: https://github.com/AmadouMamane/tessera/blob/main/SECURITY.md
+Preferred-Languages: en, fr, de
+Canonical: https://github.com/AmadouMamane/tessera/blob/main/webapp/frontend/public/.well-known/security.txt
+# Expires must be refreshed periodically per RFC 9116.
+Expires: 2027-05-31T00:00:00.000Z

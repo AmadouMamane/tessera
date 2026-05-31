@@ -247,7 +247,10 @@ async def _stream_turn(request: ChatRequest) -> AsyncIterator[bytes]:
 async def chat(
     payload: Annotated[ChatRequest, Body(...)],
 ) -> StreamingResponse:
-    """POST /chat — Server-Sent-Events stream of the agent's turn."""
+    """POST /chat — Server-Sent-Events stream of the agent's turn.
+
+    Rate limiting is applied by RateLimitMiddleware (ADR 0008), not a decorator.
+    """
     return StreamingResponse(
         _stream_turn(payload),
         media_type="text/event-stream",

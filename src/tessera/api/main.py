@@ -22,7 +22,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 from tessera import __version__
+from tessera.api.limits import RequestSizeLimitMiddleware
 from tessera.api.middleware import AuthMiddleware, RequestIdMiddleware
+from tessera.api.ratelimit import RateLimitMiddleware
 from tessera.api.routes import audit, chat, health, memory
 from tessera.api.security import SecurityHeadersMiddleware, require_bearer
 from tessera.memory.governance import ensure_consent_schema
@@ -82,10 +84,12 @@ def build_app() -> FastAPI:
             allow_credentials=False,
         )
 
+    app.add_middleware(RateLimitMiddleware)
+    app.add_middleware(RequestSizeLimitMiddleware)
     app.add_middleware(RequestIdMiddleware)
     app.add_middleware(AuthMiddleware)
     # Added last → outermost, so security headers cover every response,
-    # including the 401s produced by AuthMiddleware (ADR 0008).
+    # including the 401s / 429s produced by inner middleware (ADR 0008).
     app.add_middleware(SecurityHeadersMiddleware)
 
     app.include_router(health.router)

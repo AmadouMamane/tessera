@@ -52,6 +52,9 @@ dependencies = [
     "uvicorn[standard]>=0.32.0,<0.33",
     "httpx>=0.27.2,<0.28",
     "python-multipart>=0.0.12,<0.1",
+    # Rate limiting (ADR 0008) — the `limits` library does the windowing/storage;
+    # we only add a thin deployment-aware middleware. No hand-rolled limiter.
+    "limits>=3.13,<5",
     # Runtime guard (consumed as dependency — see docs/differentiation.md)
     "mcp-firewall>=0.1.0,<0.4",
     # Retrieval

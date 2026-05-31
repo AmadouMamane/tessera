@@ -34,6 +34,7 @@ __all__ = [
     "LanguageCode",
     "LLMProfile",
     "MemorySettings",
+    "SecretsSettings",
     "Settings",
     "get_settings",
 ]
@@ -185,7 +186,7 @@ class APISettings(BaseSettings):
     tls_terminated: bool = True
     security_headers_enabled: bool = True
 
-    # Rate limiting (slowapi). Defaults are conservative; tune per environment.
+    # Rate limiting (the `limits` lib). Defaults are conservative; tune per env.
     rate_limit_enabled: bool = True
     rate_limit_chat: str = "20/minute"
     rate_limit_read: str = "120/minute"
@@ -195,6 +196,29 @@ class APISettings(BaseSettings):
 
     # Global request-body ceiling, in addition to per-field Pydantic caps.
     max_request_bytes: int = 256_000
+
+
+class SecretsSettings(BaseSettings):
+    """Deployment-aware secret resolution (ADR 0008).
+
+    ``provider`` selects where secrets come from. ``env`` (default) covers the
+    Cloud Run managed path, where Secret Manager is mounted as env vars. The
+    on-prem standard is ``sops`` (SOPS+age file); the premium path is ``vault``
+    (HashiCorp Vault / OpenBao).
+    """
+
+    model_config = SettingsConfigDict(env_prefix="TESSERA_SECRETS_", extra="ignore")
+
+    provider: Literal["env", "gcp", "sops", "vault"] = "env"
+    # gcp
+    gcp_project_id: str | None = None
+    # sops (on-prem standard)
+    sops_file: str | None = None
+    # vault / openbao (on-prem premium)
+    vault_url: str | None = None
+    vault_token: SecretStr | None = None
+    vault_mount: str = "secret"
+    vault_path: str = "tessera"
 
 
 class MemorySettings(BaseSettings):
@@ -278,6 +302,7 @@ class Settings(BaseSettings):
 
     vertex: VertexAISettings = Field(default_factory=VertexAISettings)
     ollama: OllamaSettings = Field(default_factory=OllamaSettings)
+    secrets: SecretsSettings = Field(default_factory=SecretsSettings)
     postgres: PostgresSettings = Field(default_factory=PostgresSettings)
     guard: GuardSettings = Field(default_factory=GuardSettings)
     observability: ObservabilitySettings = Field(default_factory=ObservabilitySettings)
