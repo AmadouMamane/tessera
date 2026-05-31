@@ -3,12 +3,12 @@
 import { Send, StopCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
+  type KeyboardEvent,
   forwardRef,
   useEffect,
   useImperativeHandle,
   useRef,
   useState,
-  type KeyboardEvent,
 } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(
     }));
 
     // Auto-resize: grow with content, cap at 160px.
+    // biome-ignore lint/correctness/useExhaustiveDependencies: must re-run on value change to recompute height
     useEffect(() => {
       const el = textareaRef.current;
       if (!el) return;
@@ -89,7 +90,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(
                 variant="ghost"
                 size="icon"
                 onClick={onAbort}
-                aria-label="Stop"
+                aria-label={t("stop")}
                 className="mb-0.5 shrink-0 text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
               >
                 <StopCircle className="h-4 w-4" />

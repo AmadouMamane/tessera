@@ -1,6 +1,6 @@
 export function TypingDots() {
   return (
-    <div className="flex items-center gap-1" aria-label="typing" role="status">
+    <output className="flex items-center gap-1" aria-label="typing">
       {[0, 1, 2].map((i) => (
         <span
           key={i}
@@ -8,6 +8,6 @@ export function TypingDots() {
           style={{ animationDelay: `${i * 0.16}s` }}
         />
       ))}
-    </div>
+    </output>
   );
 }

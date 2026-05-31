@@ -1,6 +1,7 @@
 import { Check, FileSearch, X } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
+import { RunHistoryPanel } from "@/components/eval/run-history-panel";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -12,9 +13,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { RunHistoryPanel } from "@/components/eval/run-history-panel";
-import { loadAllRuns, loadScorecard } from "@/lib/eval";
 import type { ScorecardDocument, ScorecardResult } from "@/lib/api/schemas";
+import { loadAllRuns, loadScorecard } from "@/lib/eval";
 
 const CATEGORY_LABELS: Record<string, string> = {
   prompt_injection: "Prompt Injection",
@@ -62,11 +62,7 @@ export async function ScorecardView({ locale, filename }: ScorecardViewProps) {
       {!scorecard ? (
         <Card>
           <CardContent className="p-6">
-            <EmptyState
-              icon={<FileSearch />}
-              title={t("title")}
-              description={t("description")}
-            />
+            <EmptyState icon={<FileSearch />} title={t("title")} description={t("description")} />
             <div className="mt-6 rounded-md bg-[var(--muted)]/40 p-4 font-mono text-xs leading-relaxed text-[var(--muted-foreground)]">
               $ uv run python scripts/run_eval.py
             </div>
@@ -161,7 +157,12 @@ function ResultsByCategory({
               {/* Category header */}
               <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
                 <div className="flex items-center gap-3">
-                  <Badge tone={(CATEGORY_TONE[category] as "danger" | "warning" | "navy" | "info") ?? "neutral"}>
+                  <Badge
+                    tone={
+                      (CATEGORY_TONE[category] as "danger" | "warning" | "navy" | "info") ??
+                      "neutral"
+                    }
+                  >
                     {CATEGORY_LABELS[category] ?? category}
                   </Badge>
                   <span className="text-sm text-[var(--muted-foreground)]">
@@ -192,7 +193,9 @@ function ResultsByCategory({
                   {items.map((result) => (
                     <TableRow key={`${result.case_id}-${result.language}`}>
                       <TableCell className="max-w-0 overflow-hidden align-top">
-                        <div className="w-full font-mono text-xs leading-[18px]">{result.case_id.replace(/_/g, "_​")}</div>
+                        <div className="w-full font-mono text-xs leading-[18px]">
+                          {result.case_id.replace(/_/g, "_​")}
+                        </div>
                         {result.title && (
                           <div className="mt-0.5 w-full break-words text-xs leading-[18px] text-[var(--muted-foreground)]">
                             {result.title}
@@ -200,7 +203,15 @@ function ResultsByCategory({
                         )}
                       </TableCell>
                       <TableCell className="align-top text-center">
-                        <Badge tone={result.language === "fr" ? "navy" : result.language === "de" ? "gold" : "info"}>
+                        <Badge
+                          tone={
+                            result.language === "fr"
+                              ? "navy"
+                              : result.language === "de"
+                                ? "gold"
+                                : "info"
+                          }
+                        >
                           {result.language.toUpperCase()}
                         </Badge>
                       </TableCell>
@@ -224,7 +235,11 @@ function ResultsByCategory({
                         {result.reasons.length > 0 ? (
                           <ul className="w-full space-y-1">
                             {result.reasons.map((r, i) => (
-                              <li key={i} className="break-words text-xs leading-[18px] text-justify text-red-600 dark:text-red-400">
+                              <li
+                                // biome-ignore lint/suspicious/noArrayIndexKey: failure reasons are render-once and never reorder
+                                key={i}
+                                className="break-words text-xs leading-[18px] text-justify text-red-600 dark:text-red-400"
+                              >
                                 {r}
                               </li>
                             ))}
@@ -262,7 +277,10 @@ function PassRateBar({ rate }: { rate: number }) {
   return (
     <div className="flex items-center gap-2">
       <div className="h-1.5 w-24 overflow-hidden rounded-full bg-[var(--muted)]">
-        <div className={`h-full ${gradient} transition-all duration-500`} style={{ width: `${pct}%` }} />
+        <div
+          className={`h-full ${gradient} transition-all duration-500`}
+          style={{ width: `${pct}%` }}
+        />
       </div>
       <span className={`w-8 text-right text-xs font-semibold tabular-nums ${text}`}>{pct}%</span>
     </div>
@@ -309,7 +327,9 @@ function SummaryTile({ label, value, tone }: SummaryTileProps) {
 function groupBy<T>(arr: T[], key: (item: T) => string): Record<string, T[]> {
   return arr.reduce<Record<string, T[]>>((acc, item) => {
     const k = key(item);
-    (acc[k] ??= []).push(item);
+    const bucket = acc[k] ?? [];
+    bucket.push(item);
+    acc[k] = bucket;
     return acc;
   }, {});
 }

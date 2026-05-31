@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Copy } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { cn } from "@/lib/cn";
@@ -23,11 +24,9 @@ type Block =
 
 function parseInline(text: string): InlineNode[] {
   const nodes: InlineNode[] = [];
-  const re =
-    /\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`|\[(.+?)\]\((https?:\/\/[^)]+)\)/g;
+  const re = /\*\*(.+?)\*\*|\*(.+?)\*|`([^`]+)`|\[(.+?)\]\((https?:\/\/[^)]+)\)/g;
   let last = 0;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text)) !== null) {
+  for (let m = re.exec(text); m !== null; m = re.exec(text)) {
     if (m.index > last) nodes.push(text.slice(last, m.index));
     const [, b, it, c, l, href] = m;
     if (b !== undefined) nodes.push({ bold: b });
@@ -102,15 +101,34 @@ function parseBlocks(text: string): Block[] {
       continue;
     }
 
+    // Each pattern requires its exact "#…# " prefix, so they are mutually
+    // exclusive — no need to cross-guard with `!h3 && …` (which produced a
+    // `false | RegExpExecArray` union that broke `?.[1]` narrowing).
+    const h1 = /^# (.+)/.exec(line);
+    const h2 = /^## (.+)/.exec(line);
     const h3 = /^### (.+)/.exec(line);
-    const h2 = !h3 && /^## (.+)/.exec(line);
-    const h1 = !h3 && !h2 && /^# (.+)/.exec(line);
 
-    if (h3?.[1]) { blocks.push({ type: "h3", text: h3[1] }); i++; continue; }
-    if (h2 && h2[1]) { blocks.push({ type: "h2", text: h2[1] }); i++; continue; }
-    if (h1 && h1[1]) { blocks.push({ type: "h1", text: h1[1] }); i++; continue; }
+    if (h3?.[1]) {
+      blocks.push({ type: "h3", text: h3[1] });
+      i++;
+      continue;
+    }
+    if (h2?.[1]) {
+      blocks.push({ type: "h2", text: h2[1] });
+      i++;
+      continue;
+    }
+    if (h1?.[1]) {
+      blocks.push({ type: "h1", text: h1[1] });
+      i++;
+      continue;
+    }
 
-    if (HR_RE.test(line.trim())) { blocks.push({ type: "hr" }); i++; continue; }
+    if (HR_RE.test(line.trim())) {
+      blocks.push({ type: "hr" });
+      i++;
+      continue;
+    }
 
     // Blockquote
     if (/^> /.test(line)) {
@@ -143,7 +161,10 @@ function parseBlocks(text: string): Block[] {
       continue;
     }
 
-    if (line.trim() === "") { i++; continue; }
+    if (line.trim() === "") {
+      i++;
+      continue;
+    }
 
     const paraLines: string[] = [];
     while (i < lines.length) {
@@ -156,7 +177,8 @@ function parseBlocks(text: string): Block[] {
         UL_RE.test(l) ||
         OL_RE.test(l) ||
         HR_RE.test(l.trim())
-      ) break;
+      )
+        break;
       paraLines.push(l);
       i++;
     }
@@ -167,6 +189,7 @@ function parseBlocks(text: string): Block[] {
 }
 
 function CodeBlock({ lang, text }: { lang: string; text: string }) {
+  const t = useTranslations("chat");
   const [copied, setCopied] = useState(false);
 
   function handleCopy() {
@@ -193,7 +216,7 @@ function CodeBlock({ lang, text }: { lang: string; text: string }) {
           )}
         >
           {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-          {copied ? "Copié" : "Copier"}
+          {copied ? t("copied") : t("copy")}
         </button>
       </div>
       <pre className="overflow-x-auto px-3 py-2.5">
@@ -223,35 +246,49 @@ export function Markdown({ children, className, trailingCursor = false }: Markdo
   const lastIdx = blocks.length - 1;
   // Cursor is inline-eligible only for text blocks (p, headings).
   // For list/code/blockquote/hr we fall back to a standalone cursor after all blocks.
-  const lastIsInline = lastIdx >= 0 && ["p", "h1", "h2", "h3"].includes(blocks[lastIdx]!.type);
+  const lastBlock = lastIdx >= 0 ? blocks[lastIdx] : undefined;
+  const lastIsInline = lastBlock !== undefined && ["p", "h1", "h2", "h3"].includes(lastBlock.type);
 
   return (
-    <div className={cn("space-y-2 text-sm leading-relaxed [&_p]:text-justify [&_p]:hyphens-auto [&_li]:text-justify [&_li]:hyphens-auto", className)}>
+    <div
+      className={cn(
+        "space-y-2 text-sm leading-relaxed [&_p]:text-justify [&_p]:hyphens-auto [&_li]:text-justify [&_li]:hyphens-auto",
+        className,
+      )}
+    >
       {blocks.map((block, bi) => {
         const key = `b${bi}`;
         const isLast = bi === lastIdx;
-        const cur = isLast && trailingCursor && lastIsInline ? <Cursor /> : null;
+        const cur = isLast && trailingCursor && lastIsInline ? <Cursor key={`${key}-cur`} /> : null;
         switch (block.type) {
           case "h1":
             return (
               <p key={key} className="text-base font-bold">
-                {renderInline(block.text, key)}{cur}
+                {renderInline(block.text, key)}
+                {cur}
               </p>
             );
           case "h2":
             return (
               <p key={key} className="font-bold">
-                {renderInline(block.text, key)}{cur}
+                {renderInline(block.text, key)}
+                {cur}
               </p>
             );
           case "h3":
             return (
               <p key={key} className="font-semibold">
-                {renderInline(block.text, key)}{cur}
+                {renderInline(block.text, key)}
+                {cur}
               </p>
             );
           case "p":
-            return <p key={key}>{renderInline(block.text, key)}{cur}</p>;
+            return (
+              <p key={key}>
+                {renderInline(block.text, key)}
+                {cur}
+              </p>
+            );
           case "ul":
             return (
               <ul
@@ -259,6 +296,7 @@ export function Markdown({ children, className, trailingCursor = false }: Markdo
                 className="ml-4 list-disc space-y-0.5 marker:text-[var(--muted-foreground)]"
               >
                 {block.items.map((item, ii) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: markdown re-parses each render; list items never reorder
                   <li key={ii}>{renderInline(item, `${key}-${ii}`)}</li>
                 ))}
               </ul>
@@ -270,6 +308,7 @@ export function Markdown({ children, className, trailingCursor = false }: Markdo
                 className="ml-4 list-decimal space-y-0.5 marker:text-[var(--muted-foreground)]"
               >
                 {block.items.map((item, ii) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: markdown re-parses each render; list items never reorder
                   <li key={ii}>{renderInline(item, `${key}-${ii}`)}</li>
                 ))}
               </ol>
@@ -283,6 +322,7 @@ export function Markdown({ children, className, trailingCursor = false }: Markdo
                 className="border-l-2 border-gold-500/50 pl-3 italic text-[var(--muted-foreground)] dark:border-gold-400/40"
               >
                 {block.lines.map((line, li) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: markdown re-parses each render; quote lines never reorder
                   <p key={li}>{renderInline(line, `${key}-${li}`)}</p>
                 ))}
               </blockquote>

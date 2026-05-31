@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, ShieldAlert, ShieldCheck, ShieldOff, X } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -96,9 +96,7 @@ export function AuditTable() {
                 <TableHead>{t("columns.occurredAt")}</TableHead>
                 <TableHead>{t("columns.target")}</TableHead>
                 <TableHead>{t("columns.outcome")}</TableHead>
-                <TableHead className="text-right">
-                  {t("columns.decisions")}
-                </TableHead>
+                <TableHead className="text-right">{t("columns.decisions")}</TableHead>
                 <TableHead aria-label="actions" />
               </TableRow>
             </TableHeader>
@@ -106,8 +104,18 @@ export function AuditTable() {
               {entries.map((entry, idx) => (
                 <TableRow
                   key={`${entry.occurred_at}-${idx}`}
-                  className="group cursor-pointer transition-colors hover:bg-[var(--muted)]/40"
+                  className="group cursor-pointer transition-colors hover:bg-[var(--muted)]/40 focus-visible:bg-[var(--muted)]/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--ring)]"
+                  // biome-ignore lint/a11y/useSemanticElements: a table row cannot be a real <button>; role=button makes the whole row keyboard-activatable
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`${entry.target} — ${t(`outcomes.${entry.outcome}`)}`}
                   onClick={() => setSelected(entry)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelected(entry);
+                    }
+                  }}
                 >
                   <TableCell className="font-mono text-xs">
                     {formatter.dateTime(new Date(entry.occurred_at), {
@@ -178,10 +186,7 @@ function Filters({
         className="max-w-xs"
         aria-label={t("filters.target")}
       />
-      <Select
-        value={outcome}
-        onValueChange={(v) => onOutcomeChange(v as AuditOutcome | "all")}
-      >
+      <Select value={outcome} onValueChange={(v) => onOutcomeChange(v as AuditOutcome | "all")}>
         <SelectTrigger className="w-40">
           <SelectValue placeholder={t("filters.outcome")} />
         </SelectTrigger>
@@ -239,21 +244,11 @@ function Pagination({
         {cursor + 1} – {cursor + pageSize}
       </p>
       <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onPrevious}
-          disabled={cursor === 0}
-        >
+        <Button variant="outline" size="sm" onClick={onPrevious} disabled={cursor === 0}>
           <ChevronLeft className="h-4 w-4" />
           {t("previous")}
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onNext}
-          disabled={!hasMore}
-        >
+        <Button variant="outline" size="sm" onClick={onNext} disabled={!hasMore}>
           {t("next")}
           <ChevronRight className="h-4 w-4" />
         </Button>
@@ -272,16 +267,40 @@ function DetailsDrawer({
   const t = useTranslations("common");
   const tAudit = useTranslations("audit");
   const formatter = useFormatter();
+  const closeRef = useRef<HTMLButtonElement>(null);
+
+  // Move focus into the drawer on open and close it on Escape — a drawer that
+  // can be opened by keyboard must also be dismissible and focusable by keyboard.
+  useEffect(() => {
+    closeRef.current?.focus();
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   return (
-    <div className="animate-in slide-in-from-right-full fixed inset-y-0 right-0 z-40 flex w-full max-w-md flex-col border-l border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-card-elevated)] duration-300">
+    <div
+      // biome-ignore lint/a11y/useSemanticElements: a custom slide-over panel uses role=dialog on a div by design
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${tAudit("title")} — ${entry.target}`}
+      className="animate-in slide-in-from-right-full fixed inset-y-0 right-0 z-40 flex w-full max-w-md flex-col border-l border-[var(--border)] bg-[var(--card)] shadow-[var(--shadow-card-elevated)] duration-300"
+    >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
         <div className="flex items-center gap-2">
           <OutcomeBadge outcome={entry.outcome} />
           <p className="font-serif text-sm font-semibold">{entry.target}</p>
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose} aria-label={t("close")}>
+        <Button
+          ref={closeRef}
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          aria-label={t("close")}
+        >
           <X className="h-4 w-4" />
         </Button>
       </div>
@@ -307,26 +326,34 @@ function DetailsDrawer({
             <ul className="space-y-2">
               {entry.decisions.map((d, i) => (
                 <li
+                  // biome-ignore lint/suspicious/noArrayIndexKey: guard decisions are render-once and never reorder
                   key={i}
                   className="rounded-xl border border-[var(--border)] bg-[var(--muted)]/30 px-4 py-3 text-xs"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono font-medium text-[var(--foreground)]">{d.policy_rule}</span>
-                    <span className={d.decision === "allow"
-                      ? "font-medium text-green-700 dark:text-green-400"
-                      : d.decision === "deny"
-                        ? "font-medium text-red-700 dark:text-red-400"
-                        : "font-medium text-amber-700 dark:text-amber-400"
-                    }>
+                    <span className="font-mono font-medium text-[var(--foreground)]">
+                      {d.policy_rule}
+                    </span>
+                    <span
+                      className={
+                        d.decision === "allow"
+                          ? "font-medium text-green-700 dark:text-green-400"
+                          : d.decision === "deny"
+                            ? "font-medium text-red-700 dark:text-red-400"
+                            : "font-medium text-amber-700 dark:text-amber-400"
+                      }
+                    >
                       {d.decision}
                     </span>
                   </div>
                   {d.rationale && (
-                    <p className="mt-1 leading-relaxed text-[var(--muted-foreground)]">{d.rationale}</p>
+                    <p className="mt-1 leading-relaxed text-[var(--muted-foreground)]">
+                      {d.rationale}
+                    </p>
                   )}
                   {d.redactions.length > 0 && (
                     <p className="mt-1 text-[var(--muted-foreground)]/60">
-                      Redacted: {d.redactions.join(", ")}
+                      {tAudit("redacted")}: {d.redactions.join(", ")}
                     </p>
                   )}
                 </li>
@@ -338,7 +365,7 @@ function DetailsDrawer({
         {/* Raw payload — collapsible */}
         <section>
           <p className="mb-2 text-[0.65rem] font-semibold uppercase tracking-wider text-[var(--muted-foreground)]">
-            Payload
+            {tAudit("payload")}
           </p>
           <pre className="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-3 py-2.5 font-mono text-[0.72rem] leading-relaxed text-[var(--foreground)] dark:bg-navy-800/60">
             {JSON.stringify(entry, null, 2)}

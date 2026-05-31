@@ -1,6 +1,13 @@
 "use client";
 
-import { Activity, AlertTriangle, FileSearch, MessageSquareText, ShieldCheck, type LucideIcon } from "lucide-react";
+import {
+  Activity,
+  AlertTriangle,
+  FileSearch,
+  type LucideIcon,
+  MessageSquareText,
+  ShieldCheck,
+} from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Link, usePathname } from "@/i18n/navigation";
@@ -13,10 +20,10 @@ interface NavItem {
 }
 
 const NAV_ITEMS: ReadonlyArray<NavItem> = [
-  { href: "/chat",   icon: MessageSquareText, labelKey: "chat" },
-  { href: "/audit",  icon: ShieldCheck,        labelKey: "audit" },
-  { href: "/eval",   icon: FileSearch,         labelKey: "eval" },
-  { href: "/health", icon: Activity,           labelKey: "health" },
+  { href: "/chat", icon: MessageSquareText, labelKey: "chat" },
+  { href: "/audit", icon: ShieldCheck, labelKey: "audit" },
+  { href: "/eval", icon: FileSearch, labelKey: "eval" },
+  { href: "/health", icon: Activity, labelKey: "health" },
 ];
 
 export function Sidebar() {
@@ -29,8 +36,7 @@ export function Sidebar() {
       <nav className="flex-1 px-3 py-4">
         <ul className="flex flex-col gap-0.5">
           {NAV_ITEMS.map((item) => {
-            const active =
-              pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             const Icon = item.icon;
             return (
               <li key={item.href}>
@@ -78,9 +84,7 @@ function BrandHeader() {
         <span className="font-serif text-base font-semibold tracking-tight text-[var(--foreground)]">
           {t("title")}
         </span>
-        <span className="text-[0.65rem] text-[var(--muted-foreground)]/75">
-          {t("subtitle")}
-        </span>
+        <span className="text-[0.65rem] text-[var(--muted-foreground)]/75">{t("subtitle")}</span>
         <span className="text-[0.7rem] font-medium text-[var(--muted-foreground)]">
           {t("bank")}
         </span>
@@ -90,12 +94,13 @@ function BrandHeader() {
 }
 
 function SidebarFooter() {
+  const t = useTranslations("app");
   return (
     <div className="border-t border-[var(--border)] px-4 py-3">
       <div className="flex items-start gap-1.5">
         <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0 text-amber-500/60" />
         <p className="text-[0.68rem] leading-relaxed text-[var(--muted-foreground)]/70">
-          Crédit Aurore — démo non destinée à la production. Données fictives.
+          {t("disclaimer")}
         </p>
       </div>
     </div>

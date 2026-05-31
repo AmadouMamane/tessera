@@ -4,7 +4,8 @@
     "subtitle": "Assistance bancaire",
     "bank": "Crédit Aurore",
     "tagline": "Pare-feu actif · Données hébergées UE",
-    "operational": "Opérationnel"
+    "operational": "Opérationnel",
+    "disclaimer": "Crédit Aurore — démo non destinée à la production. Données fictives."
   },
   "nav": {
     "chat": "Conversation",
@@ -40,6 +41,7 @@
     "description": "Posez vos questions à Tessera.",
     "placeholder": "Posez votre question…",
     "send": "Envoyer",
+    "stop": "Arrêter",
     "clear": "Nouvelle conversation",
     "thinking": "Tessera réfléchit…",
     "youSaid": "Vous",
@@ -65,6 +67,8 @@
   "audit": {
     "title": "Journal d'audit",
     "description": "Chaque appel d'outil est enregistré avec sa décision, son auteur, et la justification de la politique.",
+    "payload": "Charge utile",
+    "redacted": "Caviardé",
     "columns": {
       "occurredAt": "Date",
       "target": "Outil",

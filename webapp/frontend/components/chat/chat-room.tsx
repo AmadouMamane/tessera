@@ -1,16 +1,29 @@
 "use client";
 
-import { type LucideIcon, AlertCircle, ArrowDown, Clock, CreditCard, Landmark, Lock, RefreshCw, RotateCcw, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowDown,
+  Clock,
+  CreditCard,
+  Landmark,
+  Lock,
+  type LucideIcon,
+  RefreshCw,
+  RotateCcw,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import type { Locale } from "@/i18n/routing";
+import { streamChat } from "@/lib/api/sse";
+import { useChatStore } from "@/lib/stores/chat-store";
 import { ChatComposer, type ChatComposerHandle } from "./chat-composer";
 import { MessageBubble } from "./message-bubble";
 import { TypingDots } from "./typing-dots";
-import { streamChat } from "@/lib/api/sse";
-import { useChatStore } from "@/lib/stores/chat-store";
-import type { Locale } from "@/i18n/routing";
 
 /**
  * Stable per-browser long-term-memory identity (ADR 0007). Generated once and
@@ -33,27 +46,27 @@ type Suggestion = { text: string; Icon: LucideIcon };
 const SUGGESTED_PROMPTS: Record<string, Suggestion[]> = {
   fr: [
     { text: "Ma carte bancaire vient d'être volée — que faire en urgence ?", Icon: CreditCard },
-    { text: "Quels sont mes droits RGPD sur mes données bancaires ?",         Icon: ShieldCheck },
-    { text: "Expliquez-moi la garantie des dépôts en France.",                Icon: Landmark    },
-    { text: "Quels délais pour un virement SEPA international ?",             Icon: Clock       },
-    { text: "Comment contester un prélèvement non autorisé ?",               Icon: AlertCircle },
-    { text: "Quels sont mes droits en cas de fraude sur mon compte ?",        Icon: ShieldAlert },
+    { text: "Quels sont mes droits RGPD sur mes données bancaires ?", Icon: ShieldCheck },
+    { text: "Expliquez-moi la garantie des dépôts en France.", Icon: Landmark },
+    { text: "Quels délais pour un virement SEPA international ?", Icon: Clock },
+    { text: "Comment contester un prélèvement non autorisé ?", Icon: AlertCircle },
+    { text: "Quels sont mes droits en cas de fraude sur mon compte ?", Icon: ShieldAlert },
   ],
   de: [
-    { text: "Meine Karte wurde gestohlen — was muss ich sofort tun?",         Icon: CreditCard },
-    { text: "Welche DSGVO-Rechte habe ich bezüglich meiner Bankdaten?",       Icon: ShieldCheck },
-    { text: "Wie funktioniert die Einlagensicherung in Deutschland?",          Icon: Landmark    },
-    { text: "Wie lange dauert eine internationale SEPA-Überweisung?",         Icon: Clock       },
-    { text: "Wie kann ich eine unberechtigte Abbuchung anfechten?",           Icon: AlertCircle },
-    { text: "Was sind meine Rechte bei Kontobetrug?",                         Icon: ShieldAlert },
+    { text: "Meine Karte wurde gestohlen — was muss ich sofort tun?", Icon: CreditCard },
+    { text: "Welche DSGVO-Rechte habe ich bezüglich meiner Bankdaten?", Icon: ShieldCheck },
+    { text: "Wie funktioniert die Einlagensicherung in Deutschland?", Icon: Landmark },
+    { text: "Wie lange dauert eine internationale SEPA-Überweisung?", Icon: Clock },
+    { text: "Wie kann ich eine unberechtigte Abbuchung anfechten?", Icon: AlertCircle },
+    { text: "Was sind meine Rechte bei Kontobetrug?", Icon: ShieldAlert },
   ],
   en: [
-    { text: "My card was just stolen — what should I do urgently?",           Icon: CreditCard },
-    { text: "What are my GDPR rights regarding my banking data?",             Icon: ShieldCheck },
-    { text: "Explain how deposit guarantees work in the EU.",                 Icon: Landmark    },
-    { text: "What are the timelines for an international SEPA transfer?",     Icon: Clock       },
-    { text: "How do I dispute an unauthorized charge?",                       Icon: AlertCircle },
-    { text: "What are my rights if I'm a victim of account fraud?",           Icon: ShieldAlert },
+    { text: "My card was just stolen — what should I do urgently?", Icon: CreditCard },
+    { text: "What are my GDPR rights regarding my banking data?", Icon: ShieldCheck },
+    { text: "Explain how deposit guarantees work in the EU.", Icon: Landmark },
+    { text: "What are the timelines for an international SEPA transfer?", Icon: Clock },
+    { text: "How do I dispute an unauthorized charge?", Icon: AlertCircle },
+    { text: "What are my rights if I'm a victim of account fraud?", Icon: ShieldAlert },
   ],
 };
 
@@ -84,6 +97,7 @@ export function ChatRoom() {
   // token append (appendToken creates a new array ref each time). During streaming
   // we use an instant scrollTop assignment — smooth scroll fights a moving target
   // and produces the visible "jitter" the user sees on each new line.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: must re-run on every messages change to follow streaming output
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
@@ -112,7 +126,9 @@ export function ChatRoom() {
     function onKey(e: KeyboardEvent) {
       if (
         e.key === "/" &&
-        !e.ctrlKey && !e.metaKey && !e.altKey &&
+        !e.ctrlKey &&
+        !e.metaKey &&
+        !e.altKey &&
         !(e.target instanceof HTMLInputElement) &&
         !(e.target instanceof HTMLTextAreaElement)
       ) {
@@ -198,8 +214,7 @@ export function ChatRoom() {
           },
           {
             signal: controller.signal,
-            onStart: ({ conversation_id, turn_id }) =>
-              start(conversation_id, turn_id),
+            onStart: ({ conversation_id, turn_id }) => start(conversation_id, turn_id),
             onToken: (token) => {
               if (assistantId === null) assistantId = crypto.randomUUID();
               tokenBuffer += token;
@@ -227,14 +242,23 @@ export function ChatRoom() {
               });
             },
             onError: (message) => {
-              if (rafId !== null) { cancelAnimationFrame(rafId); rafId = null; }
-              if (!errorHandled) { errorHandled = true; showErrorInConversation(message); }
+              if (rafId !== null) {
+                cancelAnimationFrame(rafId);
+                rafId = null;
+              }
+              if (!errorHandled) {
+                errorHandled = true;
+                showErrorInConversation(message);
+              }
             },
           },
         );
       } catch (err) {
         if (controller.signal.aborted) return;
-        if (!errorHandled) { errorHandled = true; showErrorInConversation(err instanceof Error ? err.message : String(err)); }
+        if (!errorHandled) {
+          errorHandled = true;
+          showErrorInConversation(err instanceof Error ? err.message : String(err));
+        }
       } finally {
         if (abortRef.current === controller) abortRef.current = null;
       }
@@ -255,7 +279,10 @@ export function ChatRoom() {
     if (isStreaming) return;
     const lastAsstIdx = messages.findLastIndex((m) => m.role === "assistant");
     if (lastAsstIdx === -1) return;
-    const lastUserMsg = messages.slice(0, lastAsstIdx).reverse().find((m) => m.role === "user");
+    const lastUserMsg = messages
+      .slice(0, lastAsstIdx)
+      .reverse()
+      .find((m) => m.role === "user");
     if (!lastUserMsg) return;
     removeLastExchange();
     void sendMessage(lastUserMsg.content);
@@ -310,9 +337,7 @@ export function ChatRoom() {
             {messages.map((m, idx) => {
               const prev = messages[idx - 1];
               const isGrouped =
-                !!prev &&
-                prev.role === m.role &&
-                m.createdAt - prev.createdAt < 120_000;
+                !!prev && prev.role === m.role && m.createdAt - prev.createdAt < 120_000;
               const isLastUserMsg =
                 m.role === "user" &&
                 !messages.slice(idx + 1).some((later) => later.role === "user");
@@ -343,18 +368,20 @@ export function ChatRoom() {
               </div>
             )}
             {/* Regenerate button — shown after a completed assistant response */}
-            {!isStreaming && messages[messages.length - 1]?.role === "assistant" && messages.length >= 2 && (
-              <div className="mt-3 pl-11">
-                <button
-                  type="button"
-                  onClick={handleRegenerate}
-                  className="flex items-center gap-1.5 text-[0.65rem] text-[var(--muted-foreground)]/40 transition-colors hover:text-[var(--muted-foreground)]"
-                >
-                  <RefreshCw className="h-3 w-3" />
-                  {t("regenerate")}
-                </button>
-              </div>
-            )}
+            {!isStreaming &&
+              messages[messages.length - 1]?.role === "assistant" &&
+              messages.length >= 2 && (
+                <div className="mt-3 pl-11">
+                  <button
+                    type="button"
+                    onClick={handleRegenerate}
+                    className="flex items-center gap-1.5 text-[0.65rem] text-[var(--muted-foreground)]/40 transition-colors hover:text-[var(--muted-foreground)]"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    {t("regenerate")}
+                  </button>
+                </div>
+              )}
             <div ref={scrollAnchorRef} aria-hidden />
           </div>
         )}
@@ -454,9 +481,12 @@ function EmptyWithSuggestions({
           {[
             { icon: ShieldCheck, label: "Pare-feu multi-référentiel" },
             { icon: ShieldAlert, label: "Escalade conseiller si besoin" },
-            { icon: Lock,        label: "Journal d'audit horodaté" },
+            { icon: Lock, label: "Journal d'audit horodaté" },
           ].map(({ icon: Icon, label }) => (
-            <span key={label} className="flex items-center gap-1.5 text-[0.62rem] text-[var(--muted-foreground)]/50">
+            <span
+              key={label}
+              className="flex items-center gap-1.5 text-[0.62rem] text-[var(--muted-foreground)]/50"
+            >
               <Icon className="h-3 w-3" />
               {label}
             </span>

@@ -76,9 +76,7 @@ export function HealthDashboard() {
         error={health.error?.message}
         custom={
           health.data ? (
-            <span className="font-mono text-base font-medium">
-              {health.data.version}
-            </span>
+            <span className="font-mono text-base font-medium">{health.data.version}</span>
           ) : null
         }
       />
@@ -96,15 +94,8 @@ interface StatusCardProps {
   custom?: ReactNode;
 }
 
-function StatusCard({
-  title,
-  icon,
-  loading,
-  error,
-  status,
-  helper,
-  custom,
-}: StatusCardProps) {
+function StatusCard({ title, icon, loading, error, status, helper, custom }: StatusCardProps) {
+  const t = useTranslations("health");
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -119,16 +110,14 @@ function StatusCard({
         {loading ? (
           <Skeleton className="h-7 w-24" />
         ) : error ? (
-          <Badge tone="danger">offline</Badge>
+          <Badge tone="danger">{t("status.down")}</Badge>
         ) : custom ? (
           custom
         ) : (
           <div className="flex items-center gap-2">
             <Badge tone="success">{status ?? "ok"}</Badge>
             {helper ? (
-              <span className="text-xs text-[var(--muted-foreground)]">
-                {helper}
-              </span>
+              <span className="text-xs text-[var(--muted-foreground)]">{helper}</span>
             ) : null}
           </div>
         )}

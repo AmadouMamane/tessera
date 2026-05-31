@@ -4,10 +4,10 @@ import { AlertTriangle, BookOpen, Check, Copy, Pencil, Sparkles, User2 } from "l
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
-import { Markdown } from "./markdown";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/cn";
 import type { ChatMessage } from "@/lib/stores/chat-store";
+import { Markdown } from "./markdown";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -22,7 +22,14 @@ function formatTime(ts: number): string {
   return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-export function MessageBubble({ message, isGrouped = false, isFirst = false, isStreaming = false, isLastUserMessage = true, onEdit }: MessageBubbleProps) {
+export function MessageBubble({
+  message,
+  isGrouped = false,
+  isFirst = false,
+  isStreaming = false,
+  isLastUserMessage = true,
+  onEdit,
+}: MessageBubbleProps) {
   const t = useTranslations("chat");
   const isUser = message.role === "user";
   const [copied, setCopied] = useState(false);
@@ -40,6 +47,7 @@ export function MessageBubble({ message, isGrouped = false, isFirst = false, isS
   }, [isEditing]);
 
   // Auto-resize textarea as draft grows.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: must re-run on draft change to recompute height
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -166,8 +174,9 @@ export function MessageBubble({ message, isGrouped = false, isFirst = false, isS
         </div>
 
         {/* User actions: copy + edit */}
-        {isUser && message.content && (
-          isEditing ? (
+        {isUser &&
+          message.content &&
+          (isEditing ? (
             <div className="self-end flex flex-col items-end gap-1">
               {/* Truncation warning — only when this is not the last user message */}
               {!isLastUserMessage && (
@@ -225,8 +234,7 @@ export function MessageBubble({ message, isGrouped = false, isFirst = false, isS
                 </button>
               )}
             </div>
-          )
-        )}
+          ))}
 
         {/* Assistant copy — self-start prevents stretching to full column width */}
         {!isUser && message.content && (
@@ -294,9 +302,7 @@ function CitationPills({
           className="inline-flex items-center gap-1 rounded-full border border-[var(--border)] bg-[var(--muted)]/40 px-2 py-0.5 text-[0.65rem] text-[var(--foreground)]"
         >
           <span className="font-medium">{c.source}</span>
-          {c.locator && (
-            <span className="text-[var(--muted-foreground)]">{c.locator}</span>
-          )}
+          {c.locator && <span className="text-[var(--muted-foreground)]">{c.locator}</span>}
         </span>
       ))}
     </div>
