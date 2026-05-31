@@ -45,7 +45,7 @@ export function Sidebar() {
                   className={cn(
                     "group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                     active
-                      ? "border-l-2 border-gold-500 bg-gold-500/10 pl-[10px] text-[var(--foreground)] dark:border-gold-400 dark:bg-gold-400/10 dark:text-gold-300"
+                      ? "border-l-2 border-gold-500 bg-gold-500/10 pl-[10px] text-[var(--foreground)] shadow-[inset_0_0_16px_-6px_oklch(0.72_0.142_80/0.35)] dark:border-gold-400 dark:bg-gold-400/10 dark:text-gold-300"
                       : "text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]",
                   )}
                   aria-current={active ? "page" : undefined}

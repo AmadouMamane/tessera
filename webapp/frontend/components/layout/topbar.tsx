@@ -14,7 +14,9 @@ interface TopbarProps {
 export function Topbar({ title, description }: TopbarProps) {
   const t = useTranslations("app");
   return (
-    <header className="flex min-h-[5.5rem] items-center border-b border-[var(--border)] bg-[var(--background)]/80 px-8 py-3 backdrop-blur supports-[backdrop-filter]:bg-[var(--background)]/60">
+    <header className="relative flex min-h-[5.5rem] items-center border-b border-[var(--border)] bg-[var(--background)]/80 px-8 py-3 backdrop-blur supports-[backdrop-filter]:bg-[var(--background)]/60">
+      {/* premium gold hairline under the topbar */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-gold-500/30 to-transparent" />
       {/* left — live status badge */}
       <div className="flex flex-1 items-center">
         <StatusBadge />
