@@ -22,7 +22,10 @@ export const TableHeader = forwardRef<
 >(({ className, ...props }, ref) => (
   <thead
     ref={ref}
-    className={cn("[&_tr]:border-b border-[var(--border)] bg-[var(--muted)]/40", className)}
+    className={cn(
+      "[&_tr]:border-b border-[var(--border)] bg-gradient-to-b from-[var(--muted)]/60 to-[var(--muted)]/20",
+      className,
+    )}
     {...props}
   />
 ));

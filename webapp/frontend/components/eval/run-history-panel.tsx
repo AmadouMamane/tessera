@@ -95,9 +95,9 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
   return (
     <Card>
       <CardContent className="p-0">
-        <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
+        <div className="flex items-center justify-between border-b border-[var(--border)] bg-gradient-to-b from-[var(--muted)]/40 to-transparent px-5 py-3.5">
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-[var(--muted-foreground)]" />
+            <TrendingUp className="h-4 w-4 text-gold-500 dark:text-gold-400" />
             <span className="text-sm font-medium">{t("title")}</span>
             <span className="text-xs text-[var(--muted-foreground)]">
               ({runs.length} {runs.length !== 1 ? t("runPlural") : t("runSingular")})

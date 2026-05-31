@@ -152,10 +152,10 @@ function ResultsByCategory({
         const total = items.length;
         const rate = total ? passed / total : 0;
         return (
-          <Card key={category}>
+          <Card key={category} className="overflow-hidden">
             <CardContent className="p-0">
               {/* Category header */}
-              <div className="flex items-center justify-between border-b border-[var(--border)] px-5 py-3">
+              <div className="flex items-center justify-between border-b border-[var(--border)] bg-gradient-to-b from-[var(--muted)]/40 to-transparent px-5 py-3.5">
                 <div className="flex items-center gap-3">
                   <Badge
                     tone={
