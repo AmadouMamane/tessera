@@ -1,0 +1,40 @@
+# On-prem premium edge (ADR 0008): nginx gateway in front of the agent.
+#
+# Compose this ALONGSIDE the base stack so the only exposed port is the
+# gateway's 443/80 — the agent itself is never published directly.
+#
+#   docker compose \
+#     -f docker-compose.yml \
+#     -f infra/edge/docker-compose.gateway.yml \
+#     --profile full up
+#
+# Provide TLS material at infra/edge/tls/{tls.crt,tls.key} (self-signed is fine
+# for local premium dev; mount real certs in production).
+
+services:
+  gateway:
+    image: nginx:1.27-alpine
+    depends_on:
+      - agent
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./infra/edge/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/edge/tls:/etc/nginx/tls:ro
+    restart: unless-stopped
+    profiles: ["full"]
+
+  # Override the base `agent` service: stop publishing 8080 to the host (only the
+  # gateway reaches it on the internal network) and switch to the on-prem premium
+  # posture — secrets from Vault/OpenBao, TLS terminated at the gateway.
+  agent:
+    ports: !reset []
+    expose:
+      - "8080"
+    environment:
+      TESSERA_DEPLOYMENT_MODE: on_prem
+      TESSERA_SECRETS__PROVIDER: vault
+      TESSERA_SECRETS__VAULT_URL: ${VAULT_ADDR:-http://vault:8200}
+      TESSERA_SECRETS__VAULT_TOKEN: ${VAULT_TOKEN:?set VAULT_TOKEN}
+      TESSERA_API__TLS_TERMINATED: "true"

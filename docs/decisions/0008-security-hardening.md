@@ -60,10 +60,11 @@ redundant in one is essential in the other. We make this explicit with a single
 |---|---|---|---|
 | Bearer auth (`/chat`, `/audit`, `/memory`) | required | required | unchanged; `secrets.compare_digest` |
 | Route-level authz on `/audit`, `/memory` | required | required | defence in depth, not just global middleware |
-| Rate limiting | recommended | **required** | redundant behind a cloud LB, primary on-prem |
+| Rate limiting (app layer) | recommended | **required** | per-identity, LLM-cost aware; on-prem cannot disable |
+| Rate limiting (edge) | **Cloud Armor** | **nginx / Kong** | volumetric + WAF in front of the app layer |
 | Security headers | yes | yes | HSTS only when TLS is terminated upstream |
 | HSTS | on (TLS at Cloud Run) | **opt-in** | on-prem may run plain HTTP behind a proxy → `hsts` flag |
-| Secret source | Secret Manager | file / env (documented) | never baked into the image |
+| Secret source | **Secret Manager** (premium cloud) | SOPS+age (standard) → **Vault/OpenBao** (premium) | never baked into the image |
 | Image signing / SLSA | yes (OIDC keyless) | advisory | provenance verified at deploy on cloud |
 | Ollama weight verification | n/a | **operator step** | documented gap (threat-model); pin digest, verify on a trusted host |
 | Payload size caps | yes | yes | identical app-level limits |
@@ -76,11 +77,23 @@ no platform underneath to lean on.
 Ship a deployment-aware hardening layer in five parts, each reusing a
 battle-tested mechanism and adding only thin, auditable glue:
 
-1. **Rate limiting** via `slowapi` (Starlette-native, `limits` under the hood).
-   Keyed by bearer-token identity when present, else client IP. Applied to
-   `/chat` (strict) and the read endpoints (looser). In-memory store by default;
-   a Redis URL may be configured for multi-instance Cloud Run. Default limits are
-   settings-driven and *enforced* on-prem.
+1. **Rate limiting — two complementary layers (defence in depth).**
+   - *Application layer*: the `limits` library wrapped in a thin middleware
+     (`tessera.api.ratelimit`). Keyed by **bearer-token identity** when present,
+     else client IP — so an authenticated caller is throttled as themselves, not
+     by shared NAT, which an edge proxy keyed on IP alone cannot do. Strict on
+     `/chat`, looser on reads; in-memory by default, optional Redis for
+     multi-instance Cloud Run; *enforced* on-prem (`rate_limit_required`).
+     (Implementation note: `slowapi`'s decorator breaks FastAPI return-type
+     resolution under `from __future__ import annotations`, so we use its
+     underlying `limits` engine directly via middleware.)
+   - *Edge layer* in front of the app: **Cloud Armor** on Cloud Run
+     (`infra/terraform/armor.tf` — serverless NEG + external HTTPS LB +
+     rate-based throttle + adaptive L7 DDoS, gated behind `enable_edge_armor`),
+     and **nginx** on-prem (`infra/edge/nginx.conf` + `docker-compose.gateway.yml`),
+     with **Kong** documented as a drop-in alternative. The edge does
+     volumetric/WAF protection and TLS; the app does per-identity fairness.
+     Neither replaces the other.
 
 2. **Route-level authorization** for `/audit` and `/memory` via a FastAPI
    dependency, independent of the global middleware. When auth material is

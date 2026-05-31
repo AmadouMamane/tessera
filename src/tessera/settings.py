@@ -202,9 +202,10 @@ class SecretsSettings(BaseSettings):
     """Deployment-aware secret resolution (ADR 0008).
 
     ``provider`` selects where secrets come from. ``env`` (default) covers the
-    Cloud Run managed path, where Secret Manager is mounted as env vars. The
-    on-prem standard is ``sops`` (SOPS+age file); the premium path is ``vault``
-    (HashiCorp Vault / OpenBao).
+    Cloud Run managed path, where GCP Secret Manager — the premium cloud choice —
+    is mounted as env vars. On-prem, the **recommended premium** path is
+    ``vault`` (HashiCorp Vault / OpenBao: dynamic secrets, leases, rotation);
+    ``sops`` (SOPS+age file) is the lighter, server-less standard option.
     """
 
     model_config = SettingsConfigDict(env_prefix="TESSERA_SECRETS_", extra="ignore")

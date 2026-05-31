@@ -11,11 +11,12 @@ Providers (selected by ``TESSERA_SECRETS__PROVIDER``):
   any GCP client at runtime.
 * ``gcp`` — read directly from GCP **Secret Manager** via the official client
   (lazy import). Useful when secrets are not pre-mounted as env vars.
-* ``sops`` — the on-prem **standard**: a SOPS+age encrypted file
-  (``secrets.enc.yaml``) decrypted on demand by the ``sops`` binary. GitOps
+* ``vault`` — the on-prem **premium** and recommended path: HashiCorp **Vault**
+  / **OpenBao** via ``hvac`` (lazy import). Dynamic secrets, short-lived leases,
+  rotation, and an audit log. The on-prem premium compose wires it by default.
+* ``sops`` — the on-prem **standard / lighter** option: a SOPS+age encrypted
+  file (``secrets.enc.yaml``) decrypted on demand by the ``sops`` binary. GitOps
   friendly, no server to run.
-* ``vault`` — the on-prem **premium**: HashiCorp **Vault** / **OpenBao** via
-  ``hvac`` (lazy import). Supports dynamic secrets and rotation.
 
 The point is not to implement any cryptography here — every backend delegates to
 a battle-tested tool — but to make "where does a secret come from" an explicit,
