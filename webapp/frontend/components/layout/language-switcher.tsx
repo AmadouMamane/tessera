@@ -4,6 +4,7 @@ import { Globe } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
 
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,9 +14,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { usePathname, useRouter } from "@/i18n/navigation";
-import { LOCALE_LABELS, routing, type Locale } from "@/i18n/routing";
+import { LOCALE_LABELS, type Locale, routing } from "@/i18n/routing";
 
 export function LanguageSwitcher() {
   const locale = useLocale() as Locale;

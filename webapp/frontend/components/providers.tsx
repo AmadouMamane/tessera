@@ -1,15 +1,11 @@
 "use client";
 
-import {
-  QueryClient,
-  QueryClientProvider,
-  isServer,
-} from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, isServer } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { ThemeProvider } from "next-themes";
-import { Toaster } from "sonner";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { Toaster } from "sonner";
 
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -44,22 +40,12 @@ function getQueryClient(): QueryClient {
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(getQueryClient);
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider delayDuration={200} skipDelayDuration={120}>
           {children}
         </TooltipProvider>
-        <Toaster
-          position="bottom-right"
-          theme="system"
-          richColors
-          closeButton
-        />
+        <Toaster position="bottom-right" theme="system" richColors closeButton />
         {process.env.NODE_ENV !== "production" ? (
           <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
         ) : null}

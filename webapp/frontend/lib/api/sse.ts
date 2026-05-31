@@ -11,11 +11,11 @@
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 
 import {
+  type ChatEndEvent,
   ChatEndEventSchema,
   ChatErrorEventSchema,
   ChatStartEventSchema,
   ChatTokenEventSchema,
-  type ChatEndEvent,
 } from "./schemas";
 
 export interface ChatTurnRequest {
@@ -61,9 +61,7 @@ export async function streamChat(
     onopen: async (response) => {
       if (!response.ok) {
         const text = await response.text().catch(() => "");
-        throw new Error(
-          `chat stream returned ${response.status}: ${text || "unknown error"}`,
-        );
+        throw new Error(`chat stream returned ${response.status}: ${text || "unknown error"}`);
       }
     },
     onmessage(event) {

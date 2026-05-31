@@ -1,15 +1,15 @@
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages, setRequestLocale } from "next-intl/server";
 /**
  * Locale-aware layout — owns the <html lang>, loads the message catalogue
  * and renders the persistent app shell.
  */
 import { IBM_Plex_Serif, Inter, JetBrains_Mono } from "next/font/google";
-import { NextIntlClientProvider } from "next-intl";
-import { getMessages, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { Providers } from "@/components/providers";
-import { routing, type Locale } from "@/i18n/routing";
+import { type Locale, routing } from "@/i18n/routing";
 import { cn } from "@/lib/cn";
 
 const inter = Inter({
@@ -40,10 +40,7 @@ interface LocaleLayoutProps {
   params: Promise<{ locale: string }>;
 }
 
-export default async function LocaleLayout({
-  children,
-  params,
-}: LocaleLayoutProps) {
+export default async function LocaleLayout({ children, params }: LocaleLayoutProps) {
   const { locale } = await params;
   if (!(routing.locales as readonly string[]).includes(locale)) notFound();
   setRequestLocale(locale);

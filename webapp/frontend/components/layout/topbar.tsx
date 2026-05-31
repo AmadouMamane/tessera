@@ -21,17 +21,11 @@ export function Topbar({ title, description }: TopbarProps) {
       </div>
       {/* centered title */}
       <div className="flex flex-col items-center text-center">
-        <h1 className="font-serif text-2xl font-semibold leading-tight tracking-tight">
-          {title}
-        </h1>
+        <h1 className="font-serif text-2xl font-semibold leading-tight tracking-tight">{title}</h1>
         {description ? (
-          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            {description}
-          </p>
+          <p className="mt-1 text-sm text-[var(--muted-foreground)]">{description}</p>
         ) : (
-          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            {t("tagline")}
-          </p>
+          <p className="mt-1 text-sm text-[var(--muted-foreground)]">{t("tagline")}</p>
         )}
       </div>
       {/* right controls */}

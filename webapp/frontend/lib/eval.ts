@@ -12,10 +12,10 @@ import { readFile, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 
 import {
-  RunMetaSchema,
-  ScorecardDocumentSchema,
   type RunMeta,
+  RunMetaSchema,
   type ScorecardDocument,
+  ScorecardDocumentSchema,
 } from "@/lib/api/schemas";
 
 const RELATIVE_PATH = join("eval", "reports", "latest.json");
@@ -38,9 +38,7 @@ async function findRepoRoot(start: string): Promise<string | null> {
 export async function loadScorecard(filename?: string): Promise<ScorecardDocument | null> {
   const root = await findRepoRoot(process.cwd());
   if (!root) return null;
-  const target = filename
-    ? join(root, "eval", "reports", filename)
-    : join(root, RELATIVE_PATH);
+  const target = filename ? join(root, "eval", "reports", filename) : join(root, RELATIVE_PATH);
   try {
     const raw = await readFile(target, "utf-8");
     const parsed = JSON.parse(raw);
@@ -59,7 +57,10 @@ export async function loadAllRuns(): Promise<RunMeta[]> {
     const { readdir } = await import("node:fs/promises");
     const files = await readdir(dir);
     const runs: RunMeta[] = [];
-    for (const file of files.filter((f) => /^\d{8}T\d{6}Z.*\.json$/.test(f)).sort().reverse()) {
+    for (const file of files
+      .filter((f) => /^\d{8}T\d{6}Z.*\.json$/.test(f))
+      .sort()
+      .reverse()) {
       try {
         const raw = await readFile(join(dir, file), "utf-8");
         const doc = ScorecardDocumentSchema.parse(JSON.parse(raw));

@@ -30,21 +30,12 @@ export function ThemeToggle() {
   useEffect(() => setMounted(true), []);
 
   const Icon =
-    !mounted || resolvedTheme === "light"
-      ? Sun
-      : resolvedTheme === "dark"
-        ? Moon
-        : Monitor;
+    !mounted || resolvedTheme === "light" ? Sun : resolvedTheme === "dark" ? Moon : Monitor;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={t("label")}
-          aria-haspopup="menu"
-        >
+        <Button variant="ghost" size="icon" aria-label={t("label")} aria-haspopup="menu">
           <Icon className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>

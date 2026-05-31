@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { AppShell } from "@/components/layout/app-shell";
 import { ChatRoom } from "@/components/chat/chat-room";
+import { AppShell } from "@/components/layout/app-shell";
 
 interface ChatPageProps {
   params: Promise<{ locale: string }>;

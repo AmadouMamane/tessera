@@ -10,13 +10,7 @@ interface EmptyStateProps {
   className?: string;
 }
 
-export function EmptyState({
-  icon,
-  title,
-  description,
-  action,
-  className,
-}: EmptyStateProps) {
+export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
   return (
     <div
       className={cn(
@@ -31,9 +25,7 @@ export function EmptyState({
       ) : null}
       <p className="font-medium text-sm text-[var(--foreground)]">{title}</p>
       {description ? (
-        <p className="max-w-md text-sm text-[var(--muted-foreground)]">
-          {description}
-        </p>
+        <p className="max-w-md text-sm text-[var(--muted-foreground)]">{description}</p>
       ) : null}
       {action}
     </div>

@@ -9,16 +9,16 @@
  * 2. The response is validated through the matching Zod schema. Validation
  *    failures throw `ApiError` rather than returning malformed data.
  */
-import { z } from "zod";
+import type { z } from "zod";
 
 import {
-  AuditPageSchema,
-  BudgetSnapshotSchema,
-  HealthResponseSchema,
-  type AuditPage,
   type AuditOutcome,
+  type AuditPage,
+  AuditPageSchema,
   type BudgetSnapshot,
+  BudgetSnapshotSchema,
   type HealthResponse,
+  HealthResponseSchema,
 } from "./schemas";
 
 const BASE = "/api";
@@ -88,20 +88,14 @@ export interface FetchAuditOptions {
   signal?: AbortSignal;
 }
 
-export async function fetchAudit(
-  options: FetchAuditOptions = {},
-): Promise<AuditPage> {
+export async function fetchAudit(options: FetchAuditOptions = {}): Promise<AuditPage> {
   const params = new URLSearchParams();
   if (options.cursor != null) params.set("cursor", String(options.cursor));
   if (options.limit != null) params.set("limit", String(options.limit));
   if (options.target) params.set("target", options.target);
   if (options.outcome) params.set("outcome", options.outcome);
   const query = params.toString();
-  return request(
-    `/audit${query ? `?${query}` : ""}`,
-    { signal: options.signal },
-    AuditPageSchema,
-  );
+  return request(`/audit${query ? `?${query}` : ""}`, { signal: options.signal }, AuditPageSchema);
 }
 
 export async function fetchHealth(signal?: AbortSignal): Promise<HealthResponse> {
@@ -122,7 +116,7 @@ export async function fetchBudget(signal?: AbortSignal): Promise<BudgetSnapshot>
     headers: { Accept: "text/plain" },
   });
   if (!response.ok) {
-    throw new ApiError(`/budget failed`, response.status, null);
+    throw new ApiError("/budget failed", response.status, null);
   }
   const text = await response.text();
   const parsed = Object.fromEntries(

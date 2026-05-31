@@ -1,8 +1,8 @@
 "use client";
 
 import { Slot } from "@radix-ui/react-slot";
-import { cva, type VariantProps } from "class-variance-authority";
-import { forwardRef, type ButtonHTMLAttributes } from "react";
+import { type VariantProps, cva } from "class-variance-authority";
+import { type ButtonHTMLAttributes, forwardRef } from "react";
 
 import { cn } from "@/lib/cn";
 
@@ -25,14 +25,10 @@ const buttonVariants = cva(
           "bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:bg-[color-mix(in_oklch,var(--secondary)_85%,var(--foreground))]",
         outline:
           "border border-[var(--border)] bg-transparent text-[var(--foreground)] hover:bg-[var(--secondary)]",
-        ghost:
-          "bg-transparent text-[var(--foreground)] hover:bg-[var(--secondary)]",
-        accent:
-          "bg-gold-500 text-navy-950 hover:bg-gold-400 shadow-sm",
-        danger:
-          "bg-danger-500 text-white hover:bg-danger-700",
-        link:
-          "bg-transparent text-navy-700 underline-offset-4 hover:underline dark:text-gold-400",
+        ghost: "bg-transparent text-[var(--foreground)] hover:bg-[var(--secondary)]",
+        accent: "bg-gold-500 text-navy-950 hover:bg-gold-400 shadow-sm",
+        danger: "bg-danger-500 text-white hover:bg-danger-700",
+        link: "bg-transparent text-navy-700 underline-offset-4 hover:underline dark:text-gold-400",
       },
       size: {
         sm: "h-8 px-3 text-xs [&_svg]:size-3.5",
@@ -58,11 +54,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
     return (
-      <Comp
-        ref={ref}
-        className={cn(buttonVariants({ variant, size }), className)}
-        {...props}
-      />
+      <Comp ref={ref} className={cn(buttonVariants({ variant, size }), className)} {...props} />
     );
   },
 );

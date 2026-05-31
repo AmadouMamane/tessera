@@ -3,10 +3,10 @@
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { Check, ChevronRight } from "lucide-react";
 import {
-  forwardRef,
   type ComponentPropsWithoutRef,
   type ElementRef,
   type HTMLAttributes,
+  forwardRef,
 } from "react";
 
 import { cn } from "@/lib/cn";
@@ -111,17 +111,8 @@ export const DropdownMenuRadioItem = forwardRef<
 ));
 DropdownMenuRadioItem.displayName = DropdownMenuPrimitive.RadioItem.displayName;
 
-export const DropdownMenuShortcut = ({
-  className,
-  ...props
-}: HTMLAttributes<HTMLSpanElement>) => (
-  <span
-    className={cn(
-      "ml-auto text-xs tracking-widest opacity-60",
-      className,
-    )}
-    {...props}
-  />
+export const DropdownMenuShortcut = ({ className, ...props }: HTMLAttributes<HTMLSpanElement>) => (
+  <span className={cn("ml-auto text-xs tracking-widest opacity-60", className)} {...props} />
 );
 
 export { ChevronRight as DropdownMenuChevron };
