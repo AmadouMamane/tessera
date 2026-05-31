@@ -29,6 +29,7 @@ from pydantic import Field, HttpUrl, PostgresDsn, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 __all__ = [
+    "DeploymentMode",
     "Environment",
     "LanguageCode",
     "LLMProfile",
@@ -71,6 +72,18 @@ class LanguageCode(StrEnum):
     FR = "fr"
     DE = "de"
     EN = "en"
+
+
+class DeploymentMode(StrEnum):
+    """Where Tessera is deployed (ADR 0008).
+
+    Load-bearing for security: ``on_prem`` has no managed load balancer, secret
+    manager, or platform rate limiter underneath, so app-level controls that are
+    *defence in depth* on Cloud Run become the *primary* line of defence there.
+    """
+
+    CLOUD_RUN = "cloud_run"
+    ON_PREM = "on_prem"
 
 
 # ---------------------------------------------------------------------------
@@ -166,6 +179,23 @@ class APISettings(BaseSettings):
     streaming_enabled: bool = True
     bearer_token: SecretStr | None = None
 
+    # -- Security hardening (ADR 0008) ---------------------------------------
+    # TLS is terminated by Cloud Run; an on-prem reverse proxy may not, in which
+    # case HSTS must stay off. Drives the security-headers middleware.
+    tls_terminated: bool = True
+    security_headers_enabled: bool = True
+
+    # Rate limiting (slowapi). Defaults are conservative; tune per environment.
+    rate_limit_enabled: bool = True
+    rate_limit_chat: str = "20/minute"
+    rate_limit_read: str = "120/minute"
+    # Optional shared store (e.g. "redis://host:6379") for correct limits across
+    # multiple Cloud Run instances; in-memory (per-instance) when unset.
+    rate_limit_storage_uri: str | None = None
+
+    # Global request-body ceiling, in addition to per-field Pydantic caps.
+    max_request_bytes: int = 256_000
+
 
 class MemorySettings(BaseSettings):
     """Agent memory configuration — see ADR 0007.
@@ -242,6 +272,7 @@ class Settings(BaseSettings):
     )
 
     environment: Environment = Environment.LOCAL
+    deployment_mode: DeploymentMode = DeploymentMode.CLOUD_RUN
     llm_profile: LLMProfile = LLMProfile.AUTO
     default_language: LanguageCode = LanguageCode.FR
 
@@ -269,6 +300,24 @@ class Settings(BaseSettings):
     def is_production(self) -> bool:
         """Return True when running with production-grade safety expectations."""
         return self.environment is Environment.PRODUCTION
+
+    def is_on_prem(self) -> bool:
+        """True on the self-hosted path (no managed platform underneath)."""
+        return self.deployment_mode is DeploymentMode.ON_PREM
+
+    @property
+    def rate_limit_required(self) -> bool:
+        """Rate limiting is mandatory on-prem; recommended (default-on) on cloud.
+
+        On-prem has no upstream load balancer to absorb abuse, so the control
+        cannot be silently disabled there (ADR 0008, control × mode matrix).
+        """
+        return self.api.rate_limit_enabled or self.is_on_prem()
+
+    @property
+    def hsts_enabled(self) -> bool:
+        """Send HSTS only when TLS is actually terminated for this deployment."""
+        return self.api.tls_terminated
 
 
 # ---------------------------------------------------------------------------

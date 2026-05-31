@@ -17,13 +17,14 @@ from __future__ import annotations
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 
 from tessera import __version__
 from tessera.api.middleware import AuthMiddleware, RequestIdMiddleware
 from tessera.api.routes import audit, chat, health, memory
+from tessera.api.security import SecurityHeadersMiddleware, require_bearer
 from tessera.memory.governance import ensure_consent_schema
 from tessera.memory.persistent import ensure_longterm_schema
 from tessera.memory.summary import ensure_summary_schema
@@ -83,11 +84,16 @@ def build_app() -> FastAPI:
 
     app.add_middleware(RequestIdMiddleware)
     app.add_middleware(AuthMiddleware)
+    # Added last → outermost, so security headers cover every response,
+    # including the 401s produced by AuthMiddleware (ADR 0008).
+    app.add_middleware(SecurityHeadersMiddleware)
 
     app.include_router(health.router)
     app.include_router(chat.router)
-    app.include_router(audit.router)
-    app.include_router(memory.router)
+    # Defence in depth: the read surfaces require the bearer token at the route
+    # level too, not only via the global middleware (ADR 0008).
+    app.include_router(audit.router, dependencies=[Depends(require_bearer)])
+    app.include_router(memory.router, dependencies=[Depends(require_bearer)])
 
     FastAPIInstrumentor.instrument_app(app)
     return app
