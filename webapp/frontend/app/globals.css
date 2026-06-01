@@ -41,17 +41,17 @@
   --color-navy-900: oklch(0.17 0.043 264);
   --color-navy-950: oklch(0.12 0.03 265);
 
-  /* -- Brand: Gold --------------------------------------------------------- */
-  --color-gold-50: oklch(0.97 0.025 90);
-  --color-gold-100: oklch(0.94 0.05 88);
-  --color-gold-200: oklch(0.89 0.082 86);
-  --color-gold-300: oklch(0.83 0.108 84);
-  --color-gold-400: oklch(0.77 0.13 82);
-  --color-gold-500: oklch(0.72 0.142 80);
-  --color-gold-600: oklch(0.63 0.135 78);
-  --color-gold-700: oklch(0.53 0.118 76);
-  --color-gold-800: oklch(0.42 0.094 74);
-  --color-gold-900: oklch(0.33 0.072 72);
+  /* -- Brand accent: Teal (sarcelle) — tokens kept named `gold-*` for now --- */
+  --color-gold-50: oklch(0.97 0.02 195);
+  --color-gold-100: oklch(0.94 0.04 195);
+  --color-gold-200: oklch(0.89 0.07 196);
+  --color-gold-300: oklch(0.83 0.1 196);
+  --color-gold-400: oklch(0.76 0.12 195);
+  --color-gold-500: oklch(0.7 0.13 195);
+  --color-gold-600: oklch(0.6 0.122 197);
+  --color-gold-700: oklch(0.5 0.105 199);
+  --color-gold-800: oklch(0.41 0.085 201);
+  --color-gold-900: oklch(0.33 0.065 203);
 
   /* -- Neutrals ------------------------------------------------------------ */
   --color-canvas: oklch(0.985 0.003 250);
@@ -95,9 +95,9 @@
     oklch(0.18 0.018 260 / 0.06);
   --shadow-card-elevated: 0 2px 4px 0 oklch(0.18 0.018 260 / 0.06), 0 12px 32px -4px
     oklch(0.18 0.018 260 / 0.1);
-  --shadow-card-glow: 0 0 0 1px oklch(0.72 0.142 80 / 0.07), 0 2px 4px -1px
+  --shadow-card-glow: 0 0 0 1px oklch(0.7 0.13 195 / 0.07), 0 2px 4px -1px
     oklch(0.12 0.03 265 / 0.08), 0 16px 48px -8px oklch(0.12 0.03 265 / 0.28);
-  --shadow-focus: 0 0 0 3px oklch(0.72 0.142 80 / 0.35);
+  --shadow-focus: 0 0 0 3px oklch(0.7 0.13 195 / 0.35);
 
   /* -- Animation ----------------------------------------------------------- */
   --animate-shimmer: shimmer 2s ease-in-out infinite;
@@ -188,7 +188,7 @@
 
   /* Selection */
   ::selection {
-    background-color: oklch(0.72 0.142 80 / 0.35);
+    background-color: oklch(0.7 0.13 195 / 0.35);
     color: var(--color-navy-950);
   }
 
@@ -218,16 +218,24 @@
     text-wrap: pretty;
   }
 
-  /* Canvas: dot grid + radial gold halo */
+  /* Canvas: soft champagne + navy mesh (no dot grid) */
   .bg-canvas-glow {
-    background-image: radial-gradient(oklch(0.18 0.018 260 / 0.07) 1px, transparent 1px),
-      radial-gradient(ellipse 80% 55% at 50% 0%, oklch(0.72 0.142 80 / 0.025), transparent);
-    background-size: 28px 28px, 100% 100%;
+    background-image: radial-gradient(
+        ellipse 55% 45% at 12% 0%,
+        oklch(0.7 0.13 195 / 0.06),
+        transparent 60%
+      ),
+      radial-gradient(ellipse 50% 45% at 92% 6%, oklch(0.48 0.094 258 / 0.05), transparent 62%),
+      radial-gradient(ellipse 90% 55% at 50% 100%, oklch(0.48 0.094 258 / 0.035), transparent 70%);
   }
   .dark .bg-canvas-glow {
-    background-image: radial-gradient(oklch(0.96 0.005 250 / 0.04) 1px, transparent 1px),
-      radial-gradient(ellipse 80% 55% at 50% 0%, oklch(0.72 0.142 80 / 0.07), transparent);
-    background-size: 28px 28px, 100% 100%;
+    background-image: radial-gradient(
+        ellipse 55% 45% at 12% 0%,
+        oklch(0.7 0.13 195 / 0.07),
+        transparent 60%
+      ),
+      radial-gradient(ellipse 55% 50% at 92% 4%, oklch(0.4 0.085 258 / 0.18), transparent 62%),
+      radial-gradient(ellipse 95% 60% at 50% 100%, oklch(0.3 0.072 262 / 0.22), transparent 72%);
   }
 
   .ring-focus {
