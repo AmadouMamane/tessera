@@ -76,7 +76,7 @@ function BrandHeader() {
     <div className="flex min-h-[5.5rem] items-center gap-3 border-b border-[var(--border)] px-5">
       <div
         aria-hidden
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-navy-900 font-serif text-base font-semibold text-gold-400 shadow-[inset_0_1px_1px_oklch(0.7_0.12_195/0.25),inset_0_-1px_1px_oklch(0.05_0.03_265/0.3)] ring-1 ring-gold-500/20 dark:bg-gold-500 dark:text-navy-950 dark:ring-gold-300/25"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-navy-900 font-serif text-base font-semibold text-gold-400 shadow-[inset_0_1px_1px_oklch(0.8_0.066_85/0.25),inset_0_-1px_1px_oklch(0.05_0.03_265/0.3)] ring-1 ring-gold-500/20 dark:bg-gold-500 dark:text-navy-950 dark:ring-gold-300/25"
       >
         T
       </div>
