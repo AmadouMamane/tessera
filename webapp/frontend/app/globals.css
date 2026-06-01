@@ -221,22 +221,22 @@
   /* Canvas: soft champagne + navy mesh (no dot grid) */
   .bg-canvas-glow {
     background-image: radial-gradient(
-        ellipse 50% 45% at 6% 0%,
-        oklch(0.6 0.13 262 / 0.07),
+        ellipse 52% 46% at 4% 0%,
+        oklch(0.6 0.13 262 / 0.1),
         transparent 60%
       ),
-      radial-gradient(ellipse 55% 55% at 92% 16%, oklch(0.58 0.15 285 / 0.07), transparent 62%),
-      radial-gradient(ellipse 95% 55% at 50% 106%, oklch(0.6 0.12 270 / 0.05), transparent 72%);
+      radial-gradient(ellipse 58% 58% at 94% 14%, oklch(0.58 0.15 285 / 0.1), transparent 62%),
+      radial-gradient(ellipse 95% 55% at 50% 106%, oklch(0.6 0.12 270 / 0.07), transparent 72%);
   }
   .dark .bg-canvas-glow {
     background-image: radial-gradient(
-        ellipse 52% 48% at 4% -8%,
-        oklch(0.55 0.14 258 / 0.22),
+        ellipse 55% 50% at 2% -10%,
+        oklch(0.54 0.15 258 / 0.24),
         transparent 58%
       ),
-      radial-gradient(ellipse 58% 64% at 92% 20%, oklch(0.52 0.17 285 / 0.26), transparent 60%),
-      radial-gradient(ellipse 105% 62% at 50% 114%, oklch(0.44 0.14 272 / 0.24), transparent 72%),
-      radial-gradient(ellipse 36% 26% at 50% -2%, oklch(0.82 0.05 255 / 0.07), transparent 60%);
+      radial-gradient(ellipse 60% 64% at 96% 20%, oklch(0.48 0.16 285 / 0.2), transparent 62%),
+      radial-gradient(ellipse 112% 64% at 50% 116%, oklch(0.46 0.15 272 / 0.26), transparent 72%),
+      radial-gradient(ellipse 42% 26% at 50% -2%, oklch(0.82 0.05 255 / 0.07), transparent 60%);
   }
 
   .ring-focus {
