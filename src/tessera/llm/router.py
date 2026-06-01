@@ -59,8 +59,13 @@ class ChatBackend(Protocol):
         *,
         temperature: float = 0.2,
         max_output_tokens: int | None = None,
+        model: str | None = None,
     ) -> ChatResponse:
-        """Produce a single response for the given message sequence."""
+        """Produce a single response for the given message sequence.
+
+        ``model`` optionally overrides the backend's default model for this
+        call (used by the UI model picker); ``None`` keeps the configured one.
+        """
         ...
 
     def stream_chat(
@@ -69,6 +74,7 @@ class ChatBackend(Protocol):
         *,
         temperature: float = 0.2,
         max_output_tokens: int | None = None,
+        model: str | None = None,
     ) -> AsyncIterator[str]:
         """Yield tokens as they are generated (streaming path)."""
         ...

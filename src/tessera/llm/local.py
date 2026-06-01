@@ -35,8 +35,10 @@ class OllamaBackend:
         *,
         temperature: float = 0.2,
         max_output_tokens: int | None = None,
+        model: str | None = None,
     ) -> AsyncIterator[str]:
         """Yield tokens from Ollama as they arrive."""
+        effective_model = model or self.model
         options: dict[str, object] = {"temperature": temperature}
         if max_output_tokens is not None:
             options["num_predict"] = max_output_tokens
@@ -44,7 +46,7 @@ class OllamaBackend:
         input_tokens = 0
         output_tokens = 0
         async for chunk in await self._client.chat(
-            model=self.model,
+            model=effective_model,
             messages=payload,
             options=options,
             keep_alive=self._keep_alive,
@@ -58,7 +60,7 @@ class OllamaBackend:
                 output_tokens = int(chunk.get("eval_count", 0) or 0)
         get_budget_tracker().record(
             backend=self.name,
-            model=self.model,
+            model=effective_model,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
         )
@@ -69,15 +71,17 @@ class OllamaBackend:
         *,
         temperature: float = 0.2,
         max_output_tokens: int | None = None,
+        model: str | None = None,
     ) -> ChatResponse:
         """Stream-less chat completion."""
+        effective_model = model or self.model
         options: dict[str, object] = {"temperature": temperature}
         if max_output_tokens is not None:
             options["num_predict"] = max_output_tokens
 
         payload = [{"role": message.role, "content": message.content} for message in messages]
         response = await self._client.chat(
-            model=self.model,
+            model=effective_model,
             messages=payload,
             options=options,
             keep_alive=self._keep_alive,
@@ -89,13 +93,13 @@ class OllamaBackend:
 
         get_budget_tracker().record(
             backend=self.name,
-            model=self.model,
+            model=effective_model,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
         )
         return ChatResponse(
             content=str(content),
-            model=self.model,
+            model=effective_model,
             input_tokens=input_tokens,
             output_tokens=output_tokens,
             finish_reason="length" if done_reason == "length" else "stop",

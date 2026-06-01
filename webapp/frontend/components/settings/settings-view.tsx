@@ -14,6 +14,12 @@ import { fetchHealth } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
 
 const REDUCE_MOTION_KEY = "tessera.reduceMotion";
+const CHAT_MODEL_KEY = "tessera.chatModel";
+const CHAT_MODELS: SegmentOption[] = [
+  { value: "llama3.3:70b", label: "Llama 3.3 70B" },
+  { value: "gemma3:27b", label: "Gemma 3 27B" },
+];
+const DEFAULT_CHAT_MODEL = "llama3.3:70b";
 
 interface SegmentOption {
   value: string;
@@ -121,18 +127,28 @@ export function SettingsView() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [chatModel, setChatModel] = useState(DEFAULT_CHAT_MODEL);
 
   useEffect(() => {
     setMounted(true);
     const stored = window.localStorage.getItem(REDUCE_MOTION_KEY) === "1";
     setReduceMotion(stored);
     document.documentElement.classList.toggle("reduce-motion", stored);
+    const storedModel = window.localStorage.getItem(CHAT_MODEL_KEY);
+    if (storedModel && CHAT_MODELS.some((m) => m.value === storedModel)) {
+      setChatModel(storedModel);
+    }
   }, []);
 
   function changeMotion(next: boolean) {
     setReduceMotion(next);
     window.localStorage.setItem(REDUCE_MOTION_KEY, next ? "1" : "0");
     document.documentElement.classList.toggle("reduce-motion", next);
+  }
+
+  function changeModel(next: string) {
+    setChatModel(next);
+    window.localStorage.setItem(CHAT_MODEL_KEY, next);
   }
 
   function changeLocale(next: string) {
@@ -186,6 +202,22 @@ export function SettingsView() {
         <CardContent className="pt-0">
           <Row title={t("reduceMotion")} hint={t("reduceMotionHint")}>
             <Toggle checked={reduceMotion} onChange={changeMotion} label={t("reduceMotion")} />
+          </Row>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("model")}</CardTitle>
+          <CardDescription>{t("modelHint")}</CardDescription>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <Row title={t("model")}>
+            <Segmented
+              value={mounted ? chatModel : DEFAULT_CHAT_MODEL}
+              onChange={changeModel}
+              options={CHAT_MODELS}
+            />
           </Row>
         </CardContent>
       </Card>

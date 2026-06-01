@@ -116,6 +116,11 @@ class ChatRequest(BaseModel):
         description="Prior conversation turns for multi-turn context injection.",
         max_length=40,
     )
+    model: str | None = Field(
+        default=None,
+        max_length=100,
+        description="Optional chat-model override (UI model picker); falls back to the server default.",
+    )
 
 
 class ChatEnvelope(BaseModel):
@@ -153,6 +158,7 @@ async def _stream_turn(request: ChatRequest) -> AsyncIterator[bytes]:
         language_confidence=pinned_confidence,
         prior_messages=prior_messages,
         subject_id=request.subject_id,
+        model=request.model,
     )
 
     graph = _streaming_graph()

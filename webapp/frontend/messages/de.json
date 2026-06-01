@@ -147,6 +147,8 @@
     "displayHint": "Visueller Komfort und Barrierefreiheit.",
     "reduceMotion": "Animationen reduzieren",
     "reduceMotionHint": "Deaktiviert Übergänge und animierte Effekte.",
+    "model": "Modell",
+    "modelHint": "Sprachmodell, das der Agent zur Antwortgenerierung verwendet.",
     "platform": "Plattform",
     "platformHint": "Status und Version des Tessera-Dienstes.",
     "service": "Dienst",

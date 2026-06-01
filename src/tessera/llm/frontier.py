@@ -68,11 +68,12 @@ class VertexAIBackend:
         *,
         temperature: float = 0.2,
         max_output_tokens: int | None = None,
+        model: str | None = None,  # noqa: ARG002  fixed at init on the frontier path
     ) -> AsyncIterator[str]:
         """Yield tokens from Vertex AI as they arrive."""
-        model = self._ensure_model()
+        gemini = self._ensure_model()
         max_tokens = max_output_tokens or self._max_output_tokens
-        stream = await model.generate_content_async(
+        stream = await gemini.generate_content_async(
             self._convert(messages),
             generation_config={"temperature": temperature, "max_output_tokens": max_tokens},
             stream=True,
@@ -88,11 +89,12 @@ class VertexAIBackend:
         *,
         temperature: float = 0.2,
         max_output_tokens: int | None = None,
+        model: str | None = None,  # noqa: ARG002  fixed at init on the frontier path
     ) -> ChatResponse:
         """Stream-less chat completion."""
-        model = self._ensure_model()
+        gemini = self._ensure_model()
         max_tokens = max_output_tokens or self._max_output_tokens
-        response = await model.generate_content_async(
+        response = await gemini.generate_content_async(
             self._convert(messages),
             generation_config={
                 "temperature": temperature,

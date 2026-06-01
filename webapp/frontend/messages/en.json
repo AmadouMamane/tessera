@@ -147,6 +147,8 @@
     "displayHint": "Visual comfort and accessibility.",
     "reduceMotion": "Reduce motion",
     "reduceMotionHint": "Disables transitions and animated effects.",
+    "model": "Model",
+    "modelHint": "Language model the agent uses to generate responses.",
     "platform": "Platform",
     "platformHint": "Status and version of the Tessera service.",
     "service": "Service",

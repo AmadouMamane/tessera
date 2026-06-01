@@ -186,6 +186,7 @@ async def _synthesise(state: AgentState) -> str:
     response = await backend.chat(
         await _build_chat_messages(state, system_prompt, current_user_content, prompts),
         temperature=0.2,
+        model=state.get("model"),
     )
     return response.content.strip()
 
@@ -199,6 +200,7 @@ async def astream_synthesise(state: AgentState) -> AsyncIterator[str]:
     async for token in backend.stream_chat(
         await _build_chat_messages(state, system_prompt, current_user_content, prompts),
         temperature=0.2,
+        model=state.get("model"),
     ):
         yield token
 

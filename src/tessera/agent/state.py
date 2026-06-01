@@ -177,6 +177,9 @@ class AgentState(TypedDict):
     user_input: str
     language: LanguageCode
     language_confidence: float
+    # Optional per-request chat-model override (e.g. the UI model picker).
+    # Falls back to the configured default (settings.ollama.chat_model).
+    model: NotRequired[str]
 
     # --- Conversation history --------------------------------------------
     messages: Annotated[list[ConversationMessage], operator.add]
@@ -218,6 +221,7 @@ def new_state(
     language_confidence: float = 1.0,
     prior_messages: list[ConversationMessage] | None = None,
     subject_id: str | None = None,
+    model: str | None = None,
 ) -> AgentState:
     """Construct a fresh :class:`AgentState` ready to enter the graph.
 
@@ -232,13 +236,15 @@ def new_state(
             inject multi-turn context into the LLM prompt.
         subject_id: Optional stable long-term-memory identity key. Defaults to
             ``str(conversation_id)`` (per-thread memory) when omitted.
+        model: Optional per-request chat-model override; falls back to the
+            configured default when omitted.
 
     Returns:
         A state dict with all accumulator fields initialised to empty lists.
     """
     messages: list[ConversationMessage] = list(prior_messages or [])
     messages.append(ConversationMessage(role="user", content=user_input))
-    return AgentState(
+    state = AgentState(
         conversation_id=conversation_id,
         turn_id=turn_id,
         subject_id=subject_id or str(conversation_id),
@@ -254,3 +260,6 @@ def new_state(
         needs_escalation=False,
         errors=[],
     )
+    if model is not None:
+        state["model"] = model
+    return state

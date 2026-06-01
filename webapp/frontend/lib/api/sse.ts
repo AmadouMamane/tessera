@@ -28,7 +28,11 @@ export interface ChatTurnRequest {
   subject_id?: string;
   language?: "fr" | "de" | "en";
   history?: Array<{ role: "user" | "assistant"; content: string }>;
+  /** Optional chat-model override; defaults to the Settings picker choice. */
+  model?: string;
 }
+
+const CHAT_MODEL_KEY = "tessera.chatModel";
 
 export interface ChatTurnCallbacks {
   onStart?: (event: { conversation_id: string; turn_id: string }) => void;
@@ -49,13 +53,18 @@ export async function streamChat(
   payload: ChatTurnRequest,
   { signal, onStart, onToken, onEnd, onError }: StreamChatOptions = {},
 ): Promise<void> {
+  const model =
+    payload.model ??
+    (typeof window !== "undefined"
+      ? (window.localStorage.getItem(CHAT_MODEL_KEY) ?? undefined)
+      : undefined);
   await fetchEventSource("/api/chat", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "text/event-stream",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(model ? { ...payload, model } : payload),
     signal,
     openWhenHidden: true,
     onopen: async (response) => {
