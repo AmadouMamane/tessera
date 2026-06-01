@@ -51,8 +51,16 @@ services:
       TESSERA_POSTGRES__DSN: postgresql://tessera:tessera@postgres:5432/tessera
       TESSERA_OBS__LOG_FORMAT: console
       TESSERA_OBS__METRICS_ENABLED: "false"
+    # Service-to-service auth secret (TESSERA_API__BEARER_TOKEN) and forwarded-
+    # header trust live in this gitignored file — never committed, and kept out
+    # of the root .env/.env.local so the app's Settings (and tests) don't read
+    # it. Absent → auth disabled (CI/local-open posture).
+    env_file:
+      - path: agent.secret.env
+        required: false
     ports:
-      - "8080:8080"
+      # Host 8099 (local convenience, avoids conflicts) -> container's default 8080.
+      - "8099:8080"
     profiles: ["full"]
 
 volumes:

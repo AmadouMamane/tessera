@@ -4,41 +4,60 @@
  * Proxies the request to the FastAPI backend and streams the SSE response
  * back to the browser. Using a route handler instead of a next.config rewrite
  * is required for SSE: the rewrite layer buffers the full response before
- * forwarding, which breaks streaming for long LLM calls.
+ * forwarding, which breaks streaming for long LLM calls — and, unlike a
+ * rewrite, lets us inject the service-to-service bearer token and the
+ * per-session id used for rate limiting.
  */
 import { type NextRequest, NextResponse } from "next/server";
 
-const BACKEND = process.env.TESSERA_BACKEND_URL ?? "http://localhost:8080";
+import { backendHeaders, backendUrl } from "@/lib/server/backend";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+const SESSION_COOKIE = "tessera_sid";
+const SESSION_MAX_AGE = 60 * 60 * 24; // 24h
+
 export async function POST(request: NextRequest): Promise<Response> {
   const body = await request.text();
 
-  const upstream = await fetch(`${BACKEND}/chat`, {
+  // Per-browser session id — the rate-limit key. Reuse the cookie if present,
+  // otherwise mint one and set it on the response. httpOnly so client JS can
+  // never read or spoof it.
+  let sessionId = request.cookies.get(SESSION_COOKIE)?.value;
+  const isNewSession = !sessionId;
+  if (!sessionId) sessionId = crypto.randomUUID();
+
+  const upstream = await fetch(`${backendUrl()}/chat`, {
     method: "POST",
-    headers: {
+    headers: backendHeaders({
       "Content-Type": "application/json",
       Accept: "text/event-stream",
-    },
+      "X-Session-Id": sessionId,
+    }),
     body,
   });
 
   if (!upstream.ok || !upstream.body) {
+    const detail = await upstream.text().catch(() => "");
     return NextResponse.json(
-      { detail: `upstream error ${upstream.status}` },
+      { detail: detail || `upstream error ${upstream.status}` },
       { status: upstream.status },
     );
   }
 
-  return new Response(upstream.body, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
-      "X-Accel-Buffering": "no",
-    },
+  const headers = new Headers({
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no",
   });
+  if (isNewSession) {
+    headers.append(
+      "Set-Cookie",
+      `${SESSION_COOKIE}=${sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_MAX_AGE}`,
+    );
+  }
+
+  return new Response(upstream.body, { status: 200, headers });
 }

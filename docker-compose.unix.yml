@@ -1,0 +1,21 @@
+# Unix overlay for the local container stack (Mac / Linux with Docker).
+#
+# Purpose: let the containerised `agent` reach an Ollama instance running
+# NATIVELY on the host (Apple Silicon Metal GPU, or a host-level Ollama on
+# Linux), instead of inside Docker. `localhost` from within the container is
+# the container itself, so we point the agent at the host gateway.
+#
+# `host.docker.internal:host-gateway` resolves to the host on both Docker
+# Desktop (Mac/Windows) and plain Linux (Docker 20.10+), so this overlay is
+# portable across unix dev machines — hence versioned, not gitignored.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.unix.yml \
+#       up -d --build --no-deps agent
+
+services:
+  agent:
+    environment:
+      TESSERA_OLLAMA_HOST: http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

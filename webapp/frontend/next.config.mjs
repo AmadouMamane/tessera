@@ -15,19 +15,10 @@ const nextConfig = {
     optimizePackageImports: ["lucide-react", "@radix-ui/react-dialog"],
   },
 
-  // Forward /api/* and /chat to the FastAPI backend in dev. Override
-  // NEXT_PUBLIC_API_BASE_URL in production via env.
-  async rewrites() {
-    const apiBase = process.env.TESSERA_BACKEND_URL ?? "http://localhost:8080";
-    return [
-      // /api/chat is handled by app/api/chat/route.ts (SSE streaming requires a route handler, not a rewrite).
-      { source: "/api/audit/:path*", destination: `${apiBase}/audit/:path*` },
-      { source: "/api/audit", destination: `${apiBase}/audit` },
-      { source: "/api/healthz", destination: `${apiBase}/healthz` },
-      { source: "/api/readyz", destination: `${apiBase}/readyz` },
-      { source: "/api/budget", destination: `${apiBase}/budget` },
-    ];
-  },
+  // All backend calls are proxied by server-side route handlers under
+  // app/api/* (chat/route.ts for SSE, [...path]/route.ts for the read
+  // endpoints) so the bearer token can be injected — a rewrite cannot add an
+  // Authorization header. The backend URL is read from TESSERA_BACKEND_URL.
 
   async headers() {
     return [

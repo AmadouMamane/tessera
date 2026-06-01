@@ -140,7 +140,7 @@ class GuardSettings(BaseSettings):
 
     policy_path: Path = Path("src/tessera/guard/policy.yaml")
     audit_sink: Literal["stdout", "file", "cloud_logging", "postgres"] = "file"
-    audit_file: Path = Path("/tmp/tessera/audit.log")
+    audit_file: Path = Path("/tmp/tessera/audit.log")  # noqa: S108  default local audit sink
     fail_closed: bool = True
     escalation_confidence_threshold: float = 0.6
 
@@ -188,11 +188,21 @@ class APISettings(BaseSettings):
 
     # Rate limiting (the `limits` lib). Defaults are conservative; tune per env.
     rate_limit_enabled: bool = True
-    rate_limit_chat: str = "20/minute"
+    # Per-session limit on POST /chat (keyed by the X-Session-Id cookie the front
+    # forwards). "20/hour" embodies the "20 per session" budget for a public,
+    # login-less demo; raise it for trusted environments.
+    rate_limit_chat: str = "20/hour"
+    # Hard global ceiling on POST /chat across ALL sessions — bounds total LLM
+    # cost even if sessions are farmed. Checked in addition to the per-session limit.
+    rate_limit_chat_global: str = "200/hour"
     rate_limit_read: str = "120/minute"
     # Optional shared store (e.g. "redis://host:6379") for correct limits across
     # multiple Cloud Run instances; in-memory (per-instance) when unset.
     rate_limit_storage_uri: str | None = None
+    # When True, derive the rate-limit identity from forwarded headers
+    # (X-Forwarded-For / CF-Connecting-IP) instead of the immediate peer. Enable
+    # only behind a trusted proxy (Next, nginx, cloudflared) that sets them.
+    trust_forwarded_headers: bool = False
 
     # Global request-body ceiling, in addition to per-field Pydantic caps.
     max_request_bytes: int = 256_000
@@ -336,7 +346,7 @@ class Settings(BaseSettings):
         """Rate limiting is mandatory on-prem; recommended (default-on) on cloud.
 
         On-prem has no upstream load balancer to absorb abuse, so the control
-        cannot be silently disabled there (ADR 0008, control × mode matrix).
+        cannot be silently disabled there (ADR 0008, control x mode matrix).
         """
         return self.api.rate_limit_enabled or self.is_on_prem()
 

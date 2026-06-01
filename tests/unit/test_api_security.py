@@ -112,6 +112,111 @@ class TestDeploymentMode:
         assert s.rate_limit_required is False
 
 
+def _ratelimited_client(monkeypatch: pytest.MonkeyPatch, **env: str) -> TestClient:
+    """A TestClient over a minimal app carrying only RateLimitMiddleware.
+
+    Avoids build_app() so the dummy /chat route never touches the agent/DB —
+    the middleware is the unit under test.
+    """
+    for key, value in env.items():
+        monkeypatch.setenv(key, value)
+    get_settings.cache_clear()
+    from fastapi import FastAPI
+
+    from tessera.api.ratelimit import RateLimitMiddleware
+
+    app = FastAPI()
+
+    @app.post("/chat")
+    def _chat() -> dict[str, bool]:
+        return {"ok": True}
+
+    @app.get("/audit")
+    def _audit() -> dict[str, bool]:
+        return {"ok": True}
+
+    app.add_middleware(RateLimitMiddleware)
+    return TestClient(app)
+
+
+class TestChatRateLimit:
+    def test_per_session_limit(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        client = _ratelimited_client(
+            monkeypatch,
+            TESSERA_API__RATE_LIMIT_CHAT="2/hour",
+            TESSERA_API__RATE_LIMIT_CHAT_GLOBAL="100/hour",
+        )
+        hdr = {"X-Session-Id": "sess-A"}
+        assert client.post("/chat", headers=hdr).status_code == 200
+        assert client.post("/chat", headers=hdr).status_code == 200
+        # Third call for the same session is throttled.
+        assert client.post("/chat", headers=hdr).status_code == 429
+        # A different session has its own bucket.
+        assert client.post("/chat", headers={"X-Session-Id": "sess-B"}).status_code == 200
+
+    def test_global_cap_across_sessions(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        client = _ratelimited_client(
+            monkeypatch,
+            TESSERA_API__RATE_LIMIT_CHAT="100/hour",
+            TESSERA_API__RATE_LIMIT_CHAT_GLOBAL="2/hour",
+        )
+        # Each session is under its own limit, but the global ceiling is 2.
+        assert client.post("/chat", headers={"X-Session-Id": "s1"}).status_code == 200
+        assert client.post("/chat", headers={"X-Session-Id": "s2"}).status_code == 200
+        assert client.post("/chat", headers={"X-Session-Id": "s3"}).status_code == 429
+
+    def test_read_endpoint_uses_loose_limit(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        client = _ratelimited_client(
+            monkeypatch,
+            TESSERA_API__RATE_LIMIT_CHAT="1/hour",
+            TESSERA_API__RATE_LIMIT_READ="100/minute",
+        )
+        # The strict /chat limit must not apply to the read surface.
+        for _ in range(5):
+            assert client.get("/audit").status_code == 200
+
+
+class TestRateLimitIdentity:
+    def test_forwarded_ip_isolated_when_trusted(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        client = _ratelimited_client(
+            monkeypatch,
+            TESSERA_API__TRUST_FORWARDED_HEADERS="true",
+            TESSERA_API__RATE_LIMIT_CHAT="1/hour",
+            TESSERA_API__RATE_LIMIT_CHAT_GLOBAL="100/hour",
+        )
+        # No session header → key falls to the forwarded IP. Distinct IPs are
+        # independent buckets.
+        assert client.post("/chat", headers={"X-Forwarded-For": "1.1.1.1"}).status_code == 200
+        assert client.post("/chat", headers={"X-Forwarded-For": "2.2.2.2"}).status_code == 200
+        # Same IP again → throttled.
+        assert client.post("/chat", headers={"X-Forwarded-For": "1.1.1.1"}).status_code == 429
+
+    def test_forwarded_ip_ignored_when_untrusted(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        client = _ratelimited_client(
+            monkeypatch,
+            TESSERA_API__TRUST_FORWARDED_HEADERS="false",
+            TESSERA_API__RATE_LIMIT_CHAT="1/hour",
+            TESSERA_API__RATE_LIMIT_CHAT_GLOBAL="100/hour",
+        )
+        # Forwarded headers are not trusted → both requests collapse onto the
+        # same peer identity, so the second is throttled despite a different XFF.
+        assert client.post("/chat", headers={"X-Forwarded-For": "1.1.1.1"}).status_code == 200
+        assert client.post("/chat", headers={"X-Forwarded-For": "2.2.2.2"}).status_code == 429
+
+
+class TestChatAuth:
+    def test_chat_requires_bearer_when_configured(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("TESSERA_API__BEARER_TOKEN", "s3cret-token")
+        get_settings.cache_clear()
+        from tessera.api.main import build_app
+
+        client = TestClient(build_app())
+        # AuthMiddleware rejects before the agent route runs → no DB needed.
+        assert client.post("/chat", json={"message": "hi"}).status_code == 401
+
+
 class TestSecretProvider:
     def test_default_is_env_provider(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from tessera.secrets import EnvSecretProvider, get_secret_provider
