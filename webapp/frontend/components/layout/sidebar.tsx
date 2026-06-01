@@ -21,8 +21,8 @@ interface NavItem {
 
 const NAV_ITEMS: ReadonlyArray<NavItem> = [
   { href: "/chat", icon: MessageSquareText, labelKey: "chat" },
-  { href: "/audit", icon: ShieldCheck, labelKey: "audit" },
   { href: "/eval", icon: FileSearch, labelKey: "eval" },
+  { href: "/audit", icon: ShieldCheck, labelKey: "audit" },
   { href: "/health", icon: Activity, labelKey: "health" },
 ];
 

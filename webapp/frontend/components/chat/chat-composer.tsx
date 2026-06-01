@@ -64,7 +64,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(
     }
 
     return (
-      <div className="border-t border-[var(--border)] bg-[var(--card)] px-4 pb-3 pt-3">
+      <div className="rounded-b-2xl border-t border-[var(--border)] bg-[var(--card)] px-4 pb-3 pt-3">
         <form
           className="mx-auto max-w-3xl"
           onSubmit={(e) => {

@@ -134,7 +134,7 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
           <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead style={{ width: "20%" }}>
+                <TableHead style={{ width: "22%" }}>
                   <button
                     type="button"
                     onClick={() => handleSort("date")}
@@ -144,10 +144,10 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
                     <SortIcon col="date" sortKey={sortKey} sortDir={sortDir} />
                   </button>
                 </TableHead>
-                <TableHead style={{ width: "14%" }} className="whitespace-nowrap text-center">
+                <TableHead style={{ width: "15%" }} className="whitespace-nowrap text-center">
                   {t("columns.lang")}
                 </TableHead>
-                <TableHead style={{ width: "14%" }} className="whitespace-nowrap text-center">
+                <TableHead style={{ width: "15%" }} className="whitespace-nowrap text-center">
                   <button
                     type="button"
                     onClick={() => handleSort("cases")}
@@ -157,7 +157,7 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
                     <SortIcon col="cases" sortKey={sortKey} sortDir={sortDir} />
                   </button>
                 </TableHead>
-                <TableHead style={{ width: "14%" }} className="whitespace-nowrap text-center">
+                <TableHead style={{ width: "15%" }} className="whitespace-nowrap text-center">
                   <button
                     type="button"
                     onClick={() => handleSort("passed")}
@@ -167,7 +167,7 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
                     <SortIcon col="passed" sortKey={sortKey} sortDir={sortDir} />
                   </button>
                 </TableHead>
-                <TableHead style={{ width: "14%" }} className="whitespace-nowrap text-center">
+                <TableHead style={{ width: "15%" }} className="whitespace-nowrap text-center">
                   <button
                     type="button"
                     onClick={() => handleSort("pass_rate")}
@@ -177,7 +177,7 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
                     <SortIcon col="pass_rate" sortKey={sortKey} sortDir={sortDir} />
                   </button>
                 </TableHead>
-                <TableHead style={{ width: "22%" }} className="whitespace-nowrap text-center pr-24">
+                <TableHead style={{ width: "18%" }} className="whitespace-nowrap text-center pr-16">
                   {t("columns.trend")}
                 </TableHead>
               </TableRow>
@@ -217,7 +217,7 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
                     <TableCell className="text-center font-semibold">
                       {(run.summary.pass_rate * 100).toFixed(0)}%
                     </TableCell>
-                    <TableCell className="text-center pr-24">
+                    <TableCell className="text-center pr-16">
                       {delta !== null ? (
                         <span
                           className={
