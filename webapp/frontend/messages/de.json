@@ -135,5 +135,25 @@
       "degraded": "Beeinträchtigt",
       "down": "Offline"
     }
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "description": "Anzeigeeinstellungen und Plattforminformationen.",
+    "appearance": "Darstellung",
+    "appearanceHint": "Thema und Sprache der Oberfläche.",
+    "theme": "Thema",
+    "language": "Sprache",
+    "display": "Anzeige",
+    "displayHint": "Visueller Komfort und Barrierefreiheit.",
+    "reduceMotion": "Animationen reduzieren",
+    "reduceMotionHint": "Deaktiviert Übergänge und animierte Effekte.",
+    "platform": "Plattform",
+    "platformHint": "Status und Version des Tessera-Dienstes.",
+    "service": "Dienst",
+    "version": "Version",
+    "environment": "Umgebung",
+    "environmentValue": "Demo",
+    "statusOk": "Betriebsbereit",
+    "statusDown": "Offline"
   }
 }

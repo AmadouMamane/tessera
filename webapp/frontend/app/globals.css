@@ -297,6 +297,16 @@
 /* Respect the user's reduced-motion preference: disable non-essential
  * animation (shimmer, dot-bounce, border-shimmer, mount/enter effects) and
  * collapse transitions, including the dark/light theme crossfade. */
+/* Manual "reduce motion" preference (Settings → Display) — same effect as the OS setting. */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
