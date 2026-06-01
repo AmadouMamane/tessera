@@ -20,7 +20,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary:
-          "bg-navy-900 text-navy-50 hover:bg-navy-800 dark:bg-gold-500 dark:text-navy-950 dark:hover:bg-gold-400",
+          "bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:text-white dark:hover:bg-blue-400",
         secondary:
           "bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:bg-[color-mix(in_oklch,var(--secondary)_85%,var(--foreground))]",
         outline:
@@ -28,7 +28,7 @@ const buttonVariants = cva(
         ghost: "bg-transparent text-[var(--foreground)] hover:bg-[var(--secondary)]",
         accent: "bg-gold-500 text-navy-950 hover:bg-gold-400 shadow-sm",
         danger: "bg-danger-500 text-white hover:bg-danger-700",
-        link: "bg-transparent text-navy-700 underline-offset-4 hover:underline dark:text-gold-400",
+        link: "bg-transparent text-blue-600 underline-offset-4 hover:underline dark:text-blue-400",
       },
       size: {
         sm: "h-8 px-3 text-xs [&_svg]:size-3.5",

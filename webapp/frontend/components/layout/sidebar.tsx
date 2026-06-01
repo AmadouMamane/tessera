@@ -31,7 +31,7 @@ export function Sidebar() {
   const t = useTranslations("nav");
 
   return (
-    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-[var(--border)] bg-[var(--card)]">
+    <aside className="flex h-full w-64 shrink-0 flex-col border-r border-[var(--border)] bg-[var(--card)]/55 backdrop-blur-xl">
       <BrandHeader />
       <nav className="flex-1 px-3 py-4">
         <ul className="flex flex-col gap-0.5">
@@ -45,7 +45,7 @@ export function Sidebar() {
                   className={cn(
                     "group flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                     active
-                      ? "border-l-2 border-gold-500 bg-gold-500/10 pl-[10px] text-[var(--foreground)] shadow-[inset_0_0_16px_-6px_oklch(0.68_0.095_70/0.35)] dark:border-gold-400 dark:bg-gold-400/10 dark:text-gold-300"
+                      ? "border-l-2 border-blue-500 bg-blue-500/10 pl-[10px] text-[var(--foreground)] shadow-[inset_0_0_16px_-6px_oklch(0.62_0.18_262/0.4)] dark:border-blue-400 dark:bg-blue-400/10 dark:text-blue-300"
                       : "text-[var(--muted-foreground)] hover:bg-[var(--secondary)] hover:text-[var(--foreground)]",
                   )}
                   aria-current={active ? "page" : undefined}
@@ -54,7 +54,7 @@ export function Sidebar() {
                     className={cn(
                       "h-4 w-4 shrink-0 transition-colors",
                       active
-                        ? "text-gold-500 dark:text-gold-400"
+                        ? "text-blue-500 dark:text-blue-400"
                         : "text-[var(--muted-foreground)] group-hover:text-[var(--foreground)]",
                     )}
                   />
@@ -76,7 +76,7 @@ function BrandHeader() {
     <div className="flex min-h-[5.5rem] items-center gap-3 border-b border-[var(--border)] px-5">
       <div
         aria-hidden
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-navy-900 font-serif text-base font-semibold text-gold-400 shadow-[inset_0_1px_1px_oklch(0.68_0.095_70/0.25),inset_0_-1px_1px_oklch(0.09_0.008_58/0.3)] ring-1 ring-gold-500/20 dark:bg-gold-500 dark:text-navy-950 dark:ring-gold-300/25"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-navy-900 font-serif text-base font-semibold text-gold-400 shadow-[inset_0_1px_1px_oklch(0.7_0.12_195/0.25),inset_0_-1px_1px_oklch(0.05_0.03_265/0.3)] ring-1 ring-gold-500/20 dark:bg-gold-500 dark:text-navy-950 dark:ring-gold-300/25"
       >
         T
       </div>
