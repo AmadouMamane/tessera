@@ -105,7 +105,7 @@ function StatusCard({ title, icon, loading, error, status, helper, custom }: Sta
         <CardTitle className="font-sans text-xs font-medium uppercase tracking-wider text-[var(--muted-foreground)]">
           {title}
         </CardTitle>
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-navy-800 to-navy-950 text-gold-400 shadow-[inset_0_1px_1px_oklch(0.72_0.142_80/0.2)] ring-1 ring-gold-500/15 transition-transform duration-300 group-hover:scale-105 dark:from-gold-500/15 dark:to-gold-500/5 dark:ring-gold-400/20 [&_svg]:h-4 [&_svg]:w-4">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-navy-800 to-navy-950 text-gold-400 shadow-[inset_0_1px_1px_oklch(0.8_0.066_85/0.2)] ring-1 ring-gold-500/15 transition-transform duration-300 group-hover:scale-105 dark:from-gold-500/15 dark:to-gold-500/5 dark:ring-gold-400/20 [&_svg]:h-4 [&_svg]:w-4">
           {icon}
         </div>
       </CardHeader>
