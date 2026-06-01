@@ -98,6 +98,12 @@ escalation: |
   Crédit Aurore weiter. Sie werden zeitnah kontaktiert. Vorgangsnummer:
   {ticket_reference}.
 
+# Gestohlene / verlorene Karte oder Betrug: handlungsorientierte Eskalation (Sperre).
+escalation_urgent_card: |
+  Bitte sperren Sie Ihre Karte sofort über die Crédit-Aurore-App oder die
+  Notfall-Sperrnummer. Ich leite Ihre Anfrage dringend an eine Beraterin oder
+  einen Berater weiter. Vorgangsnummer: {ticket_reference}.
+
 decline: |
   Ich kann diese Anfrage in diesem Kanal leider nicht beantworten. Bitte
   wenden Sie sich direkt an Ihren persönlichen Berater.

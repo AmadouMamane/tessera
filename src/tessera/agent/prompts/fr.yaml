@@ -104,6 +104,13 @@ escalation: |
   recontacté(e) dans les meilleurs délais. Référence du dossier :
   {ticket_reference}.
 
+# Carte volée / perdue / fraude : message d'escalade orienté action (opposition).
+escalation_urgent_card: |
+  Faites immédiatement opposition sur votre carte pour la bloquer, via
+  l'application Crédit Aurore ou le numéro d'opposition d'urgence. Je transmets
+  votre demande en urgence à un conseiller. Référence du dossier :
+  {ticket_reference}.
+
 decline: |
   Je ne peux malheureusement pas répondre à cette demande dans ce canal.
   Je vous invite à contacter directement votre conseiller.

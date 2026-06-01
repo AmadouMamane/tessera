@@ -10,32 +10,27 @@ reference in the user's language, and short-circuits the rest of the graph.
 
 from __future__ import annotations
 
+import re
 import time
 from datetime import UTC, datetime
 
+from tessera.agent.reporter import load_prompts
 from tessera.agent.state import AgentState, ConversationMessage, ToolCallRecord
 from tessera.agent.tools import ticket_escalate
 from tessera.guard.adapter import guarded_invoke
-from tessera.settings import LanguageCode
 
 NODE_NAME = "escalation_worker"
 
-_HANDOFF_TEMPLATES: dict[LanguageCode, str] = {
-    LanguageCode.FR: (
-        "Je transmets votre demande à un conseiller Crédit Aurore. "
-        "Vous serez recontacté(e) dans les meilleurs délais. "
-        "Référence du dossier : {ticket_reference}."
-    ),
-    LanguageCode.DE: (
-        "Ich leite Ihre Anfrage an eine Beraterin oder einen Berater "
-        "von Crédit Aurore weiter. Sie werden zeitnah kontaktiert. "
-        "Vorgangsnummer: {ticket_reference}."
-    ),
-    LanguageCode.EN: (
-        "I'm forwarding your request to a Crédit Aurore advisor; you will "
-        "be contacted shortly. Case reference: {ticket_reference}."
-    ),
-}
+# A card emergency (theft / loss / fraud) gets an action-oriented handoff that
+# tells the user to block the card immediately (opposition); every other
+# escalation gets the neutral handoff. Detection mirrors the planner's
+# urgent_card cues — kept multilingual and self-contained here because the
+# direct urgent_card → ESCALATION path never sets escalation_reason.
+_THEFT_RE = re.compile(
+    r"\b(vol(?:é[e]?|er?)|perdu[e]?|fraude?|gestohlen|verloren|betrug|stolen|lost)\b",
+    re.IGNORECASE,
+)
+_CARD_RE = re.compile(r"\b(carte|karte|card)\b", re.IGNORECASE)
 
 
 async def run(state: AgentState) -> dict[str, object]:
@@ -78,7 +73,15 @@ async def run(state: AgentState) -> dict[str, object]:
         guarded_result.result.reference if call.succeeded and guarded_result.result else "PENDING"
     )
 
-    final = _HANDOFF_TEMPLATES[state["language"]].format(ticket_reference=ticket_reference)
+    prompts = load_prompts(state["language"])
+    user_input = state["user_input"]
+    is_card_emergency = bool(_THEFT_RE.search(user_input) and _CARD_RE.search(user_input))
+    template_key = (
+        "escalation_urgent_card"
+        if is_card_emergency and "escalation_urgent_card" in prompts
+        else "escalation"
+    )
+    final = prompts[template_key].format(ticket_reference=ticket_reference).strip()
 
     return {
         "tool_calls": [call],

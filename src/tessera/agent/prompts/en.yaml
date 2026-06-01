@@ -92,6 +92,12 @@ escalation: |
   I'm forwarding your request to a Crédit Aurore advisor; you will be
   contacted shortly. Case reference: {ticket_reference}.
 
+# Stolen / lost card or fraud: action-oriented escalation (block the card).
+escalation_urgent_card: |
+  Please block your card immediately via the Crédit Aurore app or the emergency
+  line to report the theft and any fraud. I'm escalating your request to an
+  advisor as urgent. Case reference: {ticket_reference}.
+
 decline: |
   I'm unable to answer this request in this channel. Please reach out to
   your personal advisor directly.
