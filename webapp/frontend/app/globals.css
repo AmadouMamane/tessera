@@ -38,20 +38,20 @@
   --color-navy-600: oklch(0.38 0.085 260);
   --color-navy-700: oklch(0.3 0.072 262);
   --color-navy-800: oklch(0.23 0.058 263);
-  --color-navy-900: oklch(0.17 0.043 264);
-  --color-navy-950: oklch(0.12 0.03 265);
+  --color-navy-900: oklch(0.15 0.032 264);
+  --color-navy-950: oklch(0.1 0.022 264);
 
-  /* -- Brand accent: Teal (sarcelle) — tokens kept named `gold-*` for now --- */
-  --color-gold-50: oklch(0.97 0.02 195);
-  --color-gold-100: oklch(0.94 0.04 195);
-  --color-gold-200: oklch(0.89 0.07 196);
-  --color-gold-300: oklch(0.83 0.1 196);
-  --color-gold-400: oklch(0.76 0.12 195);
-  --color-gold-500: oklch(0.7 0.13 195);
-  --color-gold-600: oklch(0.6 0.122 197);
-  --color-gold-700: oklch(0.5 0.105 199);
-  --color-gold-800: oklch(0.41 0.085 201);
-  --color-gold-900: oklch(0.33 0.065 203);
+  /* -- Brand accent: icy blue-white — tokens kept named `gold-*` for now ----- */
+  --color-gold-50: oklch(0.98 0.01 255);
+  --color-gold-100: oklch(0.96 0.016 255);
+  --color-gold-200: oklch(0.93 0.024 255);
+  --color-gold-300: oklch(0.9 0.032 255);
+  --color-gold-400: oklch(0.86 0.042 255);
+  --color-gold-500: oklch(0.82 0.05 255);
+  --color-gold-600: oklch(0.73 0.058 256);
+  --color-gold-700: oklch(0.63 0.062 258);
+  --color-gold-800: oklch(0.52 0.058 260);
+  --color-gold-900: oklch(0.42 0.05 262);
 
   /* -- Neutrals ------------------------------------------------------------ */
   --color-canvas: oklch(0.985 0.003 250);
@@ -95,9 +95,9 @@
     oklch(0.18 0.018 260 / 0.06);
   --shadow-card-elevated: 0 2px 4px 0 oklch(0.18 0.018 260 / 0.06), 0 12px 32px -4px
     oklch(0.18 0.018 260 / 0.1);
-  --shadow-card-glow: 0 0 0 1px oklch(0.7 0.13 195 / 0.07), 0 2px 4px -1px
+  --shadow-card-glow: 0 0 0 1px oklch(0.82 0.05 255 / 0.07), 0 2px 4px -1px
     oklch(0.12 0.03 265 / 0.08), 0 16px 48px -8px oklch(0.12 0.03 265 / 0.28);
-  --shadow-focus: 0 0 0 3px oklch(0.7 0.13 195 / 0.35);
+  --shadow-focus: 0 0 0 3px oklch(0.82 0.05 255 / 0.35);
 
   /* -- Animation ----------------------------------------------------------- */
   --animate-shimmer: shimmer 2s ease-in-out infinite;
@@ -188,7 +188,7 @@
 
   /* Selection */
   ::selection {
-    background-color: oklch(0.7 0.13 195 / 0.35);
+    background-color: oklch(0.82 0.05 255 / 0.35);
     color: var(--color-navy-950);
   }
 
@@ -222,7 +222,7 @@
   .bg-canvas-glow {
     background-image: radial-gradient(
         ellipse 55% 45% at 12% 0%,
-        oklch(0.7 0.13 195 / 0.06),
+        oklch(0.82 0.05 255 / 0.06),
         transparent 60%
       ),
       radial-gradient(ellipse 50% 45% at 92% 6%, oklch(0.48 0.094 258 / 0.05), transparent 62%),
@@ -231,7 +231,7 @@
   .dark .bg-canvas-glow {
     background-image: radial-gradient(
         ellipse 55% 45% at 12% 0%,
-        oklch(0.7 0.13 195 / 0.07),
+        oklch(0.82 0.05 255 / 0.07),
         transparent 60%
       ),
       radial-gradient(ellipse 55% 50% at 92% 4%, oklch(0.4 0.085 258 / 0.18), transparent 62%),

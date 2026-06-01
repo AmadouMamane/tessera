@@ -19,7 +19,7 @@ export function EmptyState({ icon, title, description, action, className }: Empt
       )}
     >
       {icon ? (
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-navy-800 to-navy-950 text-gold-400 shadow-[inset_0_1px_1px_oklch(0.7_0.13_195/0.2),0_8px_24px_-8px_oklch(0.7_0.13_195/0.3)] ring-1 ring-gold-500/15 dark:from-gold-500/15 dark:to-gold-500/5 dark:ring-gold-400/20 [&_svg]:h-5 [&_svg]:w-5">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-navy-800 to-navy-950 text-gold-400 shadow-[inset_0_1px_1px_oklch(0.82_0.05_255/0.2),0_8px_24px_-8px_oklch(0.82_0.05_255/0.3)] ring-1 ring-gold-500/15 dark:from-gold-500/15 dark:to-gold-500/5 dark:ring-gold-400/20 [&_svg]:h-5 [&_svg]:w-5">
           {icon}
         </div>
       ) : null}
