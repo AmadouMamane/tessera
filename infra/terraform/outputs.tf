@@ -2,8 +2,13 @@
 # These values are used by CI/CD pipelines and referenced in the runbook.
 
 output "cloud_run_url" {
-  description = "HTTPS URL of the deployed Tessera Cloud Run service."
+  description = "HTTPS URL of the deployed Tessera agent Cloud Run service."
   value       = google_cloud_run_v2_service.agent.uri
+}
+
+output "frontend_url" {
+  description = "HTTPS URL of the deployed Tessera front-end (the public entry point)."
+  value       = google_cloud_run_v2_service.frontend.uri
 }
 
 output "postgres_connection_name" {

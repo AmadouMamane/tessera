@@ -28,8 +28,31 @@ variable "service_name" {
 }
 
 variable "image" {
-  description = "Fully-qualified container image (Artifact Registry path)."
+  description = "Fully-qualified agent container image (Artifact Registry path)."
   type        = string
+}
+
+variable "frontend_image" {
+  description = "Fully-qualified Next.js front-end container image (Artifact Registry path)."
+  type        = string
+}
+
+variable "frontend_service_name" {
+  description = "Cloud Run service name for the Next.js front-end."
+  type        = string
+  default     = "tessera-frontend"
+}
+
+variable "frontend_cpu" {
+  description = "vCPU allocation per front-end Cloud Run instance."
+  type        = string
+  default     = "1"
+}
+
+variable "frontend_memory" {
+  description = "RAM allocation per front-end Cloud Run instance."
+  type        = string
+  default     = "512Mi"
 }
 
 # Aliases matching the canonical CLAUDE.md naming convention while keeping

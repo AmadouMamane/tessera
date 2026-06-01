@@ -9,6 +9,15 @@ watch it, and what to do when it misbehaves.
 For the self-hosted path see `docs/on_prem.md`; for the local quickstart see the
 last section here.
 
+**Two Cloud Run services** are provisioned (`infra/terraform/`): the FastAPI
+**agent** (`tessera-agent`, port 8080) and the Next.js **front-end**
+(`tessera-frontend`, port 3000) which is the public entry point. The browser
+only ever talks to the front-end; it proxies API calls to the agent
+server-side, injecting the shared bearer token. See **Security model** and
+**Exposing a local stack to the web** below. To put a local stack online
+quickly (before any cloud deploy), jump to **Exposing a local stack to the
+web**.
+
 ## Deployment prerequisites
 
 - A GCP project with billing enabled.
@@ -20,6 +29,9 @@ last section here.
   Run, Cloud SQL, Secret Manager, and IAM.
 - A container image for the agent, built from `infra/docker/Dockerfile.agent`
   and pushed to a registry the Cloud Run service account can read.
+- A container image for the front-end, built from
+  `infra/docker/Dockerfile.frontend`, pushed to the same registry (passed to
+  Terraform as `frontend_image`).
 
 ## Deploy steps
 
@@ -56,8 +68,13 @@ versions add bearer_token --data-file=-`.)
 ### 3. Build and push the image
 
 ```bash
+# Agent
 docker build -f infra/docker/Dockerfile.agent -t REGION-docker.pkg.dev/PROJECT/tessera/agent:TAG .
 docker push REGION-docker.pkg.dev/PROJECT/tessera/agent:TAG
+
+# Front-end (pass the resulting tag to Terraform as `frontend_image`)
+docker build -f infra/docker/Dockerfile.frontend -t REGION-docker.pkg.dev/PROJECT/tessera/frontend:TAG .
+docker push REGION-docker.pkg.dev/PROJECT/tessera/frontend:TAG
 ```
 
 ### 4. Deploy to Cloud Run
@@ -85,6 +102,11 @@ are resolved from Secret Manager at start. Defaults are from
 | `TESSERA_GUARD__AUDIT_SINK`       | `file`                        | plain (`cloud_logging`)           |
 | `TESSERA_POSTGRES__DSN`           | local DSN                     | **secret** `postgres_url`         |
 | `TESSERA_API__BEARER_TOKEN`       | unset                         | **secret** `bearer_token`         |
+| `TESSERA_API__RATE_LIMIT_CHAT`    | `20/hour`                     | plain (per-session /chat limit)   |
+| `TESSERA_API__RATE_LIMIT_CHAT_GLOBAL` | `200/hour`                | plain (hard global /chat cap)     |
+| `TESSERA_API__TRUST_FORWARDED_HEADERS` | `false`                  | plain (`true` behind a proxy)     |
+
+The **front-end** service takes two of its own variables (`infra/terraform/cloud_run_frontend.tf`): `TESSERA_BACKEND_URL` (set to the agent service URI) and `TESSERA_BACKEND_TOKEN` (the **same** value as the agent's `bearer_token` secret — it is server-only and injected into outbound calls, never exposed to the browser).
 
 The audit signing key and Vertex project id secrets are populated as above; the
 guard's audit sink is set to `cloud_logging` in production so entries flow into
@@ -202,3 +224,92 @@ This starts the `pgvector/pgvector:pg16` container and runs the agent locally.
 With no Vertex project configured, the `auto` profile falls back to the on-prem
 Ollama path — see `docs/on_prem.md` for the Ollama setup. Set
 `TESSERA_LLM_PROFILE=on_prem` to force it.
+
+## Security model (login-less public demo)
+
+The agent can be exposed to the public web without forcing visitors to
+authenticate, while still protecting the backend and bounding LLM cost.
+
+- **Bearer token = service-to-service secret, not user auth.** When
+  `TESSERA_API__BEARER_TOKEN` is set, `AuthMiddleware` rejects any request to a
+  non-exempt path without a matching `Authorization: Bearer` header (401).
+  Exempt paths: `/healthz`, `/readyz`, `/metrics`, `/docs`, `/openapi.json`.
+  The **front-end holds the same value** in `TESSERA_BACKEND_TOKEN` (server
+  side) and injects it on every backend call. The end user never sees it and
+  never logs in; a script hitting the agent URL directly gets 401.
+- **Rate limiting (`src/tessera/api/ratelimit.py`).** `POST /chat` is guarded by
+  two buckets that must both pass: a **per-session** limit
+  (`TESSERA_API__RATE_LIMIT_CHAT`, default `20/hour`, keyed by the
+  `X-Session-Id` cookie the front sets) and a **hard global cap**
+  (`TESSERA_API__RATE_LIMIT_CHAT_GLOBAL`, default `200/hour`) that bounds total
+  cost across all sessions. The limiter keys on the session id rather than the
+  shared bearer token (which would collapse every caller into one bucket).
+- **Behind a proxy / tunnel**, set `TESSERA_API__TRUST_FORWARDED_HEADERS=true`
+  so the identity falls back to `X-Forwarded-For` / `CF-Connecting-IP` when no
+  session header is present.
+- **Where secrets live locally.** Keep them out of the root `.env`/`.env.local`
+  (the app's Settings reads those, which would leak the token into tests):
+  - backend container: `agent.secret.env` (gitignored), loaded via the compose
+    `env_file:` directive;
+  - front: `webapp/frontend/.env.local` (gitignored), read by Next only.
+
+## Exposing a local stack to the web (tunnel)
+
+Put the local stack online without a domain, DNS, or port-forwarding — useful
+for a portfolio demo. Only the front-end is exposed; the agent, Postgres and
+Ollama stay on localhost.
+
+```bash
+# 1. Postgres (already seeded; idempotent) + agent container on host port 8099.
+#    The unix overlay lets the container reach host-native Ollama.
+docker compose -f docker-compose.yml -f docker-compose.unix.yml up -d --build --no-deps agent
+
+# 2. Front-end (dev) on 3099, proxying to the agent on 8099. Reads
+#    webapp/frontend/.env.local (TESSERA_BACKEND_URL + TESSERA_BACKEND_TOKEN).
+npm --prefix webapp/frontend run dev
+
+# 3. Public HTTPS URL for the front (no account needed for a quick tunnel).
+cloudflared tunnel --url http://localhost:3099   # -> https://<random>.trycloudflare.com
+```
+
+Flow: `Web → cloudflared → Next :3099 → (server-side proxy, token injected) →
+agent :8099 → Ollama + Postgres`. Stop with `pkill -f "cloudflared tunnel"`,
+`pkill -f "next dev"`, and `docker compose ... stop agent`.
+
+Notes: local host ports are **8099 (agent) / 3099 (front)** to avoid collisions
+on frequent local runs; container-internal ports and Cloud Run stay on the
+defaults (8080/3000). A quick tunnel URL is ephemeral and unauthenticated — for
+a durable/private share use a **named** Cloudflare tunnel with **Cloudflare
+Access** (login gate) or rely on the bearer token + rate limits above.
+
+## Phase 2 — front on Vercel + Postgres on Neon (config-driven)
+
+The local → cloud switch is environment variables only, no code changes:
+
+| Concern        | Variable                     | Local                         | Phase 2                                  |
+| -------------- | ---------------------------- | ----------------------------- | ---------------------------------------- |
+| Database       | `TESSERA_POSTGRES__DSN`      | `…@localhost:5432`            | Neon DSN (`…neon.tech`, `pgvector` ext)  |
+| Front → agent  | `TESSERA_BACKEND_URL`        | `http://localhost:8099`       | agent tunnel / Cloud Run URL             |
+| Service secret | `TESSERA_API__BEARER_TOKEN` / `TESSERA_BACKEND_TOKEN` | unset/local | strong secret, same on both sides   |
+| LLM            | `TESSERA_LLM_PROFILE`        | `on_prem` (Ollama)            | `on_prem` (tunnelled) or `frontier` (API)|
+
+Steps: (1) create a Neon project, enable `CREATE EXTENSION vector;`, run
+ingestion locally pointed at the Neon DSN (`TESSERA_POSTGRES__DSN=… uv run
+tessera-ingest` + `… python scripts/seed_demo.py`); (2) deploy the front to
+Vercel, setting `TESSERA_BACKEND_URL` and `TESSERA_BACKEND_TOKEN` as Vercel env
+vars (server-only, **not** `NEXT_PUBLIC_*`); (3) expose the agent (Cloud Run, or
+a named tunnel from the on-prem box for the Ollama path) and point
+`TESSERA_BACKEND_URL` at it. Note: a Claude/OpenAI **consumer subscription is
+not API access** — the `frontier` path needs billed API credentials; Anthropic
+has no embeddings API (use Ollama locally or OpenAI `text-embedding-3-small`).
+
+## Follow-ups (not yet implemented)
+
+- **Cloudflare Turnstile** — invisible, no-account bot challenge on the chat
+  form; verify the token in `app/api/chat/route.ts` before proxying. Strongest
+  no-friction abuse defence; needs a Cloudflare site key + secret.
+- **Edge nginx locally** — `infra/edge/` already ships `limit_req`/`limit_conn`;
+  uncomment the `set_real_ip_from` / `real_ip_header CF-Connecting-IP` block and
+  set Cloudflare's CIDRs to recover the true client IP for per-IP limits.
+- **CI** — extend `deploy.yml` to build & push the front-end image and pass it
+  to Terraform as `frontend_image`.
