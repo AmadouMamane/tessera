@@ -29,36 +29,37 @@
     "Liberation Mono", monospace;
 
   /* -- Brand: Navy --------------------------------------------------------- */
-  --color-navy-50: oklch(0.97 0.012 250);
-  --color-navy-100: oklch(0.93 0.025 250);
-  --color-navy-200: oklch(0.86 0.044 252);
-  --color-navy-300: oklch(0.74 0.067 254);
-  --color-navy-400: oklch(0.6 0.087 256);
-  --color-navy-500: oklch(0.48 0.094 258);
-  --color-navy-600: oklch(0.38 0.085 260);
-  --color-navy-700: oklch(0.3 0.072 262);
-  --color-navy-800: oklch(0.23 0.058 263);
-  --color-navy-900: oklch(0.15 0.032 264);
-  --color-navy-950: oklch(0.1 0.022 264);
+  /* Aubergine (token kept named `navy-*`) — deep blue-violet, base #120C18 / mid #2A163A */
+  --color-navy-50: oklch(0.95 0.01 300);
+  --color-navy-100: oklch(0.9 0.016 300);
+  --color-navy-200: oklch(0.82 0.026 300);
+  --color-navy-300: oklch(0.7 0.04 300);
+  --color-navy-400: oklch(0.57 0.05 300);
+  --color-navy-500: oklch(0.45 0.056 300);
+  --color-navy-600: oklch(0.36 0.056 300);
+  --color-navy-700: oklch(0.29 0.055 300);
+  --color-navy-800: oklch(0.23 0.055 301);
+  --color-navy-900: oklch(0.18 0.05 301);
+  --color-navy-950: oklch(0.11 0.028 302);
 
-  /* -- Brand accent: icy blue-white — tokens kept named `gold-*` for now ----- */
-  --color-gold-50: oklch(0.98 0.01 255);
-  --color-gold-100: oklch(0.96 0.016 255);
-  --color-gold-200: oklch(0.93 0.024 255);
-  --color-gold-300: oklch(0.9 0.032 255);
-  --color-gold-400: oklch(0.86 0.042 255);
-  --color-gold-500: oklch(0.82 0.05 255);
-  --color-gold-600: oklch(0.73 0.058 256);
-  --color-gold-700: oklch(0.63 0.062 258);
-  --color-gold-800: oklch(0.52 0.058 260);
-  --color-gold-900: oklch(0.42 0.05 262);
+  /* -- Brand accent: champagne #D7BE8A — tokens kept named `gold-*` -------- */
+  --color-gold-50: oklch(0.97 0.018 88);
+  --color-gold-100: oklch(0.94 0.03 87);
+  --color-gold-200: oklch(0.91 0.044 86);
+  --color-gold-300: oklch(0.87 0.056 86);
+  --color-gold-400: oklch(0.84 0.062 85);
+  --color-gold-500: oklch(0.8 0.066 85);
+  --color-gold-600: oklch(0.71 0.066 84);
+  --color-gold-700: oklch(0.61 0.06 83);
+  --color-gold-800: oklch(0.5 0.05 82);
+  --color-gold-900: oklch(0.4 0.04 81);
 
   /* -- Neutrals ------------------------------------------------------------ */
   --color-canvas: oklch(0.985 0.003 250);
   --color-canvas-elevated: oklch(1 0 0);
   --color-canvas-sunken: oklch(0.965 0.005 250);
 
-  --color-ink: oklch(0.18 0.018 260);
+  --color-ink: oklch(0.18 0.018 301);
   --color-ink-muted: oklch(0.42 0.012 260);
   --color-ink-subtle: oklch(0.58 0.008 260);
 
@@ -91,13 +92,13 @@
   --radius-2xl: 1.25rem;
 
   /* -- Shadows (banking sober, never bouncy) ------------------------------- */
-  --shadow-card: 0 1px 2px 0 oklch(0.18 0.018 260 / 0.04), 0 4px 12px -2px
-    oklch(0.18 0.018 260 / 0.06);
-  --shadow-card-elevated: 0 2px 4px 0 oklch(0.18 0.018 260 / 0.06), 0 12px 32px -4px
-    oklch(0.18 0.018 260 / 0.1);
-  --shadow-card-glow: 0 0 0 1px oklch(0.82 0.05 255 / 0.07), 0 2px 4px -1px
-    oklch(0.12 0.03 265 / 0.08), 0 16px 48px -8px oklch(0.12 0.03 265 / 0.28);
-  --shadow-focus: 0 0 0 3px oklch(0.82 0.05 255 / 0.35);
+  --shadow-card: 0 1px 2px 0 oklch(0.18 0.018 301 / 0.04), 0 4px 12px -2px
+    oklch(0.18 0.018 301 / 0.06);
+  --shadow-card-elevated: 0 2px 4px 0 oklch(0.18 0.018 301 / 0.06), 0 12px 32px -4px
+    oklch(0.18 0.018 301 / 0.1);
+  --shadow-card-glow: 0 0 0 1px oklch(0.8 0.066 85 / 0.07), 0 2px 4px -1px
+    oklch(0.12 0.03 302 / 0.08), 0 16px 48px -8px oklch(0.12 0.03 302 / 0.28);
+  --shadow-focus: 0 0 0 3px oklch(0.8 0.066 85 / 0.35);
 
   /* -- Animation ----------------------------------------------------------- */
   --animate-shimmer: shimmer 2s ease-in-out infinite;
@@ -138,13 +139,13 @@
   --secondary: var(--color-navy-800);
   --secondary-foreground: oklch(0.94 0.005 250);
   --muted: var(--color-navy-800);
-  --muted-foreground: oklch(0.7 0.012 255);
+  --muted-foreground: oklch(0.74 0.022 300);
   --accent: var(--color-gold-500);
   --accent-foreground: var(--color-navy-950);
   --destructive: oklch(0.55 0.19 27);
   --destructive-foreground: oklch(0.97 0.03 25);
-  --border: oklch(0.27 0.04 263);
-  --input: oklch(0.27 0.04 263);
+  --border: oklch(0.27 0.045 301);
+  --input: oklch(0.27 0.045 301);
   --ring: var(--color-gold-500);
 }
 
@@ -188,7 +189,7 @@
 
   /* Selection */
   ::selection {
-    background-color: oklch(0.82 0.05 255 / 0.35);
+    background-color: oklch(0.8 0.066 85 / 0.35);
     color: var(--color-navy-950);
   }
 
@@ -222,21 +223,21 @@
   .bg-canvas-glow {
     background-image: radial-gradient(
         ellipse 52% 46% at 4% 0%,
-        oklch(0.6 0.13 262 / 0.1),
+        oklch(0.5 0.08 300 / 0.06),
         transparent 60%
       ),
-      radial-gradient(ellipse 58% 58% at 94% 14%, oklch(0.58 0.15 285 / 0.1), transparent 62%),
-      radial-gradient(ellipse 95% 55% at 50% 106%, oklch(0.6 0.12 270 / 0.07), transparent 72%);
+      radial-gradient(ellipse 58% 58% at 94% 14%, oklch(0.5 0.09 305 / 0.06), transparent 62%),
+      radial-gradient(ellipse 95% 55% at 50% 106%, oklch(0.5 0.08 300 / 0.05), transparent 72%);
   }
   .dark .bg-canvas-glow {
     background-image: radial-gradient(
         ellipse 55% 50% at 2% -10%,
-        oklch(0.54 0.15 258 / 0.24),
+        oklch(0.4 0.1 300 / 0.18),
         transparent 58%
       ),
-      radial-gradient(ellipse 60% 64% at 96% 20%, oklch(0.48 0.16 285 / 0.2), transparent 62%),
-      radial-gradient(ellipse 112% 64% at 50% 116%, oklch(0.46 0.15 272 / 0.26), transparent 72%),
-      radial-gradient(ellipse 42% 26% at 50% -2%, oklch(0.82 0.05 255 / 0.07), transparent 60%);
+      radial-gradient(ellipse 60% 64% at 96% 20%, oklch(0.42 0.12 305 / 0.18), transparent 62%),
+      radial-gradient(ellipse 112% 64% at 50% 116%, oklch(0.38 0.1 300 / 0.18), transparent 72%),
+      radial-gradient(ellipse 42% 26% at 50% -2%, oklch(0.8 0.066 85 / 0.05), transparent 60%);
   }
 
   .ring-focus {
