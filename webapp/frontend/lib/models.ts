@@ -21,15 +21,18 @@ export interface ChatModelMeta {
   context: string;
 }
 
+// Ordered fastest → most capable. The first entry is the default (fastest),
+// applied for every user until they pick another in Settings.
 export const CHAT_MODELS: ChatModelMeta[] = [
-  { id: "llama3.3:70b", label: "Llama 3.3 70B", params: "70B", context: "128K" },
+  { id: "llama3.2:3b", label: "Llama 3.2 3B", params: "3B", context: "128K" },
   { id: "gemma3:27b", label: "Gemma 3 27B", params: "27B", context: "128K" },
+  { id: "llama3.3:70b", label: "Llama 3.3 70B", params: "70B", context: "128K" },
 ];
 
 const FALLBACK: ChatModelMeta = CHAT_MODELS[0] ?? {
-  id: "llama3.3:70b",
-  label: "Llama 3.3 70B",
-  params: "70B",
+  id: "llama3.2:3b",
+  label: "Llama 3.2 3B",
+  params: "3B",
   context: "128K",
 };
 

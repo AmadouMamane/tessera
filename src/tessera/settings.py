@@ -112,7 +112,7 @@ class OllamaSettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="TESSERA_OLLAMA_", extra="ignore")
 
     host: HttpUrl = Field(default=HttpUrl("http://localhost:11434"))
-    chat_model: str = "llama3.3:70b"
+    chat_model: str = "llama3.2:3b"  # fastest by default; override per env/UI
     embedding_model: str = "bge-m3"
     embedding_dimension: int = 1024
     timeout_seconds: float = 120.0

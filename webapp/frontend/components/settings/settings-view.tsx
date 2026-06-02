@@ -207,7 +207,11 @@ export function SettingsView() {
           <div className="grid gap-3 sm:grid-cols-2">
             {CHAT_MODELS.map((m) => {
               const active = (mounted ? chatModel : DEFAULT_CHAT_MODEL) === m.id;
-              const tag = m.id.startsWith("gemma") ? t("modelGemmaTag") : t("modelLlamaTag");
+              const tag = m.id.startsWith("llama3.3")
+                ? t("modelTagCapable")
+                : m.id.startsWith("gemma")
+                  ? t("modelTagBalanced")
+                  : t("modelTagFast");
               return (
                 <button
                   key={m.id}
