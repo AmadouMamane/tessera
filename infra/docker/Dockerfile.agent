@@ -61,6 +61,13 @@ RUN chown -R root:root /opt/venv /app \
     && chmod -R a-w /opt/venv /app \
     && rm -f /opt/venv/bin/pip /opt/venv/bin/pip3 || true
 
+# Writable state dir for the file audit sink and the budget tracker. Created
+# owned by the runtime user so a mounted volume inherits write access (a named
+# volume copies the image dir's ownership). Locally this is volume-backed so the
+# audit trail and token counters survive container recreation; on Cloud Run the
+# audit sink is cloud_logging, so this is just a scratch dir there.
+RUN mkdir -p /tmp/tessera && chown tessera:tessera /tmp/tessera
+
 USER tessera:tessera
 EXPOSE 8080
 

@@ -61,8 +61,14 @@ services:
     ports:
       # Host 8099 (local convenience, avoids conflicts) -> container's default 8080.
       - "8099:8080"
+    volumes:
+      # Persist the file audit log (/tmp/tessera/audit.log) and the budget
+      # tracker (/tmp/tessera/budget.json) across container recreation, so the
+      # audit trail and token/cost counters accumulate instead of resetting.
+      - tessera_agent_state:/tmp/tessera
     profiles: ["full"]
 
 volumes:
   tessera_pgdata:
+  tessera_agent_state:
   # tessera_ollama:  # uncomment when using the containerised Ollama service
