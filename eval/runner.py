@@ -195,18 +195,14 @@ async def _run_all(args: argparse.Namespace) -> int:
     archive = args.report.parent / f"{run_ts}{lang_suffix}.json"
     archive.write_text(payload, encoding="utf-8")
 
-    # Update latest.json (or the explicit --report path).
-    args.report.write_text(payload, encoding="utf-8")
-
-    # Symlink latest → most-recent archive (best-effort, skip on Windows).
-    latest_link = args.report.parent / "latest.json"
-    if latest_link != args.report:
-        try:
-            if latest_link.exists() or latest_link.is_symlink():
-                latest_link.unlink()
-            latest_link.symlink_to(archive.name)
-        except OSError:
-            pass  # FAT32 / Windows — plain file copy is fine
+    # Update the report path + latest.json as PLAIN copies. Never write through
+    # a symlink: latest.json used to be a symlink to the most recent archive, so
+    # a default run (--report defaults to latest.json) would write through it
+    # and clobber whatever archive it pointed at. Drop any symlink first.
+    for target in (args.report, args.report.parent / "latest.json"):
+        if target.is_symlink():
+            target.unlink()
+        target.write_text(payload, encoding="utf-8")
 
     sys.stdout.write(f"Report saved → {archive.name}\n")
     sys.stdout.write(scorecard.render_markdown() + "\n")
