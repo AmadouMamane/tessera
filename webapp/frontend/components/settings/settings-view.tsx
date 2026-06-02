@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Check, Cpu, Monitor, Moon, Sun } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { type ReactNode, useEffect, useState, useTransition } from "react";
@@ -12,14 +12,9 @@ import { usePathname, useRouter } from "@/i18n/navigation";
 import { LOCALE_LABELS, type Locale, routing } from "@/i18n/routing";
 import { fetchHealth } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
+import { CHAT_MODELS, DEFAULT_CHAT_MODEL, getStoredModel, setStoredModel } from "@/lib/models";
 
 const REDUCE_MOTION_KEY = "tessera.reduceMotion";
-const CHAT_MODEL_KEY = "tessera.chatModel";
-const CHAT_MODELS: SegmentOption[] = [
-  { value: "llama3.3:70b", label: "Llama 3.3 70B" },
-  { value: "gemma3:27b", label: "Gemma 3 27B" },
-];
-const DEFAULT_CHAT_MODEL = "llama3.3:70b";
 
 interface SegmentOption {
   value: string;
@@ -134,10 +129,7 @@ export function SettingsView() {
     const stored = window.localStorage.getItem(REDUCE_MOTION_KEY) === "1";
     setReduceMotion(stored);
     document.documentElement.classList.toggle("reduce-motion", stored);
-    const storedModel = window.localStorage.getItem(CHAT_MODEL_KEY);
-    if (storedModel && CHAT_MODELS.some((m) => m.value === storedModel)) {
-      setChatModel(storedModel);
-    }
+    setChatModel(getStoredModel());
   }, []);
 
   function changeMotion(next: boolean) {
@@ -148,7 +140,7 @@ export function SettingsView() {
 
   function changeModel(next: string) {
     setChatModel(next);
-    window.localStorage.setItem(CHAT_MODEL_KEY, next);
+    setStoredModel(next);
   }
 
   function changeLocale(next: string) {
@@ -212,13 +204,39 @@ export function SettingsView() {
           <CardDescription>{t("modelHint")}</CardDescription>
         </CardHeader>
         <CardContent className="pt-0">
-          <Row title={t("model")}>
-            <Segmented
-              value={mounted ? chatModel : DEFAULT_CHAT_MODEL}
-              onChange={changeModel}
-              options={CHAT_MODELS}
-            />
-          </Row>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {CHAT_MODELS.map((m) => {
+              const active = (mounted ? chatModel : DEFAULT_CHAT_MODEL) === m.id;
+              const tag = m.id.startsWith("gemma") ? t("modelGemmaTag") : t("modelLlamaTag");
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => changeModel(m.id)}
+                  className={cn(
+                    "group relative flex flex-col gap-2 rounded-xl border p-4 text-left transition-all",
+                    active
+                      ? "border-gold-500/60 bg-gold-500/[0.06] shadow-[var(--shadow-card-glow)]"
+                      : "border-[var(--border)] bg-[var(--muted)]/30 hover:bg-[var(--muted)]/50",
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 font-medium text-[var(--foreground)]">
+                      <Cpu className="h-4 w-4 text-gold-500" />
+                      {m.label}
+                    </span>
+                    {active ? <Check className="h-4 w-4 text-gold-500" /> : null}
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
+                    <Badge tone="neutral">{m.params}</Badge>
+                    <span>{m.context} ctx · on-prem GPU</span>
+                  </div>
+                  <span className="text-xs text-[var(--muted-foreground)]">{tag}</span>
+                </button>
+              );
+            })}
+          </div>
         </CardContent>
       </Card>
 

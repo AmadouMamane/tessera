@@ -10,6 +10,8 @@
  */
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 
+import { getStoredModel } from "@/lib/models";
+
 import {
   type ChatEndEvent,
   ChatEndEventSchema,
@@ -32,8 +34,6 @@ export interface ChatTurnRequest {
   model?: string;
 }
 
-const CHAT_MODEL_KEY = "tessera.chatModel";
-
 export interface ChatTurnCallbacks {
   onStart?: (event: { conversation_id: string; turn_id: string }) => void;
   onToken?: (token: string) => void;
@@ -53,11 +53,7 @@ export async function streamChat(
   payload: ChatTurnRequest,
   { signal, onStart, onToken, onEnd, onError }: StreamChatOptions = {},
 ): Promise<void> {
-  const model =
-    payload.model ??
-    (typeof window !== "undefined"
-      ? (window.localStorage.getItem(CHAT_MODEL_KEY) ?? undefined)
-      : undefined);
+  const model = payload.model ?? getStoredModel();
   await fetchEventSource("/api/chat", {
     method: "POST",
     headers: {

@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { LanguageSwitcher } from "@/components/layout/language-switcher";
+import { ModelBadge } from "@/components/layout/model-badge";
 import { StatusBadge } from "@/components/layout/status-badge";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 
@@ -32,6 +33,7 @@ export function Topbar({ title, description }: TopbarProps) {
       </div>
       {/* right controls */}
       <div className="flex flex-1 items-center justify-end gap-2">
+        <ModelBadge />
         <LanguageSwitcher />
         <ThemeToggle />
       </div>
