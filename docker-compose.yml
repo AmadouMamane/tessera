@@ -51,6 +51,13 @@ services:
       TESSERA_POSTGRES__DSN: postgresql://tessera:tessera@postgres:5432/tessera
       TESSERA_OBS__LOG_FORMAT: console
       TESSERA_OBS__METRICS_ENABLED: "false"
+      # Cross-session long-term memory (ADR 0007, Tier 2), keyed by subject_id.
+      # Without these the container defaults to the per-conversation window
+      # backend, so facts stated in one conversation are not recalled in the next.
+      TESSERA_MEMORY__BACKEND: persistent
+      # DEMO ONLY: auto-grant retention consent so cross-session recall works
+      # without a consent UI. Production MUST gather consent explicitly.
+      TESSERA_MEMORY__CONSENT_DEFAULT: "true"
     # Service-to-service auth secret (TESSERA_API__BEARER_TOKEN) and forwarded-
     # header trust live in this gitignored file — never committed, and kept out
     # of the root .env/.env.local so the app's Settings (and tests) don't read
