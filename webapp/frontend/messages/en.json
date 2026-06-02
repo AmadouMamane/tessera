@@ -156,6 +156,8 @@
     "model": "Model",
     "modelHint": "Language model the agent uses to generate responses.",
     "modelTagFast": "Fastest",
+    "modelTagCompact": "Compact",
+    "modelTagReasoning": "Reasoning",
     "modelTagBalanced": "Balanced",
     "modelTagCapable": "Most capable",
     "platform": "Platform",
