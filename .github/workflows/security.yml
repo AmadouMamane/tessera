@@ -56,7 +56,9 @@ jobs:
       - name: pip-audit
         run: |
           uv pip install pip-audit
-          uv run pip-audit --strict --skip-editable --progress-spinner=off
+          # --skip-editable drops the local unpublished `tessera` package; not
+          # --strict, since that would turn the intentional skip into an error.
+          uv run pip-audit --skip-editable --progress-spinner=off
 
   bandit:
     name: bandit
@@ -98,7 +100,7 @@ jobs:
         run: docker build -f infra/docker/Dockerfile.agent -t tessera-agent:scan .
 
       - name: Run Trivy
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: tessera-agent:scan
           format: sarif
