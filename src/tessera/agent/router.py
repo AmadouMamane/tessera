@@ -514,9 +514,9 @@ def run(state: AgentState) -> dict[str, object]:
     """
     # Injection check runs unconditionally — before any language pinning logic.
     input_check = check_user_input(state["user_input"])
-    guard_decisions: list[GuardDecisionRecord] = list(
-        state.get("guard_decisions") or []
-    ) + list(input_check.decisions)
+    guard_decisions: list[GuardDecisionRecord] = list(state.get("guard_decisions") or []) + list(
+        input_check.decisions
+    )
 
     if not input_check.allowed:
         lang = state.get("language") or get_settings().default_language

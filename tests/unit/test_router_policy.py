@@ -61,8 +61,7 @@ class TestPolicyShortCircuit:
 class TestMatchPolicy:
     def test_negative_benign(self) -> None:
         assert (
-            _match_policy("Bonjour, comment puis-je consulter mon solde ?", LanguageCode.FR)
-            is None
+            _match_policy("Bonjour, comment puis-je consulter mon solde ?", LanguageCode.FR) is None
         )
 
     def test_english_competitor(self) -> None:

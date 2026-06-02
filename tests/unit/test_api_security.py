@@ -32,9 +32,7 @@ class TestSecurityHeaders:
         assert "content-security-policy" in r.headers
         assert r.headers["referrer-policy"] == "strict-origin-when-cross-origin"
 
-    def test_hsts_present_when_tls_terminated(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_hsts_present_when_tls_terminated(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("TESSERA_API__TLS_TERMINATED", "true")
         get_settings.cache_clear()
         from tessera.api.main import build_app
@@ -43,9 +41,7 @@ class TestSecurityHeaders:
         r = client.get("/healthz")
         assert "strict-transport-security" in r.headers
 
-    def test_hsts_absent_when_tls_not_terminated(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_hsts_absent_when_tls_not_terminated(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("TESSERA_API__TLS_TERMINATED", "false")
         get_settings.cache_clear()
         from tessera.api.main import build_app
@@ -56,9 +52,7 @@ class TestSecurityHeaders:
 
 
 class TestRouteAuthz:
-    def test_audit_requires_bearer_when_configured(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_audit_requires_bearer_when_configured(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("TESSERA_API__BEARER_TOKEN", "s3cret-token")
         get_settings.cache_clear()
         from tessera.api.main import build_app
@@ -92,9 +86,7 @@ class TestRequestSizeLimit:
 
 
 class TestDeploymentMode:
-    def test_on_prem_forces_rate_limit_required(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_on_prem_forces_rate_limit_required(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("TESSERA_DEPLOYMENT_MODE", "on_prem")
         monkeypatch.setenv("TESSERA_API__RATE_LIMIT_ENABLED", "false")
         get_settings.cache_clear()
@@ -205,9 +197,7 @@ class TestRateLimitIdentity:
 
 
 class TestChatAuth:
-    def test_chat_requires_bearer_when_configured(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_chat_requires_bearer_when_configured(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("TESSERA_API__BEARER_TOKEN", "s3cret-token")
         get_settings.cache_clear()
         from tessera.api.main import build_app
@@ -239,9 +229,7 @@ class TestSecretProvider:
         get_secret_provider.cache_clear()
         assert resolve_secret("TESSERA_TEST_SECRET") == "value-123"
 
-    def test_misconfigured_vault_falls_back_to_env(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_misconfigured_vault_falls_back_to_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from tessera.secrets import EnvSecretProvider, get_secret_provider
 
         # provider=vault but no url/token → must not crash; degrade to env.

@@ -43,6 +43,7 @@ def _spawn_background(coro: Coroutine[object, object, None]) -> None:
     _BACKGROUND_TASKS.add(task)
     task.add_done_callback(_BACKGROUND_TASKS.discard)
 
+
 # The checkpointer is keyed per turn (thread_id = turn_id) on purpose: it only
 # powers the intra-turn streaming pause (interrupt before the reporter). Keying
 # it by conversation would bleed one turn's per-turn accumulator channels
@@ -119,7 +120,7 @@ class ChatRequest(BaseModel):
     model: str | None = Field(
         default=None,
         max_length=100,
-        description="Optional chat-model override (UI model picker); falls back to the server default.",
+        description="Optional chat-model override (UI picker); falls back to server default.",
     )
 
 

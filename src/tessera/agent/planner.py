@@ -174,7 +174,9 @@ _INTENT_RULES: dict[LanguageCode, list[tuple[re.Pattern[str], Intent]]] = {
             ),
         ),
         (
-            re.compile(r"\b(simulate|simulation|monthly.*payment|payment.*monthly)\b", re.IGNORECASE),
+            re.compile(
+                r"\b(simulate|simulation|monthly.*payment|payment.*monthly)\b", re.IGNORECASE
+            ),
             Intent(
                 name="loan_simulation",
                 workers=(WorkerName.SIMULATOR, WorkerName.PRODUCT_LOOKUP),

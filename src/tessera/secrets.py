@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import json
 import os
-import subprocess  # noqa: S404 — used only to shell out to the pinned `sops` binary
+import subprocess
 from functools import lru_cache
 from typing import TYPE_CHECKING, Protocol
 

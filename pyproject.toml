@@ -221,6 +221,7 @@ ignore = [
     "D107",     # __init__ docstring — Google style uses the class docstring instead
     "PLW0603",  # global singletons are the intended pattern for module-level state
     "D105",     # magic methods (__str__, __repr__, etc.) don't need docstrings
+    "RUF200",   # ruff 0.7.x predates PEP 639 SPDX `license` strings; pyproject is valid (uv/hatchling parse it)
 ]
 unfixable = [
     "ERA001",   # never auto-delete commented code; require human review
@@ -252,7 +253,7 @@ docstring-code-format = true
 docstring-code-line-length = 88
 
 # ---------------------------------------------------------------------------
-# Mypy — strict mode (frozen by CLAUDE.md)
+# Mypy — strict mode (frozen project convention)
 # ---------------------------------------------------------------------------
 
 [tool.mypy]
@@ -295,6 +296,7 @@ module = [
     "langmem.*",
     "zep_python.*",
     "zep_cloud.*",
+    "hvac.*",
     "google.cloud.aiplatform.*",
     "google.cloud.logging.*",
     "opentelemetry.exporter.cloud_trace.*",

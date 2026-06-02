@@ -11,11 +11,8 @@ Workers call :func:`search` to obtain a ranked list of
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 from tessera.agent.state import RetrievedDocument
 from tessera.retrieval import embeddings, reranking, store
-
 from tessera.settings import LanguageCode  # noqa: TCH001 — used in signature at runtime
 
 __all__ = ["search"]

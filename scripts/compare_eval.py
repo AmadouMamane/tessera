@@ -59,11 +59,7 @@ def build_markdown(
             return "—"
         return "✅" if row.get("passed") else "❌"
 
-    disagreements = [
-        cid
-        for cid in case_ids
-        if status(idx_a.get(cid)) != status(idx_b.get(cid))
-    ]
+    disagreements = [cid for cid in case_ids if status(idx_a.get(cid)) != status(idx_b.get(cid))]
     if disagreements:
         lines.append(f"**Disagreements ({len(disagreements)}):** " + ", ".join(disagreements))
         lines.append("")

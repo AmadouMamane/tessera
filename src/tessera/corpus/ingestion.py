@@ -43,13 +43,13 @@ def _iter_data_files(corpus_filter: str | None) -> Iterable[tuple[Path, str, Lan
             # CNIL         → FR (French national authority)
             # Source prefixes in corpus JSON files match the issuing authority:
             # BaFin/* → DE, CNIL/* → FR, DORA/* and GDPR/* → EN
-            _REGULATION_LANGUAGES: dict[str, LanguageCode] = {
+            regulation_languages: dict[str, LanguageCode] = {
                 "regulations_dora.json": LanguageCode.EN,
                 "regulations_gdpr.json": LanguageCode.EN,
                 "regulations_bafin.json": LanguageCode.DE,
                 "regulations_cnil.json": LanguageCode.FR,
             }
-            language = _REGULATION_LANGUAGES.get(name, LanguageCode.EN)
+            language = regulation_languages.get(name, LanguageCode.EN)
         else:
             base = name.removesuffix(".json")
             *_, lang_code = base.rsplit("_", 1)

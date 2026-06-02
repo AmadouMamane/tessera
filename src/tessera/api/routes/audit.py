@@ -49,6 +49,7 @@ _PAGE_MAX = 500
 
 def _resolve_audit_path() -> Path:
     from tessera.settings import get_settings
+
     return get_settings().guard.audit_file
 
 

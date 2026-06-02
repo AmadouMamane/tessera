@@ -58,7 +58,7 @@ _PRICES: dict[tuple[str, str], _Price] = {
 }
 
 
-_BUDGET_FILE = Path("/tmp/tessera/budget.json")
+_BUDGET_FILE = Path("/tmp/tessera/budget.json")  # noqa: S108 — ephemeral local cache; the container mounts a dedicated volume here
 
 
 class BudgetTracker:

@@ -1,7 +1,7 @@
 """Request-body size ceiling middleware (ADR 0008).
 
 Per-field Pydantic caps bound individual fields, but nothing bounds the
-*aggregate* request body — 40 history messages × 8 000 chars is ~320 kB before
+*aggregate* request body — 40 history messages x 8 000 chars is ~320 kB before
 the model even runs. This middleware rejects oversized bodies early with 413,
 independently of rate limiting, as a cost/DoS amplifier guard.
 

@@ -67,9 +67,7 @@ class TestPlanner:
     def test_multi_intent_activates_all_workers(self) -> None:
         # "vol de carte" matches card_block AND "rgpd" matches regulation —
         # both workers must appear in the plan.
-        plan, _ = plan_for(
-            "que dit le rgpd sur le vol de carte bancaire", LanguageCode.FR
-        )
+        plan, _ = plan_for("que dit le rgpd sur le vol de carte bancaire", LanguageCode.FR)
         assert WorkerName.ACCOUNT_LOOKUP in plan
         assert WorkerName.REGULATION_LOOKUP in plan
 
@@ -191,8 +189,10 @@ class TestInjectionGuard:
         # Router must short-circuit: final_response set, plan empty
         assert result.get("final_response"), "injection must produce a blocked response"
         assert result.get("plan") == [], "plan must be empty on injection block"
-        assert "instructions" not in str(result["final_response"]).lower() or \
-               "ne peux pas" in str(result["final_response"]).lower()
+        assert (
+            "instructions" not in str(result["final_response"]).lower()
+            or "ne peux pas" in str(result["final_response"]).lower()
+        )
 
     def test_german_injection_blocked_at_router(self) -> None:
         import uuid

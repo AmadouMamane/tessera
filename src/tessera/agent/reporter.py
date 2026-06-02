@@ -137,9 +137,7 @@ async def _build_chat_messages(
         header = prompts.get("memory_summary_header", "Earlier in this conversation:")
         msgs.append(ChatMessage(role="system", content=f"{header}\n{context.summary}"))
     if not context.entities.is_empty():
-        msgs.append(
-            ChatMessage(role="system", content=_render_entities(context.entities, prompts))
-        )
+        msgs.append(ChatMessage(role="system", content=_render_entities(context.entities, prompts)))
     if context.long_term:
         header = prompts.get(
             "memory_context_header",
