@@ -88,6 +88,7 @@ export function ChatRoom() {
     appendToken,
     finalizeAssistant,
     setError,
+    setStreaming,
     truncateFromMessage,
     removeLastExchange,
     reset,
@@ -254,7 +255,12 @@ export function ChatRoom() {
           },
         );
       } catch (err) {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) {
+          // User hit stop: leave the partial reply in place but exit the
+          // streaming state so the UI is interactive again.
+          setStreaming(false);
+          return;
+        }
         if (!errorHandled) {
           errorHandled = true;
           showErrorInConversation(err instanceof Error ? err.message : String(err));
@@ -263,7 +269,17 @@ export function ChatRoom() {
         if (abortRef.current === controller) abortRef.current = null;
       }
     },
-    [appendUser, appendToken, finalizeAssistant, locale, setError, start, startAssistant, t],
+    [
+      appendUser,
+      appendToken,
+      finalizeAssistant,
+      locale,
+      setError,
+      setStreaming,
+      start,
+      startAssistant,
+      t,
+    ],
   );
 
   const handleInlineEdit = useCallback(

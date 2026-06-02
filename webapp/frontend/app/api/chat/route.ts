@@ -36,6 +36,9 @@ export async function POST(request: NextRequest): Promise<Response> {
       "X-Session-Id": sessionId,
     }),
     body,
+    // Propagate the client's abort (stop button / navigation) to the backend so
+    // it cancels generation instead of running the LLM to completion unseen.
+    signal: request.signal,
   });
 
   if (!upstream.ok || !upstream.body) {
