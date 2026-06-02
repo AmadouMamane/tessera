@@ -18,12 +18,13 @@ Google Cloud Build runs inside the GCP tenant where Tessera is deployed and bene
 
 ## Decision
 
-GitHub Actions is the sole CI/CD platform for Tessera. Four workflows live under `.github/workflows/`:
+GitHub Actions is the sole CI/CD platform for Tessera. Five workflows live under `.github/workflows/`:
 
 - `ci.yml` runs on every push and pull request. It executes `uv sync`, `ruff check`, `ruff format --check`, `mypy --strict`, and `pytest tests/unit/`. Integration tests under `tests/integration/` run conditionally when the `integration` label is set on the pull request or on push to `main`.
 - `eval.yml` runs the regression harness against the failure catalog under `eval/failures/`. It runs on schedule (nightly) and on pull requests labelled `eval`. It does not run on every push because it consumes paid LLM API quota.
 - `deploy.yml` runs on tag push matching `v*.*.*`. It builds the agent and frontend container images, pushes them to Artifact Registry, and triggers a Cloud Run revision deployment. Authentication to GCP uses Workload Identity Federation, not long-lived service account keys.
-- `security.yml` runs on every push, pull request, and weekly schedule. It runs Trivy on the container images, `pip-audit` and `bandit` on the Python sources, `gitleaks` on the working tree, and CodeQL on the repository.
+- `security.yml` runs on every push, pull request, and weekly schedule. It runs Trivy on the container images, `pip-audit` and `bandit` on the Python sources, `gitleaks` on the working tree, a guard-policy lint, and CodeQL on the repository.
+- `supply-chain.yml` runs on push to `main`. It builds and pushes the agent image to GHCR, generates a CycloneDX SBOM, and signs the image with cosign (keyless / OIDC) plus SLSA build provenance.
 
 Cloud Build is not used. If a future ADR introduces a GCP-internal build path for compliance or supply-chain reasons, this decision is superseded at that time.
 

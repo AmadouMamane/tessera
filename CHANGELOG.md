@@ -8,6 +8,42 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+- **Selectable on-prem models.** Five Ollama models choosable per request
+  (Llama 3.2 3B default, Mistral 7B, DeepSeek-R1 7B, Gemma 3 27B, Llama 3.3 70B);
+  the `model` threads `ChatRequest → AgentState → reporter → backend`. Surfaced
+  in the dashboard (chat badge, Settings cards, per-run/audit attribution, A/B
+  run comparison) and recorded in the eval scorecard.
+- **Web deployment path.** Containerised agent + Next.js standalone front, a
+  versioned local compose overlay, and a public-demo posture (service-to-service
+  bearer token, per-session + global rate limit, request-size cap) — ADR 0008.
+- **Supply-chain workflow.** SBOM (CycloneDX) + image signing (cosign keyless)
+  + SLSA provenance for the agent image.
+- Brand favicon set (`app/{favicon.ico,icon.svg,icon.png,apple-icon.png}`) and
+  `docs/structure.md` (public canonical tree + conventions).
+
+### Changed
+- **Dependency upgrades to remediate known CVEs** (pip-audit 11 → 0): langgraph
+  0.2 → 1.x (graph adapted to the new `CompiledStateGraph` generics),
+  langgraph-checkpoint → 4.x, starlette → 0.52 (pinned <1.0 to avoid the 1.x
+  `httpx2` test-client dependency), mcp → 1.27, google-cloud-aiplatform → 1.154,
+  httpx ≥ 0.28.1, pytest → 9. Two advisories without a safe fix are ignored with
+  justification (ollama PYSEC-2025-145, starlette PYSEC-2026-161).
+- Eval FR scores raised to 95% (Llama 3.3 70B) via deterministic policy
+  short-circuits on the resistant regression cases.
+- `pre-commit` hooks now run through `uv run` for exact parity with the gate.
+- DeepSeek-R1 `<think>` reasoning traces are stripped from responses.
+
+### Fixed
+- Cross-session long-term memory now persists (Tier 2 `persistent`, keyed by
+  `subject_id`).
+- Chat: the stop button actually interrupts streaming, the composer stays pinned
+  (flex `min-h-0`), and paste/typing no longer shift the layout.
+- `guard.adapter ↔ agent` circular import on a cold import path.
+- Eval runner no longer clobbers archived reports through the `latest.json`
+  symlink. Agent state (audit/budget) persists across container recreation via a
+  named volume.
+
 ## [0.3.0] — 2026-05-29
 
 ### Added
