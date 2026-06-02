@@ -68,7 +68,7 @@ class LLMProfile(StrEnum):
 
 
 class LanguageCode(StrEnum):
-    """Supported user-input languages — frozen by CLAUDE.md."""
+    """Supported user-input languages — frozen project convention."""
 
     FR = "fr"
     DE = "de"

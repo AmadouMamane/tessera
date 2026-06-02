@@ -14,7 +14,7 @@ assignees: amadou
 ## Proposed solution
 
 <!-- Describe the change you would like to see. Reference the relevant module(s) from the
-     canonical repository structure in CLAUDE.md (e.g. src/tessera/guard/, eval/failures/). -->
+     canonical repository structure in docs/structure.md (e.g. src/tessera/guard/, eval/failures/). -->
 
 ## Alternatives considered
 

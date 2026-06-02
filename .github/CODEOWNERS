@@ -16,5 +16,5 @@ infra/terraform/ @amadou
 # CI/CD: GitHub Actions workflow definitions
 .github/workflows/ @amadou
 
-# Project instructions: binding conventions for all contributors and the AI assistant
-CLAUDE.md @amadou
+# Structure & conventions reference
+docs/structure.md @amadou

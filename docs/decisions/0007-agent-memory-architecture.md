@@ -6,10 +6,9 @@ Date: 2026-05-30
 
 Accepted and **implemented** (all four phases). This ADR supersedes the implicit
 memory model that Tessera shipped with — client-passed conversation history plus
-a per-turn `MemorySaver` — and extends the canonical tree in CLAUDE.md by
-introducing the `src/tessera/memory/` package. The agent and infrastructure
-portions of CLAUDE.md remain authoritative; only the memory surface described
-here is added. Two design points were refined during implementation (durable
+a per-turn `MemorySaver` — and extends the canonical tree in `docs/structure.md`
+by introducing the `src/tessera/memory/` package. The rest of the canonical tree
+remains authoritative; only the memory surface described here is added. Two design points were refined during implementation (durable
 transcript table instead of re-keying the checkpointer; a dedicated pgvector
 table instead of LangGraph `BaseStore`); each is flagged inline as an
 "Implementation note" below.

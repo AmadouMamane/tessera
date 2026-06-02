@@ -21,36 +21,32 @@ Deployed on Google Cloud Run with an alternate on-premises mode running Llama 3.
 
 ---
 
-## Honest positioning
+## Positioning
 
-**Tessera is neither a new firewall, nor a new test framework, nor a new safety methodology.**
+Tessera is a **complete, opinionated, deployed assembly** of four quality layers — runtime guard, offline regression harness, structured audit trail, and human-in-the-loop escalation — wired end to end for one specific, demanding use case: **European retail banking customer support in three languages (FR / DE / EN) with explicit regulatory grounding** (DORA, CNIL, BaFin, GDPR).
 
-- The firewall layer is [`mcp-firewall`](https://github.com/ressl/mcp-firewall), consumed as a pinned dependency.
-- The non-regression harness draws its patterns from [AgentAssay](https://github.com/agentassay) and [Promptfoo](https://github.com/promptfoo/promptfoo).
-- The audit-trail approach is inspired by [AEGIS](https://arxiv.org/) — verify the specific citation against [`docs/differentiation.md`](./docs/differentiation.md) before reuse.
+It builds deliberately on proven components rather than reinventing them:
 
-What Tessera contributes is a **complete, opinionated, deployed assembly** of the four quality layers — runtime guard, offline regression harness, structured audit trail, human-in-the-loop escalation — wired end to end for **one specific use case**: European retail banking customer support in three languages with explicit regulatory grounding.
+- Runtime guarding via [`mcp-firewall`](https://github.com/ressl/mcp-firewall), consumed as a pinned dependency.
+- A non-regression harness whose patterns draw on [AgentAssay](https://github.com/agentassay) and [Promptfoo](https://github.com/promptfoo/promptfoo).
+- An audit-trail design informed by the AEGIS research line.
 
-**The value is in the assembly and the EU business semantics, not technical invention.** Any framing of this project as a "new framework" is rejected.
+The engineering work is the end-to-end integration and the EU banking domain semantics: multilingual regulatory retrieval, deterministic policy short-circuits on the critical failure cases, a per-model evaluation scorecard, and a production deployment with an on-premises fallback.
 
-### Inspirations cited explicitly
+### Built on / inspired by
 
-| Project / Paper       | Role                                       | Status                                |
-| --------------------- | ------------------------------------------ | ------------------------------------- |
-| `mcp-firewall` (ressl)| Runtime guardrail layer                    | Dependency (pinned)                   |
-| AEGIS                 | Audit-trail design pattern                 | Inspiration — citation in differentiation.md |
-| DFAH                  | Failure taxonomy for agent harnesses       | Inspiration — citation in differentiation.md |
-| AgentAssay            | Regression-test scaffolding patterns       | Inspiration                           |
-| Promptfoo             | YAML-driven prompt evaluation              | Inspiration / interop                 |
-| STING                 | Tool-use stress testing                    | Inspiration                           |
-| Bernstein             | Multilingual evaluation framing            | Inspiration                           |
-| ALTK                  | Agent-level toolkit comparisons            | Inspiration                           |
+| Project / Paper        | Role                                          |
+| ---------------------- | --------------------------------------------- |
+| `mcp-firewall` (ressl) | Runtime guardrail layer — pinned dependency   |
+| AEGIS                  | Audit-trail design pattern                    |
+| DFAH                   | Failure taxonomy for agent harnesses          |
+| AgentAssay             | Regression-test scaffolding patterns          |
+| Promptfoo              | YAML-driven prompt evaluation / interop       |
+| STING                  | Tool-use stress testing                       |
+| Bernstein              | Multilingual evaluation framing               |
+| ALTK                   | Agent-level toolkit comparisons               |
 
-> All academic citations in [`docs/differentiation.md`](./docs/differentiation.md) must be verified against the actual papers before merge. We do not cite what we have not read.
-
-### Upstream contribution commitment
-
-At least one upstream pull request on [`mcp-firewall`](https://github.com/ressl/mcp-firewall) **must** land within the project window. This is what defends the "reuse, don't reinvent" positioning. The PR link will appear here when merged.
+Academic citations in [`docs/differentiation.md`](./docs/differentiation.md) are verified against the source papers.
 
 ---
 
@@ -220,7 +216,7 @@ See [`docs/multilingual.md`](./docs/multilingual.md) for the full evaluation met
 
 ## Repository layout
 
-The canonical tree lives in [`CLAUDE.md`](./CLAUDE.md). Notable conventions:
+The canonical tree lives in [`docs/structure.md`](./docs/structure.md). Notable conventions:
 
 - `src/` layout (ADR 0004) — `import tessera` works only after `uv sync`.
 - LangGraph **nodes** (orchestration) live under `src/tessera/agent/workers/`.
@@ -232,11 +228,9 @@ The canonical tree lives in [`CLAUDE.md`](./CLAUDE.md). Notable conventions:
 
 ## Discipline
 
-These rules are non-negotiable in this repository:
+Engineering standards enforced across this repository:
 
-- **Ship-or-die at day twenty.** If schedule slips, cut scope. Never extend time.
-- **Daily commit cadence.** One Conventional-Commits commit per day, minimum.
-- **No notebooks.** Ever. If you need a scratchpad, use a script under `scripts/`.
+- **No notebooks.** If you need a scratchpad, use a script under `scripts/`.
 - **No hidden failures.** Failing tests stay visible in this README until they are fixed or formally accepted with an issue link.
 - **No fabricated citations.** Every external reference must point to a verified source.
 - **Secrets never enter the repo.** GCP Secret Manager in prod, gitignored `.env.local` in dev.

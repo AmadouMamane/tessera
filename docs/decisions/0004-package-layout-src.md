@@ -16,7 +16,7 @@ Under the src layout, `import tessera` resolves only against installed packages,
 
 The Python Packaging Authority has recommended the src layout in its official guide since 2020. The recommendation has been adopted by NumPy, pandas, Flask, Requests, Pydantic, FastAPI, LangChain, LangGraph, Instructor, and the majority of recent serious Python infrastructure projects. The flat layout remains common in older codebases and in tutorials oriented at beginners, but it is no longer the convention for production-grade libraries.
 
-Tessera is intended to be published on PyPI by day twenty and to be importable by external adopters from that point onward. The cost of switching from flat to src is approximately zero at inception and significant after the first dozen contributors have built mental models around the existing structure. The decision is therefore taken now.
+Tessera is intended to be published on PyPI and to be importable by external adopters. The cost of switching from flat to src is approximately zero at inception and significant after the first dozen contributors have built mental models around the existing structure. The decision is therefore taken now.
 
 ## Decision
 
@@ -26,6 +26,6 @@ Tests, scripts, and ad-hoc imports always go through the installed package. The 
 
 ## Consequences
 
-Packaging bugs surface at development time rather than at release time. The cost of building a PyPI distribution on day twenty drops to near zero because every test run since day one has exercised the package in its installed form. Alignment with the broader Python ecosystem makes the project legible to contributors and reviewers familiar with modern Python packaging.
+Packaging bugs surface at development time rather than at release time. The cost of building a PyPI distribution drops to near zero because every test run exercises the package in its installed form. Alignment with the broader Python ecosystem makes the project legible to contributors and reviewers familiar with modern Python packaging.
 
 The cost is a single small habit — running `uv sync` once after cloning the repository, before any other command. This is documented in the `README.md` quickstart and enforced by the `Makefile`. Contributors arriving from older flat-layout projects may briefly stumble on `ModuleNotFoundError` until they run `uv sync`; the README addresses this proactively.

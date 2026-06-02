@@ -19,7 +19,7 @@
 - [ ] `mypy --strict` passes with no errors
 - [ ] All existing tests pass (`pytest tests/unit/`)
 - [ ] New tests added for any new behaviour (or absence documented below)
-- [ ] Changes conform to the canonical repository structure in `CLAUDE.md`
+- [ ] Changes conform to the canonical repository structure in `docs/structure.md`
 - [ ] No secrets, credentials, or PII committed (keys, tokens, `.env` files)
 - [ ] Documentation updated if public interfaces or behaviour changed
 - [ ] Prompts edited in YAML under `src/tessera/agent/prompts/` — not hardcoded in Python

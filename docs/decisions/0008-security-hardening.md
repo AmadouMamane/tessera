@@ -36,9 +36,8 @@ handled:
 6. **No SBOM, no image provenance, no `.well-known/security.txt`.** Expected
    artefacts for an enterprise supply-chain story.
 
-The non-negotiable framing from the README applies: **reuse, don't reinvent.**
-This ADR adds an *opinionated assembly* of well-known controls; it invents no new
-security mechanism.
+This ADR assembles well-known, production-grade controls into an opinionated,
+coherent security posture for the deployment.
 
 ## The deployment-mode distinction (the load-bearing decision)
 

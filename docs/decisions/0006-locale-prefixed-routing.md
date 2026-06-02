@@ -8,7 +8,7 @@ Accepted
 
 ## Context
 
-CLAUDE.md's canonical tree describes the dashboard pages as living directly under `webapp/frontend/app/`:
+The canonical tree (`docs/structure.md`) describes the dashboard pages as living directly under `webapp/frontend/app/`:
 
 ```
 app/
@@ -39,7 +39,7 @@ The `next-intl` library (v3.25+) is the de facto standard for this pattern in th
 
 The dashboard uses **locale-prefixed routing** with `next-intl`. Every reachable page lives under `app/[locale]/`, the supported locales are exactly `fr` / `de` / `en` (matching the agent's `LanguageCode` enum), and `localePrefix` is `always` — even the default locale gets a segment.
 
-Concretely, the canonical tree section of CLAUDE.md is superseded for the frontend portion: the actual layout is
+Concretely, the canonical tree in `docs/structure.md` is superseded for the frontend portion: the actual layout is
 
 ```
 app/
@@ -60,4 +60,4 @@ The agent's `LanguageCode` enum (Python) and the dashboard's `Locale` zod schema
 
 ## Consequences
 
-Every URL in the dashboard now carries its language, which preserves intent across shared links, satisfies the SEO and accessibility expectations of European regulators, and matches the agent's own language partitioning end-to-end. The cost is one layer of directory nesting and one indirect import for navigation; both are absorbed once and do not slow day-to-day work. The dashboard portion of the canonical tree in CLAUDE.md is now considered superseded by this ADR, and contributors editing the frontend should treat `app/[locale]/` as the canonical layout going forward. The agent and infrastructure portions of CLAUDE.md remain authoritative and untouched.
+Every URL in the dashboard now carries its language, which preserves intent across shared links, satisfies the SEO and accessibility expectations of European regulators, and matches the agent's own language partitioning end-to-end. The cost is one layer of directory nesting and one indirect import for navigation; both are absorbed once and do not slow day-to-day work. The dashboard portion of the canonical tree in `docs/structure.md` is now considered superseded by this ADR, and contributors editing the frontend should treat `app/[locale]/` as the canonical layout going forward. The agent and infrastructure portions of the canonical tree remain authoritative and untouched.

@@ -55,7 +55,7 @@ variable "frontend_memory" {
   default     = "512Mi"
 }
 
-# Aliases matching the canonical CLAUDE.md naming convention while keeping
+# Aliases matching the canonical naming convention while keeping
 # backward-compat with the internal min/max_instances names used across files.
 variable "cloud_run_min_instances" {
   description = "Cloud Run minimum-instance floor (use 0 for the demo)."

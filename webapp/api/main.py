@@ -1,7 +1,7 @@
 """Thin entrypoint exposed under ``webapp/api/`` for Cloud Run.
 
 The real factory lives in :mod:`tessera.api.main`; this file exists so the
-deployment manifest and the canonical tree in ``CLAUDE.md`` can keep a
+deployment manifest and the canonical tree in ``docs/structure.md`` can keep a
 stable ``webapp/api/main.py`` reference while the implementation moves with
 the package.
 """

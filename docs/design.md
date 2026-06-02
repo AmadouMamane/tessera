@@ -5,7 +5,8 @@ drives the architecture, the LangGraph topology that orchestrates a single
 conversational turn, the typed state contract shared by every node, the
 retrieval layer, the dual LLM paths, and the guard/audit machinery. It is a
 technical reference for contributors, not an overview for newcomers — read the
-README and `CLAUDE.md` first for positioning.
+README first for positioning and [`docs/structure.md`](./structure.md) for the
+canonical layout.
 
 ## Architecture philosophy: the four quality layers
 

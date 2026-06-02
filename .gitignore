@@ -64,3 +64,11 @@ Icon
 # Eval reports (generated)
 eval/reports/*.json
 eval/reports/*.html
+
+# Scratch / local working dir
+tmp/
+
+# Local agent instruction files & personal tooling (kept on disk, never published)
+CLAUDE.md
+AGENTS.md
+init_claude.sh

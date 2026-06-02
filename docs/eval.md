@@ -15,9 +15,9 @@ set of pass criteria the agent's behaviour must satisfy.
 
 The patterns are drawn from AgentAssay and Promptfoo: declarative case files,
 substring and behavioural assertions, per-language expansion, and a
-machine-readable scorecard. Tessera contributes neither a new assertion language
-nor a new scoring engine — it contributes a curated, regulatory-grounded
-catalogue for one use case (EU retail banking support in FR/DE/EN) and the
+machine-readable scorecard. On top of those patterns, Tessera contributes a
+curated, regulatory-grounded catalogue for one use case (EU retail banking
+support in FR/DE/EN) and the
 wiring that replays it against the real LangGraph agent on every push.
 
 ## Failure taxonomy
