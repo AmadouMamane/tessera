@@ -106,6 +106,8 @@
     "failed": "Fail",
     "compareTitle": "Model comparison",
     "compareDisagreements": "disagreements",
+    "viewRun": "Run detail",
+    "viewCompare": "Compare models",
     "runHistory": {
       "title": "Run history",
       "runSingular": "run",

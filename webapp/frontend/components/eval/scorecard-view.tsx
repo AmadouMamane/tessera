@@ -1,6 +1,7 @@
-import { Check, FileSearch, X } from "lucide-react";
+import { Check, Cpu, FileSearch, X } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
+import { EvalTabs } from "@/components/eval/eval-tabs";
 import { ModelComparison } from "@/components/eval/model-comparison";
 import { RunHistoryPanel } from "@/components/eval/run-history-panel";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import type { ScorecardDocument, ScorecardResult } from "@/lib/api/schemas";
 import { loadAllRuns, loadModelComparison, loadScorecard } from "@/lib/eval";
+import { findModel } from "@/lib/models";
 
 const CATEGORY_LABELS: Record<string, string> = {
   prompt_injection: "Prompt Injection",
@@ -56,13 +58,10 @@ export async function ScorecardView({ locale, filename }: ScorecardViewProps) {
     getTranslations({ locale, namespace: "eval" }),
   ]);
 
-  return (
+  const detail = (
     <div className="flex flex-col gap-6">
-      {/* Evolution history */}
+      {/* Evolution history (per-run model badges) */}
       {runs.length > 0 && <RunHistoryPanel runs={runs} currentFile={filename} />}
-
-      {/* Side-by-side model comparison (latest run per model) */}
-      {comparison.length >= 2 && <ModelComparison runs={comparison} locale={locale} />}
 
       {!scorecard ? (
         <Card>
@@ -75,6 +74,12 @@ export async function ScorecardView({ locale, filename }: ScorecardViewProps) {
         </Card>
       ) : (
         <>
+          {scorecard.model ? (
+            <div className="flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)]">
+              <Cpu className="h-4 w-4 text-gold-500" />
+              {findModel(scorecard.model).label}
+            </div>
+          ) : null}
           {/* Summary tiles */}
           <SummaryRow
             scorecard={scorecard}
@@ -101,6 +106,16 @@ export async function ScorecardView({ locale, filename }: ScorecardViewProps) {
         </>
       )}
     </div>
+  );
+
+  return (
+    <EvalTabs
+      detail={detail}
+      compare={
+        comparison.length >= 2 ? <ModelComparison runs={comparison} locale={locale} /> : null
+      }
+      labels={{ detail: t("viewRun"), compare: t("viewCompare") }}
+    />
   );
 }
 

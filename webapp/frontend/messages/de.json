@@ -106,6 +106,8 @@
     "failed": "Fehlgeschlagen",
     "compareTitle": "Modellvergleich",
     "compareDisagreements": "Abweichungen",
+    "viewRun": "Run-Detail",
+    "viewCompare": "Modelle vergleichen",
     "runHistory": {
       "title": "Ausführungshistorie",
       "runSingular": "Ausführung",

@@ -10,10 +10,10 @@ schema returned by both readers is identical, defined here as
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from pathlib import Path  # noqa: TCH003  used at runtime in the file-backed reader
 from typing import Annotated, Literal
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Query
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 router = APIRouter(tags=["audit"])
@@ -27,6 +27,7 @@ class AuditEntry(BaseModel):
     occurred_at: str
     target: str
     outcome: Literal["allowed", "denied", "error"]
+    model: str | None = None
     arguments: dict[str, object] = Field(default_factory=dict)
     decisions: list[dict[str, object]] = Field(default_factory=list)
     error: str | None = None

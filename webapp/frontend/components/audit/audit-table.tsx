@@ -1,7 +1,15 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, ShieldAlert, ShieldCheck, ShieldOff, X } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Cpu,
+  ShieldAlert,
+  ShieldCheck,
+  ShieldOff,
+  X,
+} from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
@@ -28,6 +36,7 @@ import {
 } from "@/components/ui/table";
 import { fetchAudit } from "@/lib/api/client";
 import type { AuditEntry, AuditOutcome } from "@/lib/api/schemas";
+import { findModel } from "@/lib/models";
 
 const PAGE_SIZE = 20;
 const OUTCOMES: ReadonlyArray<AuditOutcome> = ["allowed", "denied", "error"];
@@ -125,6 +134,12 @@ export function AuditTable() {
                   </TableCell>
                   <TableCell>
                     <span className="font-medium">{entry.target}</span>
+                    {entry.model ? (
+                      <span className="mt-0.5 flex items-center gap-1 text-[10px] text-[var(--muted-foreground)]">
+                        <Cpu className="h-3 w-3 text-gold-500" />
+                        {findModel(entry.model).label}
+                      </span>
+                    ) : null}
                   </TableCell>
                   <TableCell>
                     <OutcomeBadge outcome={entry.outcome} />

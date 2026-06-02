@@ -6,6 +6,7 @@ import {
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
+  Cpu,
   TrendingUp,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -24,6 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { RunMeta } from "@/lib/api/schemas";
+import { findModel } from "@/lib/models";
 
 const PAGE_SIZE = 5;
 
@@ -208,6 +210,12 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
                           {t("current")}
                         </Badge>
                       )}
+                      {run.model ? (
+                        <div className="mt-1 flex items-center gap-1 text-[10px] text-[var(--muted-foreground)]">
+                          <Cpu className="h-3 w-3 text-gold-500" />
+                          {findModel(run.model).label}
+                        </div>
+                      ) : null}
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge tone="neutral">{run.lang?.toUpperCase() ?? "ALL"}</Badge>

@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 import sys
 from datetime import UTC, datetime
-from pathlib import Path
+from pathlib import Path  # noqa: TCH003  used at runtime by the file sink
 from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
@@ -57,6 +57,7 @@ def _build_entry(
     decisions: Iterable[GuardDecisionRecord],
     outcome: _Outcome,
     error: str | None,
+    model: str | None,
 ) -> dict[str, Any]:
     return {
         "type": "tessera.guard.audit",
@@ -64,6 +65,7 @@ def _build_entry(
         "occurred_at": datetime.now(UTC).isoformat(),
         "target": target,
         "outcome": outcome,
+        "model": model,
         "arguments": _coerce_arguments(arguments),
         "decisions": [_record_to_dict(d) for d in decisions],
         "error": error,
@@ -118,20 +120,28 @@ def emit_audit(
     Failures in the sink are swallowed and logged to stderr so that audit
     issues never block the agent's main path.
     """
+    from tessera.settings import LLMProfile, get_settings
+
+    settings = get_settings()
+    model = (
+        settings.ollama.chat_model
+        if settings.resolved_llm_profile() is LLMProfile.ON_PREM
+        else settings.vertex.chat_model
+    )
     entry = _build_entry(
         target=target,
         arguments=arguments,
         decisions=decisions,
         outcome=outcome,
         error=error,
+        model=model,
     )
     try:
         match sink:
             case "stdout":
                 _emit_stdout(entry)
             case "file":
-                from tessera.settings import get_settings
-                _emit_file(entry, get_settings().guard.audit_file)
+                _emit_file(entry, settings.guard.audit_file)
             case "cloud_logging":
                 _emit_cloud_logging(entry)
             case "postgres":

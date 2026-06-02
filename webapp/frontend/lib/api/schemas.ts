@@ -73,6 +73,7 @@ export const AuditEntrySchema = z.object({
   occurred_at: z.string(),
   target: z.string(),
   outcome: AuditOutcomeSchema,
+  model: z.string().nullable().optional(),
   arguments: z.record(z.string(), z.unknown()).default({}),
   decisions: z.array(AuditDecisionSchema).default([]),
   error: z.string().nullable().default(null),
