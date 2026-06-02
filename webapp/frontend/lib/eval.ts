@@ -56,11 +56,16 @@ export interface ModelRun {
 }
 
 /**
- * Latest model-tagged run per distinct model (optionally filtered by language),
- * newest first — powers the side-by-side model comparison on the eval page.
- * Reports written before model tagging (no `model`) are ignored here.
+ * Model-comparison rows for the eval page, anchored to a specific run. Each
+ * distinct model contributes its latest run for `lang`; when an `anchor` run is
+ * given, its model uses that exact run (not just the latest) and is listed
+ * first — so the comparison is tied to the run the user is viewing. Reports
+ * written before model tagging (no `model`) are ignored here.
  */
-export async function loadModelComparison(lang?: string | null): Promise<ModelRun[]> {
+export async function loadModelComparison(
+  lang?: string | null,
+  anchor?: { model?: string | null; doc: ScorecardDocument } | null,
+): Promise<ModelRun[]> {
   const root = await findRepoRoot(process.cwd());
   if (!root) return [];
   const dir = join(root, "eval", "reports");
@@ -85,7 +90,19 @@ export async function loadModelComparison(lang?: string | null): Promise<ModelRu
         // skip malformed files
       }
     }
-    return [...latestByModel.values()];
+    // Anchor: the selected run's model uses that exact run, listed first.
+    if (anchor?.model) {
+      latestByModel.set(anchor.model, {
+        model: anchor.model,
+        filename: "selected",
+        doc: anchor.doc,
+      });
+    }
+    const rows = [...latestByModel.values()];
+    if (anchor?.model) {
+      rows.sort((a, b) => (a.model === anchor.model ? -1 : b.model === anchor.model ? 1 : 0));
+    }
+    return rows;
   } catch {
     return [];
   }

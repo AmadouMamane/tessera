@@ -50,12 +50,16 @@ interface ScorecardViewProps {
 }
 
 export async function ScorecardView({ locale, filename }: ScorecardViewProps) {
-  const [scorecard, runs, comparison, t] = await Promise.all([
+  const [scorecard, runs, t] = await Promise.all([
     loadScorecard(filename),
     loadAllRuns(),
-    loadModelComparison(),
     getTranslations({ locale, namespace: "eval" }),
   ]);
+  // Comparison anchored to the currently-viewed run (its model uses this run).
+  const comparison = await loadModelComparison(
+    scorecard?.lang ?? null,
+    scorecard ? { model: scorecard.model ?? null, doc: scorecard } : null,
+  );
 
   const detail = (
     <div className="flex flex-col gap-6">
