@@ -9,11 +9,10 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
-import os
 import sys
 import uuid
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import jsonschema
@@ -21,7 +20,7 @@ import jsonschema
 from eval.scorecard import build_scorecard
 from tessera.agent import compile_graph
 from tessera.agent.state import new_state
-from tessera.settings import LanguageCode
+from tessera.settings import LanguageCode, LLMProfile, get_settings
 
 FAILURES_DIR = Path(__file__).parent / "failures"
 SCHEMA_PATH = FAILURES_DIR / "_schema.json"
@@ -172,12 +171,19 @@ async def _run_all(args: argparse.Namespace) -> int:
 
     args.report.parent.mkdir(parents=True, exist_ok=True)
     scorecard = build_scorecard(results)
-    run_ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    run_ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     lang_suffix = f"_{args.lang}" if args.lang else ""
+    settings = get_settings()
+    model = (
+        settings.ollama.chat_model
+        if settings.resolved_llm_profile() is LLMProfile.ON_PREM
+        else settings.vertex.chat_model
+    )
     payload = json.dumps(
         {
             "run_at": run_ts,
             "lang": args.lang,
+            "model": model,
             "summary": asdict(scorecard.summary),
             "results": [asdict(r) for r in results],
         },

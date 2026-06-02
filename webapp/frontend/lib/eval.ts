@@ -49,6 +49,48 @@ export async function loadScorecard(filename?: string): Promise<ScorecardDocumen
   }
 }
 
+export interface ModelRun {
+  model: string;
+  filename: string;
+  doc: ScorecardDocument;
+}
+
+/**
+ * Latest model-tagged run per distinct model (optionally filtered by language),
+ * newest first — powers the side-by-side model comparison on the eval page.
+ * Reports written before model tagging (no `model`) are ignored here.
+ */
+export async function loadModelComparison(lang?: string | null): Promise<ModelRun[]> {
+  const root = await findRepoRoot(process.cwd());
+  if (!root) return [];
+  const dir = join(root, "eval", "reports");
+  try {
+    const { readdir } = await import("node:fs/promises");
+    const files = (await readdir(dir))
+      .filter((f) => /^\d{8}T\d{6}Z.*\.json$/.test(f))
+      .sort()
+      .reverse(); // newest first → first seen per model is the latest
+    const latestByModel = new Map<string, ModelRun>();
+    for (const file of files) {
+      try {
+        const doc = ScorecardDocumentSchema.parse(
+          JSON.parse(await readFile(join(dir, file), "utf-8")),
+        );
+        if (!doc.model) continue;
+        if (lang && doc.lang && doc.lang !== lang) continue;
+        if (!latestByModel.has(doc.model)) {
+          latestByModel.set(doc.model, { model: doc.model, filename: file, doc });
+        }
+      } catch {
+        // skip malformed files
+      }
+    }
+    return [...latestByModel.values()];
+  } catch {
+    return [];
+  }
+}
+
 export async function loadAllRuns(): Promise<RunMeta[]> {
   const root = await findRepoRoot(process.cwd());
   if (!root) return [];
@@ -69,6 +111,7 @@ export async function loadAllRuns(): Promise<RunMeta[]> {
             filename: file,
             run_at: doc.run_at ?? file.replace(".json", ""),
             lang: doc.lang ?? null,
+            model: doc.model ?? null,
             summary: doc.summary,
           }),
         );

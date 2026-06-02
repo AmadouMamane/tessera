@@ -132,6 +132,7 @@ export type ScorecardSummary = z.infer<typeof ScorecardSummarySchema>;
 export const ScorecardDocumentSchema = z.object({
   run_at: z.string().optional(),
   lang: z.string().nullable().optional(),
+  model: z.string().nullable().optional(),
   summary: ScorecardSummarySchema,
   results: z.array(ScorecardResultSchema),
 });
@@ -141,6 +142,7 @@ export const RunMetaSchema = z.object({
   filename: z.string(),
   run_at: z.string(),
   lang: z.string().nullable(),
+  model: z.string().nullable().optional(),
   summary: ScorecardSummarySchema,
 });
 export type RunMeta = z.infer<typeof RunMetaSchema>;

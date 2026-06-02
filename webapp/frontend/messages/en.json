@@ -104,6 +104,8 @@
     },
     "passed": "Pass",
     "failed": "Fail",
+    "compareTitle": "Model comparison",
+    "compareDisagreements": "disagreements",
     "runHistory": {
       "title": "Run history",
       "runSingular": "run",

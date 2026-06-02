@@ -104,6 +104,8 @@
     },
     "passed": "Bestanden",
     "failed": "Fehlgeschlagen",
+    "compareTitle": "Modellvergleich",
+    "compareDisagreements": "Abweichungen",
     "runHistory": {
       "title": "Ausführungshistorie",
       "runSingular": "Ausführung",

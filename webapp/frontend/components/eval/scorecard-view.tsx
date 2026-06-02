@@ -1,6 +1,7 @@
 import { Check, FileSearch, X } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
+import { ModelComparison } from "@/components/eval/model-comparison";
 import { RunHistoryPanel } from "@/components/eval/run-history-panel";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -14,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { ScorecardDocument, ScorecardResult } from "@/lib/api/schemas";
-import { loadAllRuns, loadScorecard } from "@/lib/eval";
+import { loadAllRuns, loadModelComparison, loadScorecard } from "@/lib/eval";
 
 const CATEGORY_LABELS: Record<string, string> = {
   prompt_injection: "Prompt Injection",
@@ -48,9 +49,10 @@ interface ScorecardViewProps {
 }
 
 export async function ScorecardView({ locale, filename }: ScorecardViewProps) {
-  const [scorecard, runs, t] = await Promise.all([
+  const [scorecard, runs, comparison, t] = await Promise.all([
     loadScorecard(filename),
     loadAllRuns(),
+    loadModelComparison(),
     getTranslations({ locale, namespace: "eval" }),
   ]);
 
@@ -58,6 +60,9 @@ export async function ScorecardView({ locale, filename }: ScorecardViewProps) {
     <div className="flex flex-col gap-6">
       {/* Evolution history */}
       {runs.length > 0 && <RunHistoryPanel runs={runs} currentFile={filename} />}
+
+      {/* Side-by-side model comparison (latest run per model) */}
+      {comparison.length >= 2 && <ModelComparison runs={comparison} locale={locale} />}
 
       {!scorecard ? (
         <Card>

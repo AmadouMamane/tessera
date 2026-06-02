@@ -104,6 +104,8 @@
     },
     "passed": "Réussi",
     "failed": "Échec",
+    "compareTitle": "Comparaison des modèles",
+    "compareDisagreements": "désaccords",
     "runHistory": {
       "title": "Historique des runs",
       "runSingular": "run",
