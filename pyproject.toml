@@ -364,7 +364,9 @@ omit = [
 precision = 1
 show_missing = true
 skip_covered = false
-fail_under = 80
+# Threshold reflects unit-test coverage in CI; integration tests (Postgres/LLM,
+# not run in the fast CI job) exercise the rest.
+fail_under = 55
 exclude_lines = [
     "pragma: no cover",
     "raise NotImplementedError",
