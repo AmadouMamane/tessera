@@ -56,12 +56,18 @@ WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /app/src /app/src
 
-# Hardening (ADR 0008): own everything as root, make the venv and source
-# read-only to the unprivileged runtime user, and remove pip from the final
-# image so a compromised process cannot install packages at runtime.
-RUN chown -R root:root /opt/venv /app \
-    && chmod -R a-w /opt/venv /app \
-    && rm -f /opt/venv/bin/pip /opt/venv/bin/pip3 || true
+# Hardening (ADR 0008): remove pip entirely (binaries + package + dist-info, in
+# both the venv and the base image's system site-packages) so a compromised
+# process cannot install packages at runtime and image scanners do not flag the
+# unused, vulnerable pip. Then own everything as root and make the venv and
+# source read-only to the unprivileged runtime user.
+RUN rm -rf /opt/venv/bin/pip* /usr/local/bin/pip* \
+        /opt/venv/lib/python*/site-packages/pip \
+        /opt/venv/lib/python*/site-packages/pip-*.dist-info \
+        /usr/local/lib/python*/site-packages/pip \
+        /usr/local/lib/python*/site-packages/pip-*.dist-info \
+    && chown -R root:root /opt/venv /app \
+    && chmod -R a-w /opt/venv /app
 
 # Writable state dir for the file audit sink and the budget tracker. Created
 # owned by the runtime user so a mounted volume inherits write access (a named
