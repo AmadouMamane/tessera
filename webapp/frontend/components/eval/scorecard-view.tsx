@@ -1,4 +1,4 @@
-import { Check, Cpu, FileSearch, X } from "lucide-react";
+import { Check, FileSearch, X } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { EvalTabs } from "@/components/eval/eval-tabs";
@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/table";
 import type { ScorecardDocument, ScorecardResult } from "@/lib/api/schemas";
 import { loadAllRuns, loadModelComparison, loadScorecard } from "@/lib/eval";
-import { findModel } from "@/lib/models";
 
 const CATEGORY_LABELS: Record<string, string> = {
   prompt_injection: "Prompt Injection",
@@ -74,12 +73,6 @@ export async function ScorecardView({ locale, filename }: ScorecardViewProps) {
         </Card>
       ) : (
         <>
-          {scorecard.model ? (
-            <div className="flex items-center gap-1.5 text-sm font-medium text-[var(--foreground)]">
-              <Cpu className="h-4 w-4 text-gold-500" />
-              {findModel(scorecard.model).label}
-            </div>
-          ) : null}
           {/* Summary tiles */}
           <SummaryRow
             scorecard={scorecard}

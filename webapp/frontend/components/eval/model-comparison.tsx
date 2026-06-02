@@ -62,9 +62,9 @@ export async function ModelComparison({
 
         <Table className="table-fixed border-t border-[var(--border)]">
           <colgroup>
-            <col className="w-[56%]" />
-            <col className="w-[22%]" />
-            <col className="w-[22%]" />
+            <col className="w-[50%]" />
+            <col className="w-[25%]" />
+            <col className="w-[25%]" />
           </colgroup>
           <TableHeader>
             <TableRow>

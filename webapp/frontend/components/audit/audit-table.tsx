@@ -67,7 +67,7 @@ export function AuditTable() {
   const entries = query.data?.entries ?? [];
 
   return (
-    <Card>
+    <Card className="mb-10">
       <CardContent className="p-0">
         <Filters
           target={target}

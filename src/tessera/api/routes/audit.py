@@ -82,6 +82,7 @@ async def audit_list(
     """Return a paged slice of the audit log."""
     path = _resolve_audit_path()
     entries = _read_entries(path)
+    entries.reverse()  # newest first — most recent activity at the top
     if target:
         entries = [e for e in entries if e.target == target]
     if outcome:

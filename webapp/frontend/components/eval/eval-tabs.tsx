@@ -21,7 +21,7 @@ export function EvalTabs({
 }) {
   const [view, setView] = useState<"detail" | "compare">("detail");
 
-  if (!compare) return <>{detail}</>;
+  if (!compare) return <div className="pb-10">{detail}</div>;
 
   const tabs = [
     { key: "detail" as const, label: labels.detail },
@@ -29,7 +29,7 @@ export function EvalTabs({
   ];
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 pb-10">
       <div className="inline-flex self-start rounded-lg border border-[var(--border)] bg-[var(--muted)]/40 p-1">
         {tabs.map((tab) => (
           <button
