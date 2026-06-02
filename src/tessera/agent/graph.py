@@ -114,13 +114,13 @@ def _route_after_reviewer(state: AgentState) -> str:
 # ---------------------------------------------------------------------------
 
 
-def build_graph() -> StateGraph[AgentState]:  # type: ignore[type-arg]
+def build_graph() -> StateGraph[AgentState]:
     """Construct (but do not compile) the agent's StateGraph.
 
     Returning the uncompiled graph lets tests inspect the topology and lets
     callers register custom checkpointers before compilation.
     """
-    graph: StateGraph[AgentState] = StateGraph(AgentState)  # type: ignore[type-arg]
+    graph: StateGraph[AgentState] = StateGraph(AgentState)
 
     # Top-level nodes
     graph.add_node(NodeName.ROUTER.value, router_module.run)
@@ -155,7 +155,7 @@ def build_graph() -> StateGraph[AgentState]:  # type: ignore[type-arg]
     worker_targets = [*_WORKER_NODES.values(), NodeName.REVIEWER.value]
     graph.add_conditional_edges(
         NodeName.PLANNER.value,
-        _route_after_planner,  # type: ignore[arg-type]
+        _route_after_planner,
         path_map={name: name for name in worker_targets},
     )
 
@@ -185,7 +185,7 @@ def build_graph() -> StateGraph[AgentState]:  # type: ignore[type-arg]
     return graph
 
 
-def compile_graph() -> CompiledStateGraph[AgentState, AgentState, AgentState]:  # type: ignore[type-arg]
+def compile_graph() -> CompiledStateGraph[AgentState, None, AgentState, AgentState]:
     """Return a compiled, immediately invokable graph.
 
     Callers needing a checkpointer (persistent conversations) should build the

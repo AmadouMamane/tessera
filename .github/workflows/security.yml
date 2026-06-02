@@ -58,7 +58,14 @@ jobs:
           uv pip install pip-audit
           # --skip-editable drops the local unpublished `tessera` package; not
           # --strict, since that would turn the intentional skip into an error.
-          uv run pip-audit --skip-editable --progress-spinner=off
+          # Two advisories are ignored with justification:
+          #  - PYSEC-2025-145 (ollama 0.4.9): no fixed release exists upstream.
+          #  - PYSEC-2026-161 (starlette): only fixed in 1.x, whose TestClient
+          #    pulls an unvetted `httpx2` dependency; starlette is pinned <1.0.
+          uv run pip-audit --skip-editable \
+            --ignore-vuln PYSEC-2025-145 \
+            --ignore-vuln PYSEC-2026-161 \
+            --progress-spinner=off
 
   bandit:
     name: bandit

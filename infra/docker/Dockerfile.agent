@@ -17,6 +17,7 @@ WORKDIR /app
 
 # System deps required to compile psycopg + the cryptography wheels.
 RUN apt-get update \
+    && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
         build-essential \
         libpq-dev \
@@ -42,6 +43,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     TESSERA_API__PORT=8080
 
 RUN apt-get update \
+    && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
         libpq5 \
         ca-certificates \
