@@ -49,65 +49,6 @@ export async function loadScorecard(filename?: string): Promise<ScorecardDocumen
   }
 }
 
-export interface ModelRun {
-  model: string;
-  filename: string;
-  doc: ScorecardDocument;
-}
-
-/**
- * Model-comparison rows for the eval page, anchored to a specific run. Each
- * distinct model contributes its latest run for `lang`; when an `anchor` run is
- * given, its model uses that exact run (not just the latest) and is listed
- * first — so the comparison is tied to the run the user is viewing. Reports
- * written before model tagging (no `model`) are ignored here.
- */
-export async function loadModelComparison(
-  lang?: string | null,
-  anchor?: { model?: string | null; doc: ScorecardDocument } | null,
-): Promise<ModelRun[]> {
-  const root = await findRepoRoot(process.cwd());
-  if (!root) return [];
-  const dir = join(root, "eval", "reports");
-  try {
-    const { readdir } = await import("node:fs/promises");
-    const files = (await readdir(dir))
-      .filter((f) => /^\d{8}T\d{6}Z.*\.json$/.test(f))
-      .sort()
-      .reverse(); // newest first → first seen per model is the latest
-    const latestByModel = new Map<string, ModelRun>();
-    for (const file of files) {
-      try {
-        const doc = ScorecardDocumentSchema.parse(
-          JSON.parse(await readFile(join(dir, file), "utf-8")),
-        );
-        if (!doc.model) continue;
-        if (lang && doc.lang && doc.lang !== lang) continue;
-        if (!latestByModel.has(doc.model)) {
-          latestByModel.set(doc.model, { model: doc.model, filename: file, doc });
-        }
-      } catch {
-        // skip malformed files
-      }
-    }
-    // Anchor: the selected run's model uses that exact run, listed first.
-    if (anchor?.model) {
-      latestByModel.set(anchor.model, {
-        model: anchor.model,
-        filename: "selected",
-        doc: anchor.doc,
-      });
-    }
-    const rows = [...latestByModel.values()];
-    if (anchor?.model) {
-      rows.sort((a, b) => (a.model === anchor.model ? -1 : b.model === anchor.model ? 1 : 0));
-    }
-    return rows;
-  } catch {
-    return [];
-  }
-}
-
 export async function loadAllRuns(): Promise<RunMeta[]> {
   const root = await findRepoRoot(process.cwd());
   if (!root) return [];

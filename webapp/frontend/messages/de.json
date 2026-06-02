@@ -108,6 +108,8 @@
     "compareDisagreements": "Abweichungen",
     "viewRun": "Run-Detail",
     "viewCompare": "Modelle vergleichen",
+    "compareRunA": "Run A",
+    "compareRunB": "Run B",
     "runHistory": {
       "title": "Ausführungshistorie",
       "runSingular": "Ausführung",

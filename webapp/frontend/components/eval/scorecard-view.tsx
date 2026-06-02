@@ -1,6 +1,7 @@
 import { Check, FileSearch, X } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
+import { CompareControls } from "@/components/eval/compare-controls";
 import { EvalTabs } from "@/components/eval/eval-tabs";
 import { ModelComparison } from "@/components/eval/model-comparison";
 import { RunHistoryPanel } from "@/components/eval/run-history-panel";
@@ -16,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { ScorecardDocument, ScorecardResult } from "@/lib/api/schemas";
-import { loadAllRuns, loadModelComparison, loadScorecard } from "@/lib/eval";
+import { loadAllRuns, loadScorecard } from "@/lib/eval";
 
 const CATEGORY_LABELS: Record<string, string> = {
   prompt_injection: "Prompt Injection",
@@ -47,19 +48,36 @@ const CATEGORY_TONE: Record<string, string> = {
 interface ScorecardViewProps {
   locale: string;
   filename?: string;
+  vs?: string;
 }
 
-export async function ScorecardView({ locale, filename }: ScorecardViewProps) {
+export async function ScorecardView({ locale, filename, vs }: ScorecardViewProps) {
   const [scorecard, runs, t] = await Promise.all([
     loadScorecard(filename),
     loadAllRuns(),
     getTranslations({ locale, namespace: "eval" }),
   ]);
-  // Comparison anchored to the currently-viewed run (its model uses this run).
-  const comparison = await loadModelComparison(
-    scorecard?.lang ?? null,
-    scorecard ? { model: scorecard.model ?? null, doc: scorecard } : null,
-  );
+
+  // Comparison = run A (the viewed run) vs run B (user-picked via ?vs=). Both
+  // are selectable; B defaults to the latest run of a different model.
+  const aFile = filename ?? runs[0]?.filename;
+  const aModel = scorecard?.model ?? null;
+  const bFile =
+    vs ??
+    runs.find((r) => r.model && r.model !== aModel && r.filename !== aFile)?.filename ??
+    runs.find((r) => r.filename !== aFile)?.filename;
+  const bScorecard = bFile ? await loadScorecard(bFile) : null;
+  const comparePair =
+    scorecard && bScorecard
+      ? {
+          a: { model: scorecard.model ?? null, run_at: scorecard.run_at ?? null, doc: scorecard },
+          b: {
+            model: bScorecard.model ?? null,
+            run_at: bScorecard.run_at ?? null,
+            doc: bScorecard,
+          },
+        }
+      : null;
 
   const detail = (
     <div className="flex flex-col gap-6">
@@ -109,7 +127,17 @@ export async function ScorecardView({ locale, filename }: ScorecardViewProps) {
     <EvalTabs
       detail={detail}
       compare={
-        comparison.length >= 2 ? <ModelComparison runs={comparison} locale={locale} /> : null
+        comparePair ? (
+          <div className="flex flex-col gap-5 pb-10">
+            <CompareControls
+              runs={runs}
+              aFile={aFile}
+              bFile={bFile}
+              labels={{ a: t("compareRunA"), b: t("compareRunB") }}
+            />
+            <ModelComparison a={comparePair.a} b={comparePair.b} locale={locale} />
+          </div>
+        ) : null
       }
       labels={{ detail: t("viewRun"), compare: t("viewCompare") }}
     />

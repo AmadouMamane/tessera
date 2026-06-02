@@ -5,7 +5,7 @@ import { AppShell } from "@/components/layout/app-shell";
 
 interface EvalPageProps {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ run?: string }>;
+  searchParams: Promise<{ run?: string; vs?: string }>;
 }
 
 export async function generateMetadata({ params }: EvalPageProps) {
@@ -16,12 +16,12 @@ export async function generateMetadata({ params }: EvalPageProps) {
 
 export default async function EvalPage({ params, searchParams }: EvalPageProps) {
   const { locale } = await params;
-  const { run } = await searchParams;
+  const { run, vs } = await searchParams;
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "eval" });
   return (
     <AppShell title={t("title")} description={t("description")}>
-      <ScorecardView locale={locale} filename={run} />
+      <ScorecardView locale={locale} filename={run} vs={vs} />
     </AppShell>
   );
 }
