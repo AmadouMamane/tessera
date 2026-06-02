@@ -23,7 +23,6 @@ from tessera.agent.state import (  # noqa: TCH001  — LangGraph introspects run
     AgentState,
     GuardDecisionRecord,
 )
-from tessera.guard.adapter import check_user_input
 from tessera.settings import LanguageCode, get_settings
 
 __all__ = ["LanguageDetectionResult", "detect_language", "run"]
@@ -512,6 +511,12 @@ def run(state: AgentState) -> dict[str, object]:
     returns a confident result, or keeps the existing values if the caller
     already pinned them (useful in tests and replays).
     """
+    # Imported lazily to break a guard.adapter <-> agent.graph import cycle:
+    # adapter imports agent.state, which triggers the agent package init and the
+    # graph, which imports this router — so a top-level import of check_user_input
+    # would hit a partially-initialised guard.adapter on a fresh import.
+    from tessera.guard.adapter import check_user_input
+
     # Injection check runs unconditionally — before any language pinning logic.
     input_check = check_user_input(state["user_input"])
     guard_decisions: list[GuardDecisionRecord] = list(state.get("guard_decisions") or []) + list(

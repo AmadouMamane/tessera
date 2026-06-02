@@ -23,7 +23,6 @@ import inspect
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from tessera.agent.state import GuardDecisionRecord
 from tessera.guard.audit import emit_audit
 from tessera.guard.decisions import (
     Decision,
@@ -36,6 +35,10 @@ from tessera.settings import LanguageCode, get_settings
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
+
+    # Runtime-imported lazily inside the functions below to avoid a
+    # guard.adapter -> agent.state -> agent.graph -> guard.adapter import cycle.
+    from tessera.agent.state import GuardDecisionRecord
 
 __all__ = ["GuardedResult", "InputCheckResult", "check_user_input", "guarded_invoke"]
 
@@ -158,6 +161,8 @@ def _redacted_arguments(
 
 
 def _to_record(decision: Decision, target: str) -> GuardDecisionRecord:
+    from tessera.agent.state import GuardDecisionRecord
+
     return GuardDecisionRecord(
         target=target,
         decision=decision.kind.value,
@@ -187,6 +192,8 @@ def check_user_input(
         deny pattern matched, or ``True`` with a (potentially redacted)
         ``sanitised_text`` when the input is acceptable.
     """
+    from tessera.agent.state import GuardDecisionRecord
+
     active_policy = policy or load_policy()
     settings = get_settings()
     records: list[GuardDecisionRecord] = []
