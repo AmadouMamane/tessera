@@ -46,7 +46,10 @@ export function Providers({ children }: { children: ReactNode }) {
           {children}
         </TooltipProvider>
         <Toaster position="bottom-right" theme="system" richColors closeButton />
-        {process.env.NODE_ENV !== "production" ? (
+        {/* Opt-in only (set NEXT_PUBLIC_RQ_DEVTOOLS=true). Hidden by default even
+            in dev, so the floating toggle never shows on the public demo, which
+            runs `next dev` behind a tunnel (NODE_ENV stays "development"). */}
+        {process.env.NEXT_PUBLIC_RQ_DEVTOOLS === "true" ? (
           <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
         ) : null}
       </QueryClientProvider>
