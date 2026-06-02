@@ -12,6 +12,7 @@ escalation as a safety net.
 
 from __future__ import annotations
 
+import re
 from functools import lru_cache
 from importlib import resources
 from typing import TYPE_CHECKING, Final
@@ -177,6 +178,24 @@ def _build_synthesis_input(state: AgentState, prompts: dict[str, str]) -> tuple[
     return system_prompt, current_user_content
 
 
+_THINK_RE: Final = re.compile(r"<think>.*?</think>", re.DOTALL | re.IGNORECASE)
+# Chars to buffer at stream start before concluding there is no leading <think>.
+_REASONING_PROBE_CHARS: Final = 12
+
+
+def _strip_reasoning(text: str) -> str:
+    """Remove ``<think>…</think>`` reasoning traces (e.g. DeepSeek-R1) from a reply.
+
+    The agent's user-facing answer must not carry the model's chain-of-thought;
+    harmless for models that never emit it.
+    """
+    cleaned = _THINK_RE.sub("", text)
+    if "<think>" in cleaned and "</think>" not in cleaned:
+        # Unclosed/truncated reasoning — drop everything from the opening tag.
+        cleaned = cleaned.split("<think>", 1)[0]
+    return cleaned.strip()
+
+
 async def _synthesise(state: AgentState) -> str:
     """Call the LLM to produce a grounded answer from all available sources."""
     language = state["language"]
@@ -188,21 +207,43 @@ async def _synthesise(state: AgentState) -> str:
         temperature=0.2,
         model=state.get("model"),
     )
-    return response.content.strip()
+    return _strip_reasoning(response.content)
 
 
 async def astream_synthesise(state: AgentState) -> AsyncIterator[str]:
-    """Streaming variant of ``_synthesise`` — yields tokens as they arrive."""
+    """Streaming variant of ``_synthesise`` — yields tokens as they arrive.
+
+    A leading ``<think>…</think>`` reasoning block (DeepSeek-R1) is suppressed
+    before the answer streams; once past it, tokens pass straight through.
+    """
     language = state["language"]
     prompts = load_prompts(language)
     system_prompt, current_user_content = _build_synthesis_input(state, prompts)
     backend = get_chat_backend()
-    async for token in backend.stream_chat(
+    stream = backend.stream_chat(
         await _build_chat_messages(state, system_prompt, current_user_content, prompts),
         temperature=0.2,
         model=state.get("model"),
-    ):
-        yield token
+    )
+    buffer = ""
+    passthrough = False
+    async for token in stream:
+        if passthrough:
+            yield token
+            continue
+        buffer += token
+        if "</think>" in buffer:
+            rest = buffer.split("</think>", 1)[1].lstrip()
+            buffer = ""
+            passthrough = True
+            if rest:
+                yield rest
+        elif "<think>" not in buffer and len(buffer) >= _REASONING_PROBE_CHARS:
+            passthrough = True
+            yield buffer
+            buffer = ""
+    if not passthrough and buffer:
+        yield _strip_reasoning(buffer)
 
 
 def render(state: AgentState) -> str:
