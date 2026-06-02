@@ -267,6 +267,11 @@ export function ChatRoom() {
         }
       } finally {
         if (abortRef.current === controller) abortRef.current = null;
+        // @microsoft/fetch-event-source *resolves* (does not reject) when the
+        // external signal aborts, so the catch above never runs on stop. Reset
+        // the streaming flag here so the composer becomes interactive again and
+        // the partial reply stays in place.
+        if (controller.signal.aborted) setStreaming(false);
       }
     },
     [
@@ -307,7 +312,7 @@ export function ChatRoom() {
   const suggestions = SUGGESTED_PROMPTS[locale] ?? SUGGESTED_PROMPTS.en ?? [];
 
   return (
-    <div className="relative flex flex-1 flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)]/55 backdrop-blur-xl shadow-sm">
+    <div className="relative flex min-h-0 flex-1 flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)]/55 backdrop-blur-xl shadow-sm">
       {/* Message list — fix 1: flex flex-col so empty wrapper can use flex-1 */}
       <div
         ref={scrollContainerRef}
@@ -347,7 +352,7 @@ export function ChatRoom() {
           </div>
         ) : (
           /* pt-8 so messages don't slide under the absolute button */
-          <div className="mx-auto w-full flex max-w-3xl flex-col pt-8">
+          <div className="mx-auto w-full flex max-w-3xl flex-col pt-8 pb-10 sm:pb-12">
             {messages.map((m, idx) => {
               const prev = messages[idx - 1];
               const isGrouped =

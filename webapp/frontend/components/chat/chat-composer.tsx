@@ -13,6 +13,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/cn";
 
 export interface ChatComposerHandle {
   focus: () => void;
@@ -73,7 +74,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(
           }}
         >
           {/* Integrated pill — focus glow on the wrapper, not on the textarea */}
-          <div className="flex items-end gap-2 rounded-2xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-2 transition-all duration-200 focus-within:border-blue-500/50 focus-within:shadow-[0_0_0_3px_oklch(0.55_0.2_263/0.15)] dark:focus-within:border-blue-400/40 dark:focus-within:shadow-[0_0_0_3px_oklch(0.55_0.2_263/0.18)]">
+          <div className="flex items-end gap-2 rounded-2xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-2 transition-[border-color,box-shadow] duration-200 focus-within:border-blue-500/50 focus-within:shadow-[0_0_0_3px_oklch(0.55_0.2_263/0.15)] dark:focus-within:border-blue-400/40 dark:focus-within:shadow-[0_0_0_3px_oklch(0.55_0.2_263/0.18)]">
             <Textarea
               ref={textareaRef}
               value={value}
@@ -108,11 +109,17 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(
               </Button>
             )}
           </div>
-          {value.trim().length === 0 && !isStreaming && (
-            <p className="mt-1.5 px-1 text-[0.65rem] text-[var(--muted-foreground)] animate-in fade-in-0 duration-150">
-              {t("composerHint")}
-            </p>
-          )}
+          {/* Always rendered so its line-height is reserved — toggling only the
+              opacity avoids the layout shift (and jitter) when typing begins. */}
+          <p
+            aria-hidden={value.trim().length > 0 || isStreaming}
+            className={cn(
+              "mt-1.5 px-1 text-[0.65rem] text-[var(--muted-foreground)] transition-opacity duration-150",
+              value.trim().length === 0 && !isStreaming ? "opacity-100" : "opacity-0",
+            )}
+          >
+            {t("composerHint")}
+          </p>
         </form>
       </div>
     );
