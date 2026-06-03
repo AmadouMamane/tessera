@@ -345,7 +345,9 @@ export function ChatRoom() {
               suggestionsLabel={t("startWith")}
               suggestions={suggestions}
               onSelect={(text) => {
-                composerRef.current?.setValue(text);
+                // Send straight away — do NOT prefill the composer: sendMessage
+                // already takes the text, and setValue would leave the prompt
+                // stranded in the input box (only the composer's own submit clears it).
                 void sendMessage(text);
               }}
             />

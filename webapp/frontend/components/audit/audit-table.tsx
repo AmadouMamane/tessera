@@ -67,114 +67,120 @@ export function AuditTable() {
   const entries = query.data?.entries ?? [];
 
   return (
-    <Card className="mb-10">
-      <CardContent className="p-0">
-        <Filters
-          target={target}
-          outcome={outcome}
-          onTargetChange={(value) => {
-            setCursor(0);
-            setTarget(value);
-          }}
-          onOutcomeChange={(value) => {
-            setCursor(0);
-            setOutcome(value);
-          }}
-        />
-
-        {query.isPending ? (
-          <div className="space-y-2 p-6">
-            <Skeleton className="h-9 w-full" />
-            <Skeleton className="h-9 w-full" />
-            <Skeleton className="h-9 w-full" />
-            <Skeleton className="h-9 w-full" />
-            <Skeleton className="h-9 w-full" />
-          </div>
-        ) : entries.length === 0 ? (
-          <div className="p-6">
-            <EmptyState
-              icon={<ShieldCheck />}
-              title={tCommon("empty")}
-              description={t("description")}
-            />
-          </div>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("columns.occurredAt")}</TableHead>
-                <TableHead>{t("columns.target")}</TableHead>
-                <TableHead>{t("columns.outcome")}</TableHead>
-                <TableHead className="text-right">{t("columns.decisions")}</TableHead>
-                <TableHead aria-label="actions" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {entries.map((entry, idx) => (
-                <TableRow
-                  key={`${entry.occurred_at}-${idx}`}
-                  className="group cursor-pointer transition-colors hover:bg-[var(--muted)]/40 focus-visible:bg-[var(--muted)]/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--ring)]"
-                  // biome-ignore lint/a11y/useSemanticElements: a table row cannot be a real <button>; role=button makes the whole row keyboard-activatable
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`${entry.target} — ${t(`outcomes.${entry.outcome}`)}`}
-                  onClick={() => setSelected(entry)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setSelected(entry);
-                    }
-                  }}
-                >
-                  <TableCell className="font-mono text-xs">
-                    {formatter.dateTime(new Date(entry.occurred_at), {
-                      dateStyle: "short",
-                      timeStyle: "medium",
-                    })}
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-medium">{entry.target}</span>
-                    {entry.model ? (
-                      <span className="mt-0.5 flex items-center gap-1 text-[10px] text-[var(--muted-foreground)]">
-                        <Cpu className="h-3 w-3 text-gold-500" />
-                        {findModel(entry.model).label}
-                      </span>
-                    ) : null}
-                  </TableCell>
-                  <TableCell>
-                    <OutcomeBadge outcome={entry.outcome} />
-                  </TableCell>
-                  <TableCell className="text-right text-xs text-[var(--muted-foreground)]">
-                    {entry.decisions.length}
-                  </TableCell>
-                  <TableCell className="w-8 text-right">
-                    <ChevronRight className="ml-auto h-4 w-4 text-[var(--muted-foreground)] opacity-0 transition-opacity duration-150 group-hover:opacity-100" />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-
-        <Pagination
-          cursor={cursor}
-          pageSize={PAGE_SIZE}
-          hasMore={query.data?.has_more ?? false}
-          onPrevious={() => setCursor((c) => Math.max(0, c - PAGE_SIZE))}
-          onNext={() => setCursor((c) => c + PAGE_SIZE)}
-        />
-      </CardContent>
-      {selected ? (
-        <>
-          <div
-            aria-hidden
-            className="fixed inset-0 z-30 bg-[var(--background)]/60 backdrop-blur-sm animate-in fade-in-0 duration-200"
-            onClick={() => setSelected(null)}
+    <>
+      <Card>
+        <CardContent className="p-0">
+          <Filters
+            target={target}
+            outcome={outcome}
+            onTargetChange={(value) => {
+              setCursor(0);
+              setTarget(value);
+            }}
+            onOutcomeChange={(value) => {
+              setCursor(0);
+              setOutcome(value);
+            }}
           />
-          <DetailsDrawer entry={selected} onClose={() => setSelected(null)} />
-        </>
-      ) : null}
-    </Card>
+
+          {query.isPending ? (
+            <div className="space-y-2 p-6">
+              <Skeleton className="h-9 w-full" />
+              <Skeleton className="h-9 w-full" />
+              <Skeleton className="h-9 w-full" />
+              <Skeleton className="h-9 w-full" />
+              <Skeleton className="h-9 w-full" />
+            </div>
+          ) : entries.length === 0 ? (
+            <div className="p-6">
+              <EmptyState
+                icon={<ShieldCheck />}
+                title={tCommon("empty")}
+                description={t("description")}
+              />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("columns.occurredAt")}</TableHead>
+                  <TableHead>{t("columns.target")}</TableHead>
+                  <TableHead>{t("columns.outcome")}</TableHead>
+                  <TableHead className="text-right">{t("columns.decisions")}</TableHead>
+                  <TableHead aria-label="actions" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {entries.map((entry, idx) => (
+                  <TableRow
+                    key={`${entry.occurred_at}-${idx}`}
+                    className="group cursor-pointer transition-colors hover:bg-[var(--muted)]/40 focus-visible:bg-[var(--muted)]/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--ring)]"
+                    // biome-ignore lint/a11y/useSemanticElements: a table row cannot be a real <button>; role=button makes the whole row keyboard-activatable
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`${entry.target} — ${t(`outcomes.${entry.outcome}`)}`}
+                    onClick={() => setSelected(entry)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelected(entry);
+                      }
+                    }}
+                  >
+                    <TableCell className="font-mono text-xs">
+                      {formatter.dateTime(new Date(entry.occurred_at), {
+                        dateStyle: "short",
+                        timeStyle: "medium",
+                      })}
+                    </TableCell>
+                    <TableCell>
+                      <span className="font-medium">{entry.target}</span>
+                      {entry.model ? (
+                        <span className="mt-0.5 flex items-center gap-1 text-[10px] text-[var(--muted-foreground)]">
+                          <Cpu className="h-3 w-3 text-gold-500" />
+                          {findModel(entry.model).label}
+                        </span>
+                      ) : null}
+                    </TableCell>
+                    <TableCell>
+                      <OutcomeBadge outcome={entry.outcome} />
+                    </TableCell>
+                    <TableCell className="text-right text-xs text-[var(--muted-foreground)]">
+                      {entry.decisions.length}
+                    </TableCell>
+                    <TableCell className="w-8 text-right">
+                      <ChevronRight className="ml-auto h-4 w-4 text-[var(--muted-foreground)] opacity-0 transition-opacity duration-150 group-hover:opacity-100" />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+
+          <Pagination
+            cursor={cursor}
+            pageSize={PAGE_SIZE}
+            hasMore={query.data?.has_more ?? false}
+            onPrevious={() => setCursor((c) => Math.max(0, c - PAGE_SIZE))}
+            onNext={() => setCursor((c) => c + PAGE_SIZE)}
+          />
+        </CardContent>
+        {selected ? (
+          <>
+            <div
+              aria-hidden
+              className="fixed inset-0 z-30 bg-[var(--background)]/60 backdrop-blur-sm animate-in fade-in-0 duration-200"
+              onClick={() => setSelected(null)}
+            />
+            <DetailsDrawer entry={selected} onClose={() => setSelected(null)} />
+          </>
+        ) : null}
+      </Card>
+      {/* In-flow bottom spacer: a last-child margin is dropped from the scroll
+          container's scrollHeight and gets clipped, leaving the card flush
+          against the viewport edge; an in-flow box is counted instead. */}
+      <div aria-hidden className="h-10 shrink-0" />
+    </>
   );
 }
 
