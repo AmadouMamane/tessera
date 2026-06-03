@@ -238,3 +238,37 @@ class TestSecretProvider:
         get_settings.cache_clear()
         get_secret_provider.cache_clear()
         assert isinstance(get_secret_provider(), EnvSecretProvider)
+
+
+class TestReadiness:
+    """`/readyz` must reflect LLM reachability, not just process liveness, so a
+    container is only healthy when it can actually answer (not silently escalate)."""
+
+    def _client(self, monkeypatch: pytest.MonkeyPatch, *, reachable: bool) -> TestClient:
+        from tessera.api.routes import health
+
+        async def _stub() -> bool:
+            return reachable
+
+        monkeypatch.delenv("TESSERA_API__BEARER_TOKEN", raising=False)
+        monkeypatch.setattr(health, "_llm_reachable", _stub)
+        get_settings.cache_clear()
+        from tessera.api.main import build_app
+
+        return TestClient(build_app())
+
+    def test_readyz_ready_when_llm_reachable(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        r = self._client(monkeypatch, reachable=True).get("/readyz")
+        assert r.status_code == 200
+        assert r.json()["status"] == "ready"
+
+    def test_readyz_503_when_llm_unreachable(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        r = self._client(monkeypatch, reachable=False).get("/readyz")
+        assert r.status_code == 503
+        assert r.json()["status"] == "llm_unreachable"
+
+    def test_healthz_stays_up_regardless_of_llm(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        # Liveness must not depend on the LLM — only readiness does.
+        r = self._client(monkeypatch, reachable=False).get("/healthz")
+        assert r.status_code == 200
+        assert r.json()["status"] == "ok"

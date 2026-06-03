@@ -79,8 +79,11 @@ RUN mkdir -p /tmp/tessera && chown tessera:tessera /tmp/tessera
 USER tessera:tessera
 EXPOSE 8080
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/healthz').read()"
+# Probe /readyz, not /healthz: readiness verifies the LLM backend is reachable,
+# so the container reports unhealthy when it could only serve silent escalations
+# (a 503 makes urlopen raise → non-zero exit). start-period covers Ollama warmup.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/readyz').read()"
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["tessera"]
