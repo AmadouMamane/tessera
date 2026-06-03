@@ -125,7 +125,8 @@
         "passRate": "Quote",
         "trend": "Trend"
       }
-    }
+    },
+    "bestRun": "Bestes Ergebnis"
   },
   "health": {
     "title": "Servicestatus",

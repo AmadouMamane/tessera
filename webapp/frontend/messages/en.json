@@ -125,7 +125,8 @@
         "passRate": "Pass rate",
         "trend": "Trend"
       }
-    }
+    },
+    "bestRun": "Best run"
   },
   "health": {
     "title": "Service health",

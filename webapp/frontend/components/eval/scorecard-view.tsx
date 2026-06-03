@@ -2,6 +2,7 @@ import { Check, FileSearch, X } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { OperatorLocked } from "@/components/auth/operator-locked";
+import { BestRunHighlight } from "@/components/eval/best-run-highlight";
 import { CompareControls } from "@/components/eval/compare-controls";
 import { EvalTabs } from "@/components/eval/eval-tabs";
 import { ModelComparison } from "@/components/eval/model-comparison";
@@ -54,8 +55,7 @@ interface ScorecardViewProps {
 }
 
 export async function ScorecardView({ locale, filename, vs }: ScorecardViewProps) {
-  const [scorecard, runs, t] = await Promise.all([
-    loadScorecard(filename),
+  const [runs, t] = await Promise.all([
     loadAllRuns(),
     getTranslations({ locale, namespace: "eval" }),
   ]);
@@ -65,9 +65,17 @@ export async function ScorecardView({ locale, filename, vs }: ScorecardViewProps
   // operator surface (ADR 0009).
   const operator = isOperator(await currentRole());
 
+  // Default the landing to the best-scoring run (not the most recent, which may
+  // be a weak model) so the first impression is the flagship result. The full
+  // per-model spread stays visible in the history below.
+  const bestRun = runs.length
+    ? runs.reduce((best, r) => (r.summary.pass_rate > best.summary.pass_rate ? r : best))
+    : null;
+
   // Comparison = run A (the viewed run) vs run B (user-picked via ?vs=). Both
   // are selectable; B defaults to the latest run of a different model.
-  const aFile = filename ?? runs[0]?.filename;
+  const aFile = filename ?? bestRun?.filename;
+  const scorecard = await loadScorecard(aFile);
   const aModel = scorecard?.model ?? null;
   const bFile =
     vs ??
@@ -88,8 +96,11 @@ export async function ScorecardView({ locale, filename, vs }: ScorecardViewProps
 
   const detail = (
     <div className="flex flex-col gap-6">
+      {/* Best run pinned to the top so the first impression is the flagship score */}
+      {bestRun && <BestRunHighlight run={bestRun} locale={locale} />}
+
       {/* Evolution history (per-run model badges) */}
-      {runs.length > 0 && <RunHistoryPanel runs={runs} currentFile={filename} />}
+      {runs.length > 0 && <RunHistoryPanel runs={runs} currentFile={aFile} />}
 
       {!scorecard ? (
         <Card>
