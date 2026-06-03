@@ -62,6 +62,9 @@ async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
 def build_app() -> FastAPI:
     """Construct the FastAPI application."""
     settings = get_settings()
+    # Docs/OpenAPI are on for local dev, off in production, and can be closed
+    # explicitly (expose_docs=False) on an internet-reachable non-prod agent.
+    docs_on = settings.api.expose_docs and not settings.is_production()
     app = FastAPI(
         title="Tessera",
         version=__version__,
@@ -69,9 +72,9 @@ def build_app() -> FastAPI:
             "Multilingual (FR/DE/EN) banking support LLM agent, grounded in EU "
             "regulatory corpora and guarded by mcp-firewall."
         ),
-        docs_url=None if settings.is_production() else "/docs",
+        docs_url="/docs" if docs_on else None,
         redoc_url=None,
-        openapi_url=None if settings.is_production() else "/openapi.json",
+        openapi_url="/openapi.json" if docs_on else None,
         lifespan=_lifespan,
     )
 

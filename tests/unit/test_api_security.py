@@ -272,3 +272,22 @@ class TestReadiness:
         r = self._client(monkeypatch, reachable=False).get("/healthz")
         assert r.status_code == 200
         assert r.json()["status"] == "ok"
+
+
+class TestDocsExposure:
+    """/docs and /openapi.json must be closable on an internet-reachable agent."""
+
+    def _app(self, monkeypatch: pytest.MonkeyPatch, *, expose: bool) -> TestClient:
+        monkeypatch.delenv("TESSERA_API__BEARER_TOKEN", raising=False)
+        monkeypatch.setenv("TESSERA_API__EXPOSE_DOCS", "true" if expose else "false")
+        get_settings.cache_clear()
+        from tessera.api.main import build_app
+
+        return TestClient(build_app())
+
+    def test_openapi_open_by_default(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        assert self._app(monkeypatch, expose=True).get("/openapi.json").status_code == 200
+
+    def test_openapi_closed_when_disabled(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        assert self._app(monkeypatch, expose=False).get("/openapi.json").status_code == 404
+        assert self._app(monkeypatch, expose=False).get("/docs").status_code == 404

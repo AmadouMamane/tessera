@@ -186,6 +186,12 @@ class APISettings(BaseSettings):
     tls_terminated: bool = True
     security_headers_enabled: bool = True
 
+    # Interactive API docs (/docs) and the OpenAPI schema (/openapi.json). On by
+    # default for local dev, always forced off in production. Set False to also
+    # close them on a non-prod agent that is nonetheless reachable from the
+    # internet (e.g. exposed via a tunnel) — they leak the full route surface.
+    expose_docs: bool = True
+
     # Rate limiting (the `limits` lib). Defaults are conservative; tune per env.
     rate_limit_enabled: bool = True
     # Per-session limit on POST /chat (keyed by the X-Session-Id cookie the front
