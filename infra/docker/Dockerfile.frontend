@@ -41,6 +41,10 @@ RUN addgroup --system --gid 1001 nodejs \
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Curated eval scorecards: the standalone server reads these at runtime via
+# lib/eval.ts when no repo root is present (the deployed image has none), so the
+# dashboard renders real scores instead of an empty state. Non-sensitive data.
+COPY --from=builder --chown=nextjs:nodejs /app/data ./data
 
 USER nextjs
 EXPOSE 3000

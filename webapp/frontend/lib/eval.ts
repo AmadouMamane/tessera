@@ -1,14 +1,20 @@
 /**
  * Server-only loader for the eval scorecard.
  *
- * The scorecard is written by `scripts/run_eval.py` to
- * `eval/reports/latest.json` at the repository root. We locate it by walking
- * up from `process.cwd()` — works for both `next dev` (cwd is the frontend
- * directory) and the standalone Cloud Run image (cwd is the package root).
+ * Two sources, tried in order:
+ *
+ *   1. The live repo reports — `eval/reports/` at the repository root, written
+ *      by `scripts/run_eval.py`. Found by walking up from `process.cwd()` for a
+ *      `pyproject.toml`. This is the source under `next dev` and on a checkout,
+ *      so freshly produced runs show up immediately.
+ *   2. A bundled fallback — `data/eval/` shipped inside the frontend image. The
+ *      standalone Cloud Run image has no repo root (no `pyproject.toml`), so
+ *      without this the dashboard would render an empty scorecard. The bundle
+ *      is a curated, non-sensitive snapshot baked in at build time.
  */
 import "server-only";
 
-import { readFile, stat } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 
 import {
@@ -17,8 +23,6 @@ import {
   type ScorecardDocument,
   ScorecardDocumentSchema,
 } from "@/lib/api/schemas";
-
-const RELATIVE_PATH = join("eval", "reports", "latest.json");
 
 async function findRepoRoot(start: string): Promise<string | null> {
   let dir = resolve(start);
@@ -35,10 +39,35 @@ async function findRepoRoot(start: string): Promise<string | null> {
   }
 }
 
-export async function loadScorecard(filename?: string): Promise<ScorecardDocument | null> {
+/**
+ * Resolve the directory holding the scorecard JSON files. Prefers the live repo
+ * reports; falls back to the bundled snapshot (the only source in the deployed
+ * image). Returns null only if neither exists.
+ */
+async function reportsDir(): Promise<string | null> {
   const root = await findRepoRoot(process.cwd());
-  if (!root) return null;
-  const target = filename ? join(root, "eval", "reports", filename) : join(root, RELATIVE_PATH);
+  if (root) {
+    const live = join(root, "eval", "reports");
+    try {
+      await stat(live);
+      return live;
+    } catch {
+      // fall through to the bundle
+    }
+  }
+  const bundled = join(process.cwd(), "data", "eval");
+  try {
+    await stat(bundled);
+    return bundled;
+  } catch {
+    return null;
+  }
+}
+
+export async function loadScorecard(filename?: string): Promise<ScorecardDocument | null> {
+  const dir = await reportsDir();
+  if (!dir) return null;
+  const target = join(dir, filename ?? "latest.json");
   try {
     const raw = await readFile(target, "utf-8");
     const parsed = JSON.parse(raw);
@@ -50,11 +79,9 @@ export async function loadScorecard(filename?: string): Promise<ScorecardDocumen
 }
 
 export async function loadAllRuns(): Promise<RunMeta[]> {
-  const root = await findRepoRoot(process.cwd());
-  if (!root) return [];
-  const dir = join(root, "eval", "reports");
+  const dir = await reportsDir();
+  if (!dir) return [];
   try {
-    const { readdir } = await import("node:fs/promises");
     const files = await readdir(dir);
     const runs: RunMeta[] = [];
     for (const file of files
