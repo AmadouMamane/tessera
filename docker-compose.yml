@@ -75,6 +75,30 @@ services:
       - tessera_agent_state:/tmp/tessera
     profiles: ["full"]
 
+  frontend:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.frontend
+    image: tessera-frontend:local
+    depends_on:
+      agent:
+        condition: service_healthy
+    environment:
+      # In-network the agent is reachable by service name on its container port
+      # 8080 (the 8099 host mapping is for local convenience only).
+      TESSERA_BACKEND_URL: http://agent:8080
+    # Bearer token for the server-side proxy calls; must match the agent's
+    # TESSERA_API__BEARER_TOKEN. Gitignored, never committed. Absent → the proxy
+    # sends no Authorization header and the agent returns 401 when auth is on.
+    env_file:
+      - path: frontend.secret.env
+        required: false
+    ports:
+      # Host 3090 avoids clashing with the bare `next dev` server on 3099 (kept
+      # for non-container local testing behind the Cloudflare quick tunnel).
+      - "3090:3000"
+    profiles: ["full"]
+
 volumes:
   tessera_pgdata:
   tessera_agent_state:

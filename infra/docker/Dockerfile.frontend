@@ -28,7 +28,12 @@ WORKDIR /app
 
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
-    PORT=3000
+    PORT=3000 \
+    # Next.js standalone server.js binds to process.env.HOSTNAME. Docker sets
+    # HOSTNAME to the container id, so without this the server listens only on
+    # the container's own hostname/IP — localhost:3000 (the healthcheck) and
+    # Cloud Run's 0.0.0.0:$PORT routing both fail. Pin it to all interfaces.
+    HOSTNAME=0.0.0.0
 
 RUN addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 nextjs
@@ -40,7 +45,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 USER nextjs
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-    CMD wget --quiet --spider http://localhost:3000/ || exit 1
+# Use 127.0.0.1, not localhost: Alpine maps localhost to ::1 as well, busybox
+# wget tries IPv6 first, and the server listens on 0.0.0.0 (IPv4) only.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD wget --quiet --spider http://127.0.0.1:3000/ || exit 1
 
 CMD ["node", "server.js"]
