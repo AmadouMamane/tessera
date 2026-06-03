@@ -73,7 +73,7 @@ export async function ScorecardView({ locale, filename, vs }: ScorecardViewProps
     vs ??
     runs.find((r) => r.model && r.model !== aModel && r.filename !== aFile)?.filename ??
     runs.find((r) => r.filename !== aFile)?.filename;
-  const bScorecard = bFile ? await loadScorecard(bFile) : null;
+  const bScorecard = operator && bFile ? await loadScorecard(bFile) : null;
   const comparePair =
     scorecard && bScorecard
       ? {
@@ -138,7 +138,10 @@ export async function ScorecardView({ locale, filename, vs }: ScorecardViewProps
     <EvalTabs
       detail={detail}
       compare={
-        comparePair ? (
+        // The comparison renders a per-case pass/fail table — same sensitivity
+        // as the detail — so it is operator-only. For visitors `compare` is null
+        // and EvalTabs hides the toggle entirely.
+        operator && comparePair ? (
           <div className="flex flex-col gap-5 pb-10">
             <CompareControls
               runs={runs}
