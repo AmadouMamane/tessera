@@ -168,5 +168,35 @@
     "environmentValue": "Démonstration",
     "statusOk": "Opérationnel",
     "statusDown": "Hors ligne"
+  },
+  "auth": {
+    "signIn": "Connexion",
+    "signOut": "Déconnexion",
+    "auditorMode": "Mode auditeur",
+    "signedInAs": "Connecté : {name}",
+    "roles": {
+      "admin": "Administrateur",
+      "auditor": "Auditeur"
+    },
+    "locked": {
+      "title": "Accès opérateur requis",
+      "description": "Cette vue est réservée aux opérateurs. Connectez-vous en tant qu'administrateur ou auditeur pour l'afficher.",
+      "cta": "Se connecter"
+    },
+    "login": {
+      "title": "Connexion opérateur",
+      "subtitle": "Accédez au journal d'audit, au budget et au détail des évaluations.",
+      "username": "Identifiant",
+      "password": "Mot de passe",
+      "submit": "Se connecter",
+      "submitting": "Connexion…",
+      "error": "Identifiant ou mot de passe invalide.",
+      "back": "Retour à la démo"
+    },
+    "demo": {
+      "title": "Identifiants de démonstration",
+      "hint": "Démo publique : utilisez l'un de ces comptes pour tout voir."
+    },
+    "adminOnly": "Réservé à l’administrateur"
   }
 }

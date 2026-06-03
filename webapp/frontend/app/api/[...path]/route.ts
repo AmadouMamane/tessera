@@ -8,34 +8,42 @@
  *
  * Security: this proxy authenticates on the caller's behalf, so it must NOT be
  * a wildcard — that would make every authenticated agent GET endpoint anonymously
- * reachable through the public front. We allowlist by first path segment and
- * close the operator surfaces (audit/budget — they expose the compliance trail
- * and cost counters) on the public deployment via TESSERA_DASHBOARD_PUBLIC=1.
- * Locally the flag is unset, so the operator keeps the full dashboard.
+ * reachable through the public front. We allowlist by first path segment:
+ *   - healthz/readyz  → always public (liveness/readiness)
+ *   - audit           → admin or auditor (ADR 0009; replaces TESSERA_DASHBOARD_PUBLIC)
+ *   - budget          → admin only (cost counters)
+ *   - anything else   → never proxied (404)
  */
 import { type NextRequest, NextResponse } from "next/server";
 
+import { auth } from "@/auth";
 import { backendHeaders, backendUrl } from "@/lib/server/backend";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const ALWAYS_PUBLIC = new Set(["healthz", "readyz"]);
-const OPERATOR_ONLY = new Set(["audit", "budget"]);
-
-function isProxyAllowed(head: string): boolean {
-  if (ALWAYS_PUBLIC.has(head)) return true;
-  if (OPERATOR_ONLY.has(head)) return process.env.TESSERA_DASHBOARD_PUBLIC !== "1";
-  return false; // unknown path → never proxied (no wildcard)
-}
 
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ path: string[] }> },
 ): Promise<Response> {
   const { path } = await context.params;
-  if (!isProxyAllowed(path[0] ?? "")) {
-    return NextResponse.json({ detail: "not found" }, { status: 404 });
+  const head = path[0] ?? "";
+
+  if (!ALWAYS_PUBLIC.has(head)) {
+    const role = (await auth())?.user?.role;
+    const allowed =
+      (head === "audit" && (role === "admin" || role === "auditor")) ||
+      (head === "budget" && role === "admin");
+    if (!allowed) {
+      // Known operator paths return 401 to signal auth; everything else is 404.
+      const known = head === "audit" || head === "budget";
+      return NextResponse.json(
+        { detail: known ? "operator authentication required" : "not found" },
+        { status: known ? 401 : 404 },
+      );
+    }
   }
   const target = `${backendUrl()}/${path.join("/")}${request.nextUrl.search}`;
 

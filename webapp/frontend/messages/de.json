@@ -168,5 +168,35 @@
     "environmentValue": "Demo",
     "statusOk": "Betriebsbereit",
     "statusDown": "Offline"
+  },
+  "auth": {
+    "signIn": "Anmelden",
+    "signOut": "Abmelden",
+    "auditorMode": "Auditor-Modus",
+    "signedInAs": "Angemeldet: {name}",
+    "roles": {
+      "admin": "Administrator",
+      "auditor": "Auditor"
+    },
+    "locked": {
+      "title": "Betreiberzugang erforderlich",
+      "description": "Diese Ansicht ist Betreibern vorbehalten. Melden Sie sich als Administrator oder Auditor an, um sie anzuzeigen.",
+      "cta": "Anmelden"
+    },
+    "login": {
+      "title": "Betreiber-Anmeldung",
+      "subtitle": "Zugriff auf Audit-Protokoll, Budget und Evaluierungsdetails.",
+      "username": "Benutzername",
+      "password": "Passwort",
+      "submit": "Anmelden",
+      "submitting": "Anmeldung…",
+      "error": "Ungültiger Benutzername oder Passwort.",
+      "back": "Zurück zur Demo"
+    },
+    "demo": {
+      "title": "Demo-Zugangsdaten",
+      "hint": "Öffentliche Demo: Verwenden Sie eines dieser Konten, um alles zu sehen."
+    },
+    "adminOnly": "Nur für Administratoren"
   }
 }

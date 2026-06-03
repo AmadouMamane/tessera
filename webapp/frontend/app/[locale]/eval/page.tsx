@@ -3,6 +3,9 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ScorecardView } from "@/components/eval/scorecard-view";
 import { AppShell } from "@/components/layout/app-shell";
 
+// ScorecardView gates the per-case detail on the session (cookies) per request.
+export const dynamic = "force-dynamic";
+
 interface EvalPageProps {
   params: Promise<{ locale: string }>;
   searchParams: Promise<{ run?: string; vs?: string }>;

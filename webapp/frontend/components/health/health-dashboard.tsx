@@ -1,7 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Activity, CircleDollarSign, Heart, ServerCog } from "lucide-react";
+import { Activity, CircleDollarSign, Heart, Lock, ServerCog } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
@@ -14,6 +15,9 @@ const POLL_MS = 10_000;
 
 export function HealthDashboard() {
   const t = useTranslations("health");
+  const tAuth = useTranslations("auth");
+  // Budget/cost is an admin-only surface (ADR 0009): gate the query and the card.
+  const isAdmin = useSession().data?.user?.role === "admin";
 
   const health = useQuery({
     queryKey: ["health"],
@@ -31,6 +35,7 @@ export function HealthDashboard() {
     queryKey: ["budget"],
     queryFn: ({ signal }) => fetchBudget(signal),
     refetchInterval: POLL_MS,
+    enabled: isAdmin,
   });
 
   return (
@@ -53,7 +58,9 @@ export function HealthDashboard() {
       <StatusCard
         title={t("cards.budget")}
         icon={<CircleDollarSign />}
-        loading={budget.isPending}
+        locked={!isAdmin}
+        lockedLabel={tAuth("adminOnly")}
+        loading={isAdmin && budget.isPending}
         error={budget.error?.message}
         custom={
           budget.data ? (
@@ -92,9 +99,21 @@ interface StatusCardProps {
   status?: string;
   helper?: string;
   custom?: ReactNode;
+  locked?: boolean;
+  lockedLabel?: string;
 }
 
-function StatusCard({ title, icon, loading, error, status, helper, custom }: StatusCardProps) {
+function StatusCard({
+  title,
+  icon,
+  loading,
+  error,
+  status,
+  helper,
+  custom,
+  locked,
+  lockedLabel,
+}: StatusCardProps) {
   const t = useTranslations("health");
   return (
     <Card className="group relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[var(--shadow-card-elevated)]">
@@ -110,7 +129,12 @@ function StatusCard({ title, icon, loading, error, status, helper, custom }: Sta
         </div>
       </CardHeader>
       <CardContent className="pt-1">
-        {loading ? (
+        {locked ? (
+          <span className="flex items-center gap-1.5 text-sm text-[var(--muted-foreground)]">
+            <Lock className="h-3.5 w-3.5" />
+            {lockedLabel}
+          </span>
+        ) : loading ? (
           <Skeleton className="h-7 w-24" />
         ) : error ? (
           <Badge tone="danger">{t("status.down")}</Badge>

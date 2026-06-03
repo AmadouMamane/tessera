@@ -168,5 +168,35 @@
     "environmentValue": "Demo",
     "statusOk": "Operational",
     "statusDown": "Offline"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "auditorMode": "Auditor mode",
+    "signedInAs": "Signed in: {name}",
+    "roles": {
+      "admin": "Administrator",
+      "auditor": "Auditor"
+    },
+    "locked": {
+      "title": "Operator access required",
+      "description": "This view is restricted to operators. Sign in as an administrator or auditor to view it.",
+      "cta": "Sign in"
+    },
+    "login": {
+      "title": "Operator sign-in",
+      "subtitle": "Access the audit log, budget and evaluation details.",
+      "username": "Username",
+      "password": "Password",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "error": "Invalid username or password.",
+      "back": "Back to the demo"
+    },
+    "demo": {
+      "title": "Demo credentials",
+      "hint": "Public demo: use one of these accounts to see everything."
+    },
+    "adminOnly": "Administrator only"
   }
 }

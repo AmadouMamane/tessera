@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider, isServer } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "next-themes";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -40,19 +41,21 @@ function getQueryClient(): QueryClient {
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(getQueryClient);
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider delayDuration={200} skipDelayDuration={120}>
-          {children}
-        </TooltipProvider>
-        <Toaster position="bottom-right" theme="system" richColors closeButton />
-        {/* Opt-in only (set NEXT_PUBLIC_RQ_DEVTOOLS=true). Hidden by default even
-            in dev, so the floating toggle never shows on the public demo, which
-            runs `next dev` behind a tunnel (NODE_ENV stays "development"). */}
-        {process.env.NEXT_PUBLIC_RQ_DEVTOOLS === "true" ? (
-          <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
-        ) : null}
-      </QueryClientProvider>
-    </ThemeProvider>
+    <SessionProvider>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider delayDuration={200} skipDelayDuration={120}>
+            {children}
+          </TooltipProvider>
+          <Toaster position="bottom-right" theme="system" richColors closeButton />
+          {/* Opt-in only (set NEXT_PUBLIC_RQ_DEVTOOLS=true). Hidden by default even
+              in dev, so the floating toggle never shows on the public demo, which
+              runs `next dev` behind a tunnel (NODE_ENV stays "development"). */}
+          {process.env.NEXT_PUBLIC_RQ_DEVTOOLS === "true" ? (
+            <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+          ) : null}
+        </QueryClientProvider>
+      </ThemeProvider>
+    </SessionProvider>
   );
 }

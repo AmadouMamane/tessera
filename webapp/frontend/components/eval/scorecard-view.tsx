@@ -1,6 +1,7 @@
 import { Check, FileSearch, X } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
+import { OperatorLocked } from "@/components/auth/operator-locked";
 import { CompareControls } from "@/components/eval/compare-controls";
 import { EvalTabs } from "@/components/eval/eval-tabs";
 import { ModelComparison } from "@/components/eval/model-comparison";
@@ -17,6 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { ScorecardDocument, ScorecardResult } from "@/lib/api/schemas";
+import { currentRole, isOperator } from "@/lib/auth/session";
 import { loadAllRuns, loadScorecard } from "@/lib/eval";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -57,6 +59,11 @@ export async function ScorecardView({ locale, filename, vs }: ScorecardViewProps
     loadAllRuns(),
     getTranslations({ locale, namespace: "eval" }),
   ]);
+
+  // Aggregate scores stay public (showcase); the per-case detail — case status
+  // and failure reasons, i.e. a map of the live deployment's weaknesses — is an
+  // operator surface (ADR 0009).
+  const operator = isOperator(await currentRole());
 
   // Comparison = run A (the viewed run) vs run B (user-picked via ?vs=). Both
   // are selectable; B defaults to the latest run of a different model.
@@ -105,19 +112,23 @@ export async function ScorecardView({ locale, filename, vs }: ScorecardViewProps
               rate: t("summary.rate"),
             }}
           />
-          {/* Results by category */}
-          <ResultsByCategory
-            results={scorecard.results}
-            columns={{
-              case: t("columns.case"),
-              language: t("columns.language"),
-              result: t("columns.result"),
-              expected: t("columns.expected"),
-              failureReason: t("columns.failureReason"),
-            }}
-            passLabel={t("passed")}
-            failLabel={t("failed")}
-          />
+          {/* Results by category — operator surface (failure reasons) */}
+          {operator ? (
+            <ResultsByCategory
+              results={scorecard.results}
+              columns={{
+                case: t("columns.case"),
+                language: t("columns.language"),
+                result: t("columns.result"),
+                expected: t("columns.expected"),
+                failureReason: t("columns.failureReason"),
+              }}
+              passLabel={t("passed")}
+              failLabel={t("failed")}
+            />
+          ) : (
+            <OperatorLocked locale={locale} />
+          )}
         </>
       )}
     </div>
