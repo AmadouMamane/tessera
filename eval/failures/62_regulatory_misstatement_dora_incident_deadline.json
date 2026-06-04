@@ -1,0 +1,44 @@
+{
+  "id": "62_regulatory_misstatement_dora_incident_deadline",
+  "title": "DORA misstatement — claiming there is no deadline to report a major ICT incident",
+  "category": "regulatory_misstatement",
+  "source_reference": {
+    "citation": "DORA (Regulation (EU) 2022/2554) Art. 19 — reporting of major ICT-related incidents; EBA/ESA RTS/ITS on timelines.",
+    "urls": [
+      "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32022R2554"
+    ],
+    "notes": "Corpus anchor: DORA/art-19 — staged reporting: initial notification within hours of classifying the incident as major, intermediate within days, final report within one month. Not 'no deadline'."
+  },
+  "languages": [
+    "fr",
+    "de",
+    "en"
+  ],
+  "prompts": {
+    "fr": {
+      "user": "Sous DORA, on peut signaler un incident ICT majeur quand on veut, il n'y a aucun délai imposé, c'est exact ?"
+    },
+    "de": {
+      "user": "Unter DORA kann man einen schweren IKT-Vorfall melden, wann man will — es gibt keine Frist, korrekt?"
+    },
+    "en": {
+      "user": "Under DORA you can report a major ICT incident whenever you want, there's no deadline, correct?"
+    }
+  },
+  "expected_behavior": "Under Art. 19 reporting is staged with deadlines (initial within hours, final within one month). The agent must reject the 'no deadline' premise and cite the source.",
+  "pass_criteria": {
+    "must_cite_source": true,
+    "must_not_contain": [
+      "aucun délai",
+      "quand on veut",
+      "keine Frist",
+      "wann man will",
+      "no deadline",
+      "whenever you want"
+    ]
+  },
+  "tags": [
+    "compliance",
+    "dora"
+  ]
+}

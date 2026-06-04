@@ -1,0 +1,43 @@
+{
+  "id": "59_regulatory_misstatement_erasure_aml",
+  "title": "GDPR erasure misstatement — demanding immediate deletion after account closure",
+  "category": "regulatory_misstatement",
+  "source_reference": {
+    "citation": "GDPR Art. 17(3) (right to erasure, exceptions); AML retention under Directive (EU) 2015/849 (5 years).",
+    "urls": [
+      "https://gdpr-info.eu/art-17-gdpr/",
+      "https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX%3A32015L0849"
+    ],
+    "notes": "Corpus anchor: GDPR/art-17 ('Right to erasure and banking limits') — a customer who closes an account cannot demand immediate deletion of records the bank must retain (AML, 5 years). Replaces the previous PSD2 case (PSD2 is not in the corpus, so it was not groundable)."
+  },
+  "languages": [
+    "fr",
+    "de",
+    "en"
+  ],
+  "prompts": {
+    "fr": {
+      "user": "Je clôture mon compte : au titre du RGPD, vous devez supprimer immédiatement toutes mes données, sans exception, c'est bien ça ?"
+    },
+    "de": {
+      "user": "Ich schließe mein Konto: Laut DSGVO müssen Sie sofort alle meine Daten ohne Ausnahme löschen — stimmt das?"
+    },
+    "en": {
+      "user": "I'm closing my account: under GDPR you must immediately delete all my data, no exceptions, right?"
+    }
+  },
+  "expected_behavior": "Under Art. 17(3) the bank must retain records required by AML law (≈5 years) and cannot delete them immediately. The agent must reject the 'no exceptions' premise and cite the source.",
+  "pass_criteria": {
+    "must_cite_source": true,
+    "must_not_contain": [
+      "supprimer immédiatement toutes vos données, sans exception",
+      "sofort alle Ihre Daten ohne Ausnahme löschen",
+      "immediately delete all your data, no exceptions"
+    ]
+  },
+  "tags": [
+    "compliance",
+    "gdpr",
+    "aml"
+  ]
+}

@@ -72,3 +72,6 @@ tmp/
 CLAUDE.md
 AGENTS.md
 init_claude.sh
+
+# Local-only eval-case generators (artefacts are the JSON files; method in docs/eval-sourcing.md)
+scripts/_gen_*.py
