@@ -1,7 +1,8 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Check, Cpu, Monitor, Moon, Sun } from "lucide-react";
+import { Check, Cpu, Lock, Monitor, Moon, Sun } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useLocale, useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { type ReactNode, useEffect, useState, useTransition } from "react";
@@ -12,7 +13,14 @@ import { usePathname, useRouter } from "@/i18n/navigation";
 import { LOCALE_LABELS, type Locale, routing } from "@/i18n/routing";
 import { fetchHealth } from "@/lib/api/client";
 import { cn } from "@/lib/cn";
-import { CHAT_MODELS, DEFAULT_CHAT_MODEL, getStoredModel, setStoredModel } from "@/lib/models";
+import {
+  CHAT_MODELS,
+  DEFAULT_CHAT_MODEL,
+  getStoredModel,
+  isModelAllowedForRole,
+  modelHosting,
+  setStoredModel,
+} from "@/lib/models";
 
 const REDUCE_MOTION_KEY = "tessera.reduceMotion";
 
@@ -117,6 +125,8 @@ export function SettingsView() {
   const locale = useLocale() as Locale;
   const router = useRouter();
   const pathname = usePathname();
+  const { data: session } = useSession();
+  const role = session?.user?.role ?? null;
   const [isPending, startTransition] = useTransition();
 
   const { theme, setTheme } = useTheme();
@@ -139,6 +149,9 @@ export function SettingsView() {
   }
 
   function changeModel(next: string) {
+    // Gated (paid frontier) models are selectable only by the superadmin; the
+    // server enforces it too, but don't even let the UI persist the choice.
+    if (!isModelAllowedForRole(next, role)) return;
     setChatModel(next);
     setStoredModel(next);
   }
@@ -149,6 +162,7 @@ export function SettingsView() {
     modelTagReasoning: t("modelTagReasoning"),
     modelTagBalanced: t("modelTagBalanced"),
     modelTagCapable: t("modelTagCapable"),
+    modelTagFrontier: t("modelTagFrontier"),
   };
 
   function changeLocale(next: string) {
@@ -216,17 +230,23 @@ export function SettingsView() {
             {CHAT_MODELS.map((m) => {
               const active = (mounted ? chatModel : DEFAULT_CHAT_MODEL) === m.id;
               const tag = modelTags[m.tagKey] ?? "";
+              // Gated models stay visible (the integration is on show) but are
+              // locked for anyone who isn't the superadmin.
+              const locked = m.gated === true && role !== "superadmin";
               return (
                 <button
                   key={m.id}
                   type="button"
                   aria-pressed={active}
+                  disabled={locked}
+                  title={locked ? t("modelLockedHint") : undefined}
                   onClick={() => changeModel(m.id)}
                   className={cn(
                     "group relative flex flex-col gap-2 rounded-xl border p-4 text-left transition-all",
                     active
                       ? "border-gold-500/60 bg-gold-500/[0.06] shadow-[var(--shadow-card-glow)]"
                       : "border-[var(--border)] bg-[var(--muted)]/30 hover:bg-[var(--muted)]/50",
+                    locked && "cursor-not-allowed opacity-60 hover:bg-[var(--muted)]/30",
                   )}
                 >
                   <div className="flex items-center justify-between">
@@ -234,13 +254,19 @@ export function SettingsView() {
                       <Cpu className="h-4 w-4 text-gold-500" />
                       {m.label}
                     </span>
-                    {active ? <Check className="h-4 w-4 text-gold-500" /> : null}
+                    {locked ? (
+                      <Lock className="h-3.5 w-3.5 text-[var(--muted-foreground)]" aria-hidden />
+                    ) : active ? (
+                      <Check className="h-4 w-4 text-gold-500" />
+                    ) : null}
                   </div>
                   <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
                     <Badge tone="neutral">{m.params}</Badge>
-                    <span>{m.context} ctx · on-prem GPU</span>
+                    <span>{modelHosting(m)}</span>
                   </div>
-                  <span className="text-xs text-[var(--muted-foreground)]">{tag}</span>
+                  <span className="text-xs text-[var(--muted-foreground)]">
+                    {locked ? t("modelLockedHint") : tag}
+                  </span>
                 </button>
               );
             })}

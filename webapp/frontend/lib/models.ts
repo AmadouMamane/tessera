@@ -11,7 +11,7 @@ export const CHAT_MODEL_KEY = "tessera.chatModel";
 export const CHAT_MODEL_EVENT = "tessera:chatmodelchange";
 
 export interface ChatModelMeta {
-  /** Ollama model id sent to the backend (TESSERA_OLLAMA_CHAT_MODEL). */
+  /** Model id sent to the backend; routed to the matching backend by the registry. */
   id: string;
   /** Human-readable display name. */
   label: string;
@@ -21,6 +21,15 @@ export interface ChatModelMeta {
   context: string;
   /** i18n key for the one-line characterisation shown on the Settings card. */
   tagKey: string;
+  /** Where the model runs: local Ollama GPU vs the OpenAI frontier API. */
+  provider: "ollama" | "openai";
+  /**
+   * Paid/frontier model gated to the superadmin: visible to everyone (so the
+   * integration is on show) but only the superadmin may select and run it. The
+   * real lock is enforced server-side in the /api/chat proxy — UI gating alone
+   * is bypassable.
+   */
+  gated?: boolean;
 }
 
 // Ordered fastest → most capable. The first entry is the default (fastest),
@@ -32,6 +41,7 @@ export const CHAT_MODELS: ChatModelMeta[] = [
     params: "3B",
     context: "128K",
     tagKey: "modelTagFast",
+    provider: "ollama",
   },
   {
     id: "mistral:7b",
@@ -39,6 +49,7 @@ export const CHAT_MODELS: ChatModelMeta[] = [
     params: "7B",
     context: "32K",
     tagKey: "modelTagCompact",
+    provider: "ollama",
   },
   {
     id: "deepseek-r1:7b",
@@ -46,6 +57,7 @@ export const CHAT_MODELS: ChatModelMeta[] = [
     params: "7B",
     context: "128K",
     tagKey: "modelTagReasoning",
+    provider: "ollama",
   },
   {
     id: "gemma3:27b",
@@ -53,6 +65,7 @@ export const CHAT_MODELS: ChatModelMeta[] = [
     params: "27B",
     context: "128K",
     tagKey: "modelTagBalanced",
+    provider: "ollama",
   },
   {
     id: "llama3.3:70b",
@@ -60,14 +73,18 @@ export const CHAT_MODELS: ChatModelMeta[] = [
     params: "70B",
     context: "128K",
     tagKey: "modelTagCapable",
+    provider: "ollama",
   },
   {
     // OpenAI frontier (routed to the OpenAI backend by the model registry).
+    // Gated: visible to all, runnable only by the superadmin (server-enforced).
     id: "gpt-5.5",
     label: "GPT-5.5",
     params: "frontier",
-    context: "—",
-    tagKey: "modelTagCapable",
+    context: "256K",
+    tagKey: "modelTagFrontier",
+    provider: "openai",
+    gated: true,
   },
 ];
 
@@ -77,6 +94,7 @@ const FALLBACK: ChatModelMeta = CHAT_MODELS[0] ?? {
   params: "3B",
   context: "128K",
   tagKey: "modelTagFast",
+  provider: "ollama",
 };
 
 export const DEFAULT_CHAT_MODEL = FALLBACK.id;
@@ -98,4 +116,32 @@ export function setStoredModel(id: string): void {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(CHAT_MODEL_KEY, id);
   window.dispatchEvent(new CustomEvent(CHAT_MODEL_EVENT, { detail: id }));
+}
+
+/** Hosting descriptor for the Settings card (right of the params badge). */
+export function modelHosting(m: ChatModelMeta): string {
+  return m.provider === "openai"
+    ? `${m.context} ctx · OpenAI API`
+    : `${m.context} ctx · on-prem GPU`;
+}
+
+/** Short hosting tag for the topbar badge. */
+export function modelHostingShort(m: ChatModelMeta): string {
+  return m.provider === "openai" ? "frontier" : "on-prem";
+}
+
+/** True if the model is gated (paid frontier, superadmin-only). */
+export function isGatedModel(id: string | null | undefined): boolean {
+  return findModel(id).gated === true;
+}
+
+/**
+ * Whether a role may *run* a model. Gated models require the superadmin; this
+ * is the same predicate the server enforces in the /api/chat proxy.
+ */
+export function isModelAllowedForRole(
+  id: string | null | undefined,
+  role: string | null | undefined,
+): boolean {
+  return isGatedModel(id) ? role === "superadmin" : true;
 }

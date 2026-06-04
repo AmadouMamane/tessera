@@ -15,13 +15,20 @@ import "server-only";
 
 import { timingSafeEqual } from "node:crypto";
 
-export type Role = "admin" | "auditor";
+export type Role = "admin" | "auditor" | "superadmin";
 
 interface Account {
   username: string;
   password: string;
   role: Role;
 }
+
+// The superadmin gates the paid frontier models (e.g. GPT-5.5 via the OpenAI
+// API): only this account may actually run them, so they can't be abused on a
+// public demo to burn API credits. It is registered ONLY when an explicit
+// password is configured — there is deliberately no weak default that could
+// unlock spend, and its credentials are never surfaced in the demo banner.
+const SUPERADMIN_PASSWORD = process.env.TESSERA_AUTH_SUPERADMIN_PASSWORD;
 
 const ACCOUNTS: Account[] = [
   {
@@ -34,6 +41,9 @@ const ACCOUNTS: Account[] = [
     password: process.env.TESSERA_AUTH_AUDITOR_PASSWORD ?? "tessera-auditor",
     role: "auditor",
   },
+  ...(SUPERADMIN_PASSWORD
+    ? [{ username: "superadmin", password: SUPERADMIN_PASSWORD, role: "superadmin" as const }]
+    : []),
 ];
 
 function safeEqual(a: string, b: string): boolean {
@@ -55,7 +65,13 @@ export function verifyCredentials(username: string, password: string): { role: R
 /**
  * Credentials surfaced in the demo banner. Synthetic and intentionally public
  * (the gate is theatrical by design — see the module docstring and ADR 0009).
+ * The superadmin is deliberately excluded: its credentials are a genuine secret
+ * because it can spend real API budget on the paid frontier models.
  */
 export function demoCredentials(): { username: string; password: string; role: Role }[] {
-  return ACCOUNTS.map(({ username, password, role }) => ({ username, password, role }));
+  return ACCOUNTS.filter((a) => a.role !== "superadmin").map(({ username, password, role }) => ({
+    username,
+    password,
+    role,
+  }));
 }

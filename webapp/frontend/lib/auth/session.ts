@@ -16,9 +16,14 @@ export async function currentRole(): Promise<Role | null> {
 }
 
 export function isOperator(role: Role | null): boolean {
-  return role === "admin" || role === "auditor";
+  return role === "admin" || role === "auditor" || role === "superadmin";
 }
 
 export function isAdmin(role: Role | null): boolean {
-  return role === "admin";
+  return role === "admin" || role === "superadmin";
+}
+
+/** Only the superadmin may run the paid frontier models (e.g. GPT-5.5). */
+export function isSuperadmin(role: Role | null): boolean {
+  return role === "superadmin";
 }

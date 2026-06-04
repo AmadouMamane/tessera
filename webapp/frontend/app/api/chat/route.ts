@@ -10,6 +10,8 @@
  */
 import { type NextRequest, NextResponse } from "next/server";
 
+import { auth } from "@/auth";
+import { isGatedModel } from "@/lib/models";
 import { backendHeaders, backendUrl } from "@/lib/server/backend";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +22,26 @@ const SESSION_MAX_AGE = 60 * 60 * 24; // 24h
 
 export async function POST(request: NextRequest): Promise<Response> {
   const body = await request.text();
+
+  // Server-side gate for paid frontier models (e.g. GPT-5.5): only the
+  // superadmin may run them, so a public visitor can't burn API credits by
+  // POSTing the model id directly. This is the authoritative lock — the UI
+  // disabling the card is only a courtesy.
+  let requestedModel: string | undefined;
+  try {
+    requestedModel = (JSON.parse(body) as { model?: string }).model;
+  } catch {
+    requestedModel = undefined;
+  }
+  if (requestedModel && isGatedModel(requestedModel)) {
+    const session = await auth();
+    if (session?.user?.role !== "superadmin") {
+      return NextResponse.json(
+        { detail: "Ce modèle frontier est réservé au compte super-admin." },
+        { status: 403 },
+      );
+    }
+  }
 
   // Per-browser session id — the rate-limit key. Reuse the cookie if present,
   // otherwise mint one and set it on the response. httpOnly so client JS can

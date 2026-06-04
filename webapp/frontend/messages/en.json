@@ -162,6 +162,8 @@
     "modelTagReasoning": "Reasoning",
     "modelTagBalanced": "Balanced",
     "modelTagCapable": "Most capable",
+    "modelTagFrontier": "Frontier (OpenAI)",
+    "modelLockedHint": "Superadmin only",
     "platform": "Platform",
     "platformHint": "Status and version of the Tessera service.",
     "service": "Service",
@@ -178,7 +180,8 @@
     "signedInAs": "Signed in: {name}",
     "roles": {
       "admin": "Administrator",
-      "auditor": "Auditor"
+      "auditor": "Auditor",
+      "superadmin": "Superadmin"
     },
     "locked": {
       "title": "Operator access required",
