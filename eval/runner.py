@@ -149,7 +149,7 @@ def _evaluate(
     return not reasons, reasons
 
 
-async def _run_case(case: dict[str, object], language: str) -> CaseResult:
+async def _run_case(case: dict[str, object], language: str, model: str | None = None) -> CaseResult:
     prompt_bundle = (case.get("prompts") or {}).get(language)
     if not isinstance(prompt_bundle, dict):
         return CaseResult(
@@ -169,6 +169,7 @@ async def _run_case(case: dict[str, object], language: str) -> CaseResult:
         user_input=user_input,
         language=LanguageCode(language),
         language_confidence=1.0,
+        model=model,
     )
     graph = compile_graph()
     try:
@@ -206,6 +207,10 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--case", help="Run only the case with this id.")
     parser.add_argument("--lang", choices=["fr", "de", "en"], help="Restrict to one language.")
     parser.add_argument(
+        "--model",
+        help="Chat-model override (e.g. gpt-5.5); routes via backend_for_model.",
+    )
+    parser.add_argument(
         "--report",
         type=Path,
         default=REPORTS_DIR / "latest.json",
@@ -230,7 +235,7 @@ async def _run_all(args: argparse.Namespace) -> int:
         for language in languages:
             if language not in prompts:
                 continue
-            result = await _run_case(case, language)
+            result = await _run_case(case, language, args.model)
             results.append(result)
 
     args.report.parent.mkdir(parents=True, exist_ok=True)
@@ -238,7 +243,7 @@ async def _run_all(args: argparse.Namespace) -> int:
     run_ts = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     lang_suffix = f"_{args.lang}" if args.lang else ""
     settings = get_settings()
-    model = (
+    model = args.model or (
         settings.ollama.chat_model
         if settings.resolved_llm_profile() is LLMProfile.ON_PREM
         else settings.vertex.chat_model

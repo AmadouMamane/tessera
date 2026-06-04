@@ -119,6 +119,24 @@ class OllamaSettings(BaseSettings):
     keep_alive_seconds: int = 600
 
 
+class OpenAISettings(BaseSettings):
+    """OpenAI (frontier path) configuration.
+
+    The API key is read by the SDK directly from ``OPENAI_API_KEY``; it is never
+    stored in this object so it cannot leak into logs or the audit trail.
+    """
+
+    model_config = SettingsConfigDict(env_prefix="TESSERA_OPENAI_", extra="ignore")
+
+    chat_model: str = "gpt-5.5"
+    base_url: str | None = None
+    timeout_seconds: float = 120.0
+    # Explicit registry: the models the picker routes to the OpenAI backend
+    # (declared, not guessed by name). Anything not listed falls back to the
+    # profile backend (Ollama on-prem / Vertex frontier).
+    models: list[str] = Field(default_factory=lambda: ["gpt-5.5", "gpt-5.5-pro"])
+
+
 class PostgresSettings(BaseSettings):
     """Postgres + pgvector configuration."""
 
@@ -319,6 +337,7 @@ class Settings(BaseSettings):
 
     vertex: VertexAISettings = Field(default_factory=VertexAISettings)
     ollama: OllamaSettings = Field(default_factory=OllamaSettings)
+    openai: OpenAISettings = Field(default_factory=OpenAISettings)
     secrets: SecretsSettings = Field(default_factory=SecretsSettings)
     postgres: PostgresSettings = Field(default_factory=PostgresSettings)
     guard: GuardSettings = Field(default_factory=GuardSettings)

@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Final
 import yaml
 
 from tessera.agent.state import AgentState, Citation, ConversationMessage
-from tessera.llm.router import ChatMessage, get_chat_backend
+from tessera.llm.router import ChatMessage, backend_for_model
 from tessera.memory import get_memory_backend, scope_for
 from tessera.settings import LanguageCode
 
@@ -199,7 +199,7 @@ async def _synthesise(state: AgentState) -> str:
     language = state["language"]
     prompts = load_prompts(language)
     system_prompt, current_user_content = _build_synthesis_input(state, prompts)
-    backend = get_chat_backend()
+    backend = backend_for_model(state.get("model"))
     response = await backend.chat(
         await _build_chat_messages(state, system_prompt, current_user_content, prompts),
         temperature=0.2,
@@ -217,7 +217,7 @@ async def astream_synthesise(state: AgentState) -> AsyncIterator[str]:
     language = state["language"]
     prompts = load_prompts(language)
     system_prompt, current_user_content = _build_synthesis_input(state, prompts)
-    backend = get_chat_backend()
+    backend = backend_for_model(state.get("model"))
     stream = backend.stream_chat(
         await _build_chat_messages(state, system_prompt, current_user_content, prompts),
         temperature=0.2,

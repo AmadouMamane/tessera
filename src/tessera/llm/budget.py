@@ -55,6 +55,16 @@ _PRICES: dict[tuple[str, str], _Price] = {
         eur_per_million_input=Decimal("0"),
         eur_per_million_output=Decimal("0"),
     ),
+    # OpenAI frontier — indicative EUR/million tokens (estimate; adjust to the
+    # real GPT-5.5 tariff). Lets the budget dashboard show real spend.
+    ("openai", "gpt-5.5"): _Price(
+        eur_per_million_input=Decimal("1.10"),
+        eur_per_million_output=Decimal("8.80"),
+    ),
+    ("openai", "gpt-5.5-pro"): _Price(
+        eur_per_million_input=Decimal("2.50"),
+        eur_per_million_output=Decimal("20.00"),
+    ),
 }
 
 

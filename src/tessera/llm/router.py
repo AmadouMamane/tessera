@@ -21,6 +21,7 @@ __all__ = [
     "ChatBackend",
     "ChatMessage",
     "ChatResponse",
+    "backend_for_model",
     "get_chat_backend",
     "get_summary_backend",
 ]
@@ -95,6 +96,27 @@ def get_chat_backend() -> ChatBackend:
     from tessera.llm.local import OllamaBackend
 
     return OllamaBackend()
+
+
+@lru_cache(maxsize=1)
+def _openai_backend() -> ChatBackend:
+    from tessera.llm.openai_backend import OpenAIBackend
+
+    return OpenAIBackend()
+
+
+def backend_for_model(model: str | None) -> ChatBackend:
+    """Resolve the backend for a per-request chat model (the UI picker).
+
+    Explicit registry, not name-guessing: a model listed in
+    ``OpenAISettings.models`` routes to the OpenAI backend; everything else —
+    including no override — keeps the profile backend (Ollama on-prem / Vertex
+    frontier). This lets a single running instance serve both local and OpenAI
+    models without changing the deploy-level profile.
+    """
+    if model and model in get_settings().openai.models:
+        return _openai_backend()
+    return get_chat_backend()
 
 
 def get_summary_backend() -> ChatBackend:

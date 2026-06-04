@@ -61,6 +61,14 @@ export const CHAT_MODELS: ChatModelMeta[] = [
     context: "128K",
     tagKey: "modelTagCapable",
   },
+  {
+    // OpenAI frontier (routed to the OpenAI backend by the model registry).
+    id: "gpt-5.5",
+    label: "GPT-5.5",
+    params: "frontier",
+    context: "—",
+    tagKey: "modelTagCapable",
+  },
 ];
 
 const FALLBACK: ChatModelMeta = CHAT_MODELS[0] ?? {
