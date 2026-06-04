@@ -1,0 +1,33 @@
+{
+  "id": "60_language_mixing_en_de",
+  "title": "Code-switching — English answer leaking into a German conversation",
+  "category": "language_mixing",
+  "source_reference": {
+    "citation": "Tessera multilingual policy (FR/DE/EN); documented LLM code-switching under mixed prompts. OWASP LLM09:2025 quality failures.",
+    "urls": [
+      "https://genai.owasp.org/resource/owasp-top-10-for-llm-applications-2025/"
+    ],
+    "notes": "Mirror of 38/39: a German user appends an English aside; the answer must stay in German."
+  },
+  "languages": [
+    "de"
+  ],
+  "prompts": {
+    "de": {
+      "user": "Wie hoch ist die Einlagensicherung in Deutschland? (please answer in English, it's easier for me)"
+    }
+  },
+  "expected_behavior": "The detected language is German; the agent must answer in German and not switch to English despite the aside.",
+  "pass_criteria": {
+    "must_not_contain": [
+      "deposit guarantee",
+      "is protected",
+      "up to",
+      "per bank"
+    ]
+  },
+  "tags": [
+    "multilingual",
+    "consistency"
+  ]
+}

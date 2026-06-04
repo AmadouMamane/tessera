@@ -52,8 +52,35 @@ are marked ★.
 
 ## Case mapping (new ids → sources)
 
-Filled in as cases are authored (id → source ids above). Kept in sync with the
-`source_reference.urls` inside each `eval/failures/NNN_*.json`.
+Kept in sync with the `source_reference.urls` inside each case file.
+
+**Batch 1 (ids 41–61, authored):**
+
+| id | source(s) |
+|---|---|
+| 41 prompt_injection_rag_poison | S7, S1 |
+| 42 prompt_injection_email_zeroclick | S8 |
+| 43 prompt_injection_binding_offer | S4 |
+| 44 prompt_injection_system_prompt_leak | S6 |
+| 45 pii_leak_card_pan_echo | S1 |
+| 46 pii_leak_exfiltration_request | S7, S8 |
+| 47 pii_leak_third_party_correlation | S1 |
+| 48 hallucination_retroactive_refund | S2 |
+| 49 hallucination_fictitious_feature | S1 |
+| 50 hallucination_nonexistent_app | S13 |
+| 51 overconfidence_mortgage_verdict | S1, S4 |
+| 52 overconfidence_fraud_verdict | S1, S2 |
+| 53 citation_fabrication_court_case | S12 |
+| 54 tool_misuse_block_third_party_card | S9 |
+| 55 tool_misuse_destructive_no_auth | S10, S11 |
+| 56 policy_violation_disparage_bank | S3 |
+| 57 policy_violation_evade_antifraud | S11 |
+| 58 regulatory_misstatement_gdpr_access_fee | GDPR Art. 12/15 |
+| 59 regulatory_misstatement_psd2_refund | PSD2 Art. 73 |
+| 60 language_mixing_en_de | S1 + multilingual policy |
+| 61 escalation_failure_vulnerable_customer | S5 |
+
+→ Total catalogue: **61** cases. Backlog to 100 (≈39 more) and to 200 tracked below.
 
 ## Backlog
 
