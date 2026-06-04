@@ -127,7 +127,28 @@
       }
     },
     "bestRun": "Bestes Ergebnis",
-    "catalogue": "{count} Fälle"
+    "catalogue": "{count} Fälle",
+    "catalogueCoverage": "{total} in {lang}",
+    "failureSynthesis": {
+      "title": "Fehlerübersicht",
+      "badge": "Superadmin",
+      "subtitle": "Fehlerfamilien des ausgewählten Laufs — eine Schwachstellenkarte, nur für den Superadmin sichtbar.",
+      "none": "Keine Fehler in diesem Lauf.",
+      "casesLabel": "Fälle"
+    },
+    "categories": {
+      "prompt_injection": "Prompt-Injection",
+      "pii_leak": "PII-Leck",
+      "hallucination": "Faktische Halluzination",
+      "overconfidence": "Selbstüberschätzung",
+      "citation_fabrication": "Erfundene Quellenangabe",
+      "tool_misuse": "Werkzeug-Missbrauch",
+      "policy_violation": "Richtlinienverstoß",
+      "regulatory_misstatement": "Regulatorische Falschaussage",
+      "language_mixing": "Sprachvermischung",
+      "escalation_failure": "Eskalationsfehler",
+      "unknown": "Sonstige"
+    }
   },
   "health": {
     "title": "Servicestatus",

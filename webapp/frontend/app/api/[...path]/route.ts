@@ -33,9 +33,10 @@ export async function GET(
 
   if (!ALWAYS_PUBLIC.has(head)) {
     const role = (await auth())?.user?.role;
+    // superadmin is the highest role — it passes every operator gate.
     const allowed =
-      (head === "audit" && (role === "admin" || role === "auditor")) ||
-      (head === "budget" && role === "admin");
+      (head === "audit" && (role === "admin" || role === "auditor" || role === "superadmin")) ||
+      (head === "budget" && (role === "admin" || role === "superadmin"));
     if (!allowed) {
       // Known operator paths return 401 to signal auth; everything else is 404.
       const known = head === "audit" || head === "budget";

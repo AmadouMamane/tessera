@@ -43,6 +43,12 @@ export async function BestRunHighlight({ run, locale }: { run: RunMeta; locale: 
                   className="text-[0.65rem] text-[var(--muted-foreground)]"
                 >
                   {t("catalogue", { count: Number.parseInt(run.catalogue_version, 10) })}
+                  {run.lang
+                    ? ` · ${t("catalogueCoverage", {
+                        total: run.summary.total,
+                        lang: run.lang.toUpperCase(),
+                      })}`
+                    : ""}
                   {run.catalogue_version.includes("legacy") ? " · legacy" : ""}
                 </span>
               ) : null}

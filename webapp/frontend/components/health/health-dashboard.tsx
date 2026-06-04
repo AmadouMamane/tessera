@@ -17,7 +17,9 @@ export function HealthDashboard() {
   const t = useTranslations("health");
   const tAuth = useTranslations("auth");
   // Budget/cost is an admin-only surface (ADR 0009): gate the query and the card.
-  const isAdmin = useSession().data?.user?.role === "admin";
+  // superadmin is the highest role and sees everything admin does.
+  const role = useSession().data?.user?.role;
+  const isAdmin = role === "admin" || role === "superadmin";
 
   const health = useQuery({
     queryKey: ["health"],

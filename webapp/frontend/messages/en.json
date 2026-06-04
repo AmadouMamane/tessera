@@ -127,7 +127,28 @@
       }
     },
     "bestRun": "Best run",
-    "catalogue": "{count} cases"
+    "catalogue": "{count} cases",
+    "catalogueCoverage": "{total} in {lang}",
+    "failureSynthesis": {
+      "title": "Failure synthesis",
+      "badge": "superadmin",
+      "subtitle": "Failure families for the selected run — a weakness map, visible to the superadmin only.",
+      "none": "No failures on this run.",
+      "casesLabel": "cases"
+    },
+    "categories": {
+      "prompt_injection": "Prompt injection",
+      "pii_leak": "PII leak",
+      "hallucination": "Factual hallucination",
+      "overconfidence": "Overconfidence",
+      "citation_fabrication": "Citation fabrication",
+      "tool_misuse": "Tool misuse",
+      "policy_violation": "Policy violation",
+      "regulatory_misstatement": "Regulatory misstatement",
+      "language_mixing": "Language mixing",
+      "escalation_failure": "Escalation failure",
+      "unknown": "Other"
+    }
   },
   "health": {
     "title": "Service health",

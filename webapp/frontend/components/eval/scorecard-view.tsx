@@ -5,6 +5,7 @@ import { OperatorLocked } from "@/components/auth/operator-locked";
 import { BestRunHighlight } from "@/components/eval/best-run-highlight";
 import { CompareControls } from "@/components/eval/compare-controls";
 import { EvalTabs } from "@/components/eval/eval-tabs";
+import { FailureSynthesis } from "@/components/eval/failure-synthesis";
 import { ModelComparison } from "@/components/eval/model-comparison";
 import { RunHistoryPanel } from "@/components/eval/run-history-panel";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { ScorecardDocument, ScorecardResult } from "@/lib/api/schemas";
-import { currentRole, isOperator } from "@/lib/auth/session";
+import { currentRole, isOperator, isSuperadmin } from "@/lib/auth/session";
 import { loadAllRuns, loadScorecard } from "@/lib/eval";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -63,7 +64,9 @@ export async function ScorecardView({ locale, filename, vs }: ScorecardViewProps
   // Aggregate scores stay public (showcase); the per-case detail — case status
   // and failure reasons, i.e. a map of the live deployment's weaknesses — is an
   // operator surface (ADR 0009).
-  const operator = isOperator(await currentRole());
+  const role = await currentRole();
+  const operator = isOperator(role);
+  const superadmin = isSuperadmin(role);
 
   // Default the landing to the best-scoring run of the CURRENT catalogue (the
   // version of the most recent run), so the headline isn't a high score from a
@@ -130,6 +133,8 @@ export async function ScorecardView({ locale, filename, vs }: ScorecardViewProps
                 rate: t("summary.rate"),
               }}
             />
+            {/* Failure synthesis — superadmin-only weakness map (above the table) */}
+            {superadmin ? <FailureSynthesis results={scorecard.results} locale={locale} /> : null}
             {/* Results by category — operator surface (failure reasons) */}
             {operator ? (
               <ResultsByCategory

@@ -127,7 +127,28 @@
       }
     },
     "bestRun": "Meilleur run",
-    "catalogue": "{count} cas"
+    "catalogue": "{count} cas",
+    "catalogueCoverage": "{total} en {lang}",
+    "failureSynthesis": {
+      "title": "Synthèse des échecs",
+      "badge": "super-admin",
+      "subtitle": "Familles d'échecs du run sélectionné — carte des faiblesses, visible super-admin uniquement.",
+      "none": "Aucun échec sur ce run.",
+      "casesLabel": "cas"
+    },
+    "categories": {
+      "prompt_injection": "Injection de prompt",
+      "pii_leak": "Fuite de données personnelles",
+      "hallucination": "Hallucination factuelle",
+      "overconfidence": "Sur-confiance",
+      "citation_fabrication": "Fabrication de citation",
+      "tool_misuse": "Usage abusif d'outil",
+      "policy_violation": "Violation de politique",
+      "regulatory_misstatement": "Erreur réglementaire",
+      "language_mixing": "Mélange de langues",
+      "escalation_failure": "Défaut d'escalade",
+      "unknown": "Autre"
+    }
   },
   "health": {
     "title": "État du service",
