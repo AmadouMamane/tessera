@@ -22,24 +22,27 @@ wiring that replays it against the real LangGraph agent on every push.
 
 ## Failure taxonomy
 
-The catalogue holds forty cases across ten categories. The category set is fixed
-by the `category` enum in `eval/failures/_schema.json`:
+The catalogue holds **61 cases** across ten categories (the original 40 plus a
+first web-sourced batch of 21, ids 41–61 — see `docs/eval-sourcing.md` for the
+procedure and the per-case reference links). It is growing toward 100, then 200.
+The category set is fixed by the `category` enum in `eval/failures/_schema.json`:
 
 | Category | Cases | What it checks |
 | --- | --- | --- |
-| `prompt_injection` | 6 | Direct and indirect instruction-override attempts; the guard must refuse and the agent must not echo its system prompt. |
-| `pii_leak` | 5 | The agent must mask IBANs, card numbers, and other PII in both responses and the audit trail. |
-| `hallucination` | 5 | Factual claims must trace to retrieved documents or tool results; ungrounded answers must not be emitted. |
-| `overconfidence` | 4 | The agent must not assert high confidence on thin or absent evidence. |
-| `citation_fabrication` | 3 | Cited regulatory sources (DORA articles, BaFin circulars) must be real and retrieved, never invented. |
-| `tool_misuse` | 3 | Side-effecting tools (`card_block`, transfers) must not be invoked without justification. |
-| `policy_violation` | 3 | Requests that violate guard policy must be denied. |
-| `regulatory_misstatement` | 3 | Statements about DORA/CNIL/BaFin/GDPR obligations must be accurate and sourced. |
-| `language_mixing` | 2 | The answer must stay in the user's detected language; no FR/DE/EN code-switching. |
-| `escalation_failure` | 1 | Cases that must reach a human must set `needs_escalation`. |
+| `prompt_injection` | 11 | Direct and indirect instruction-override attempts; the guard must refuse and the agent must not echo its system prompt. |
+| `pii_leak` | 9 | The agent must mask IBANs, card numbers, and other PII in both responses and the audit trail. |
+| `hallucination` | 9 | Factual claims must trace to retrieved documents or tool results; ungrounded answers must not be emitted. |
+| `overconfidence` | 7 | The agent must not assert high confidence on thin or absent evidence. |
+| `citation_fabrication` | 5 | Cited regulatory sources (DORA articles, BaFin circulars) must be real and retrieved, never invented. |
+| `tool_misuse` | 5 | Side-effecting tools (`card_block`, transfers) must not be invoked without justification. |
+| `policy_violation` | 5 | Requests that violate guard policy must be denied. |
+| `regulatory_misstatement` | 5 | Statements about DORA/CNIL/BaFin/GDPR obligations must be accurate and sourced. |
+| `language_mixing` | 3 | The answer must stay in the user's detected language; no FR/DE/EN code-switching. |
+| `escalation_failure` | 2 | Cases that must reach a human must set `needs_escalation`. |
 
 Each case is one JSON file under `eval/failures/NN_short_name.json`, where `NN`
-is a two-digit ordinal. The numbering matches the `id` field and the filename.
+is a two- or three-digit ordinal (the catalogue now exceeds 99). The numbering
+matches the `id` field and the filename.
 
 ## Case schema
 
@@ -47,7 +50,7 @@ Every case is validated against `eval/failures/_schema.json` (JSON Schema draft
 2020-12) at load time. The schema forbids additional properties. Required
 fields:
 
-- **`id`** — `^[0-9]{2}_[a-z0-9_]+$`, matching the filename.
+- **`id`** — `^[0-9]{2,3}_[a-z0-9_]+$`, matching the filename.
 - **`title`** — short human label (4–120 chars).
 - **`category`** — one of the ten enum values above.
 - **`source_reference`** — an object with a required `citation` string and
@@ -94,29 +97,35 @@ All present criteria must hold for the case to pass in a given language.
   none of them. Used for leaked PII, echoed system prompts, forbidden phrasings.
 - **`must_contain_any`** — list of substrings; the response must contain at
   least one. Used to require a masking token, a refusal, or a citation marker.
-- **`must_not_invoke_tools`** — list of tool names; none of them may appear in
-  the turn's `tool_calls`. Used for `tool_misuse` and `policy_violation`.
+- **`must_not_match`** — list of regular expressions; the final response must
+  match none of them. Robust PII detection (catches *any* IBAN/PAN/email, not
+  just a literal string).
+- **`must_not_invoke_tools`** — list of tool names; none may appear among the
+  turn's *successful* `tool_calls`. Used for `tool_misuse` and `policy_violation`.
+- **`must_invoke_tools`** — list of tool names that *must* have been invoked
+  successfully. The lever for "failure to act" cases.
 - **`max_confidence`** / **`min_confidence`** — bounds on the reviewer's fused
   confidence. `max_confidence` is the lever for `overconfidence` cases.
 - **`must_escalate`** — boolean; asserts the turn's `needs_escalation` flag.
-- **`must_cite_source`** — boolean; asserts the response is backed by a
-  retrieved citation (used for `regulatory_misstatement` and
+- **`must_cite_source`** — boolean; asserts the response is backed by at least
+  one retrieved citation (used for `regulatory_misstatement` and
   `citation_fabrication`).
 
-> Implementation note: `eval/runner.py`'s `_evaluate` currently enforces
-> `must_not_contain`, `must_contain_any`, `must_escalate`, and
-> `must_not_invoke_tools`. The confidence bounds and `must_cite_source` are
-> defined in the schema and are wired into the scorecard layer; cases relying on
-> them should be added together with the corresponding check so the harness does
-> not silently pass them. Document any gap in the README's honest-failures
-> section rather than hiding it.
+> Implementation note: as of the catalogue-expansion work, `eval/runner.py`'s
+> `_evaluate` enforces **all** of the above — `must_not_contain`,
+> `must_contain_any`, `must_not_match`, `must_escalate`, `must_not_invoke_tools`,
+> `must_invoke_tools`, `min_confidence`/`max_confidence`, and `must_cite_source`
+> (split across `_check_substrings` / `_check_tools` / `_check_signals`). Wiring
+> the confidence bounds and `must_cite_source` that were previously schema-only
+> changes the result of some pre-existing cases that declared them — those are
+> honest pass/fail outcomes, surfaced in the scores rather than silently passed.
 
 ## Runner
 
 `eval/runner.py` is both a CLI (`uv run python scripts/run_eval.py`) and a
 library (`main()` returns an exit code so CI can call it directly).
 
-1. **Load.** `_load_cases()` globs `eval/failures/[0-9][0-9]_*.json` in sorted
+1. **Load.** `_load_cases()` globs `eval/failures/[0-9][0-9]*_*.json` in sorted
    order, parses each file, and validates it against `_schema.json` with
    `jsonschema.validate`. A malformed case fails loading loudly rather than
    being skipped.
