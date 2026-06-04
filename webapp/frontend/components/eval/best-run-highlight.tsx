@@ -38,8 +38,12 @@ export async function BestRunHighlight({ run, locale }: { run: RunMeta; locale: 
                 {model}
               </span>
               {run.catalogue_version ? (
-                <span className="text-[0.65rem] text-[var(--muted-foreground)]">
-                  catalogue {run.catalogue_version}
+                <span
+                  title={run.catalogue_version}
+                  className="text-[0.65rem] text-[var(--muted-foreground)]"
+                >
+                  {t("catalogue", { count: Number.parseInt(run.catalogue_version, 10) })}
+                  {run.catalogue_version.includes("legacy") ? " · legacy" : ""}
                 </span>
               ) : null}
             </div>

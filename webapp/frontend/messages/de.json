@@ -126,7 +126,8 @@
         "trend": "Trend"
       }
     },
-    "bestRun": "Bestes Ergebnis"
+    "bestRun": "Bestes Ergebnis",
+    "catalogue": "{count} Fälle"
   },
   "health": {
     "title": "Servicestatus",

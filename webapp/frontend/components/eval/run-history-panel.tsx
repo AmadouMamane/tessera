@@ -57,6 +57,7 @@ interface RunHistoryPanelProps {
 
 export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
   const t = useTranslations("eval.runHistory");
+  const tEval = useTranslations("eval");
   const [page, setPage] = useState(0);
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -219,11 +220,19 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
                           {findModel(run.model).label}
                         </div>
                       ) : null}
-                      {/* Catalogue version: distinguishes runs scored on different
-                          case sets so their pass rates aren't compared as equals. */}
-                      <div className="mt-0.5 flex items-center gap-1 text-[10px] text-[var(--muted-foreground)]/70">
+                      {/* Catalogue size (human-readable); the exact version hash is
+                          in the tooltip. Distinguishes runs scored on different sets. */}
+                      <div
+                        title={run.catalogue_version ?? undefined}
+                        className="mt-0.5 flex items-center gap-1 text-[10px] text-[var(--muted-foreground)]/70"
+                      >
                         <Layers className="h-3 w-3" />
-                        {run.catalogue_version ?? `${run.summary.total} cas`}
+                        {tEval("catalogue", {
+                          count: run.catalogue_version
+                            ? Number.parseInt(run.catalogue_version, 10)
+                            : run.summary.total,
+                        })}
+                        {run.catalogue_version?.includes("legacy") ? " · legacy" : ""}
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
