@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import re
 import sys
 import uuid
 from dataclasses import asdict, dataclass
@@ -50,11 +51,70 @@ def _load_schema() -> dict[str, object]:
 def _load_cases() -> list[dict[str, object]]:
     schema = _load_schema()
     cases: list[dict[str, object]] = []
-    for path in sorted(FAILURES_DIR.glob("[0-9][0-9]_*.json")):
+    for path in sorted(FAILURES_DIR.glob("[0-9][0-9]*_*.json")):
         payload = json.loads(path.read_text(encoding="utf-8"))
         jsonschema.validate(payload, schema)
         cases.append(payload)
     return cases
+
+
+def _check_substrings(pass_criteria: dict[str, object], response: str) -> list[str]:
+    """must_not_contain / must_contain_any / must_not_match (regex)."""
+    reasons: list[str] = []
+    must_not = pass_criteria.get("must_not_contain") or []
+    if isinstance(must_not, list):
+        reasons += [
+            f"response contained forbidden substring {n!r}" for n in must_not if str(n) in response
+        ]
+    must_any = pass_criteria.get("must_contain_any") or []
+    if isinstance(must_any, list) and must_any and not any(str(n) in response for n in must_any):
+        reasons.append(f"response did not contain any required substring from {must_any!r}")
+    patterns = pass_criteria.get("must_not_match") or []
+    if isinstance(patterns, list):
+        for pattern in patterns:
+            try:
+                if re.search(str(pattern), response):
+                    reasons.append(f"response matched forbidden pattern {pattern!r}")
+            except re.error as exc:
+                reasons.append(f"invalid must_not_match regex {pattern!r}: {exc}")
+    return reasons
+
+
+def _check_tools(pass_criteria: dict[str, object], invoked: set[str]) -> list[str]:
+    """must_not_invoke_tools / must_invoke_tools (failure to act)."""
+    reasons: list[str] = []
+    forbidden = pass_criteria.get("must_not_invoke_tools") or []
+    if isinstance(forbidden, list):
+        reasons += [f"forbidden tool {t!r} was invoked" for t in forbidden if str(t) in invoked]
+    required = pass_criteria.get("must_invoke_tools") or []
+    if isinstance(required, list):
+        reasons += [
+            f"required tool {t!r} was not invoked (failure to act)"
+            for t in required
+            if str(t) not in invoked
+        ]
+    return reasons
+
+
+def _check_signals(pass_criteria: dict[str, object], final_state: dict[str, object]) -> list[str]:
+    """must_escalate / confidence bounds / must_cite_source."""
+    reasons: list[str] = []
+    if "must_escalate" in pass_criteria:
+        expected = bool(pass_criteria["must_escalate"])
+        actual = bool(final_state.get("needs_escalation", False))
+        if expected != actual:
+            reasons.append(f"escalation expected={expected}, actual={actual}")
+    confidence = final_state.get("confidence")
+    conf = float(confidence) if isinstance(confidence, int | float) else None
+    min_conf = pass_criteria.get("min_confidence")
+    if isinstance(min_conf, int | float) and (conf is None or conf < float(min_conf)):
+        reasons.append(f"confidence {conf} below min_confidence {min_conf}")
+    max_conf = pass_criteria.get("max_confidence")
+    if isinstance(max_conf, int | float) and conf is not None and conf > float(max_conf):
+        reasons.append(f"confidence {conf} above max_confidence {max_conf}")
+    if pass_criteria.get("must_cite_source") and not final_state.get("citations"):
+        reasons.append("response is not backed by any retrieved citation")
+    return reasons
 
 
 def _evaluate(
@@ -67,36 +127,13 @@ def _evaluate(
     pass_criteria = case.get("pass_criteria") or {}
     if not isinstance(pass_criteria, dict):
         return False, ["pass_criteria is malformed"]
-    reasons: list[str] = []
-
-    must_not = pass_criteria.get("must_not_contain") or []
-    if isinstance(must_not, list):
-        for needle in must_not:
-            if str(needle) in response:
-                reasons.append(f"response contained forbidden substring {needle!r}")
-
-    must_any = pass_criteria.get("must_contain_any") or []
-    if (
-        isinstance(must_any, list)
-        and must_any
-        and not any(str(needle) in response for needle in must_any)
-    ):
-        reasons.append(f"response did not contain any required substring from {must_any!r}")
-
-    if "must_escalate" in pass_criteria:
-        expected = bool(pass_criteria["must_escalate"])
-        actual = bool(final_state.get("needs_escalation", False))
-        if expected != actual:
-            reasons.append(f"escalation expected={expected}, actual={actual}")
-
-    forbidden_tools = pass_criteria.get("must_not_invoke_tools") or []
-    if isinstance(forbidden_tools, list) and forbidden_tools:
-        # Only count tool calls that succeeded — a guard deny is not an invocation.
-        invoked = {call.tool_name for call in final_state.get("tool_calls", []) if call.succeeded}
-        for forbidden in forbidden_tools:
-            if str(forbidden) in invoked:
-                reasons.append(f"forbidden tool {forbidden!r} was invoked")
-
+    # Only count tool calls that succeeded — a guard deny is not an invocation.
+    invoked = {call.tool_name for call in final_state.get("tool_calls", []) if call.succeeded}
+    reasons = (
+        _check_substrings(pass_criteria, response)
+        + _check_tools(pass_criteria, invoked)
+        + _check_signals(pass_criteria, final_state)
+    )
     return not reasons, reasons
 
 
