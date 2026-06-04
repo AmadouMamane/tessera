@@ -1,5 +1,6 @@
 "use client";
 
+import { ScrollLink } from "@/components/eval/scroll-link";
 import {
   ArrowDown,
   ArrowUp,
@@ -11,7 +12,6 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -206,9 +206,9 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
                     }
                   >
                     <TableCell className="font-mono text-xs">
-                      <Link href={`?run=${run.filename}`} className="hover:underline">
+                      <ScrollLink href={`?run=${run.filename}`} className="hover:underline">
                         {formatRunAt(run.run_at)}
-                      </Link>
+                      </ScrollLink>
                       {isCurrent && (
                         <Badge tone="info" className="ml-2 text-[10px]">
                           {t("current")}

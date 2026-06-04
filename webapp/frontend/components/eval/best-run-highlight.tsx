@@ -1,6 +1,6 @@
+import { ScrollLink } from "@/components/eval/scroll-link";
 import { ArrowRight, Award, Cpu } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import Link from "next/link";
 
 import type { RunMeta } from "@/lib/api/schemas";
 import { findModel } from "@/lib/models";
@@ -17,7 +17,7 @@ export async function BestRunHighlight({ run, locale }: { run: RunMeta; locale: 
   const model = run.model ? findModel(run.model).label : "—";
 
   return (
-    <Link
+    <ScrollLink
       href={`?run=${run.filename}`}
       className="group block"
       aria-label={`${t("bestRun")} — ${model}`}
@@ -61,6 +61,6 @@ export async function BestRunHighlight({ run, locale }: { run: RunMeta; locale: 
           </div>
         </div>
       </div>
-    </Link>
+    </ScrollLink>
   );
 }

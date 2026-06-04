@@ -1,13 +1,11 @@
 import { Check, FileSearch, X } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 
 import { OperatorLocked } from "@/components/auth/operator-locked";
 import { BestRunHighlight } from "@/components/eval/best-run-highlight";
 import { CompareControls } from "@/components/eval/compare-controls";
 import { EvalTabs } from "@/components/eval/eval-tabs";
 import { ModelComparison } from "@/components/eval/model-comparison";
-import { RunDetailScroller } from "@/components/eval/run-detail-scroller";
 import { RunHistoryPanel } from "@/components/eval/run-history-panel";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -109,10 +107,7 @@ export async function ScorecardView({ locale, filename, vs }: ScorecardViewProps
       {/* Evolution history (per-run model badges) */}
       {runs.length > 0 && <RunHistoryPanel runs={runs} currentFile={aFile} />}
 
-      {/* Selecting a run (history row or the best-run banner) scrolls here. */}
-      <Suspense fallback={null}>
-        <RunDetailScroller />
-      </Suspense>
+      {/* Selecting a run (history row or best-run banner) scrolls here, via ScrollLink. */}
       <div id="run-detail" className="flex scroll-mt-4 flex-col gap-6">
         {!scorecard ? (
           <Card>
