@@ -67,11 +67,16 @@ export async function ScorecardView({ locale, filename, vs }: ScorecardViewProps
   // operator surface (ADR 0009).
   const operator = isOperator(await currentRole());
 
-  // Default the landing to the best-scoring run (not the most recent, which may
-  // be a weak model) so the first impression is the flagship result. The full
-  // per-model spread stays visible in the history below.
-  const bestRun = runs.length
-    ? runs.reduce((best, r) => (r.summary.pass_rate > best.summary.pass_rate ? r : best))
+  // Default the landing to the best-scoring run of the CURRENT catalogue (the
+  // version of the most recent run), so the headline isn't a high score from a
+  // smaller/older catalogue. Older-catalogue runs stay visible (and badged) in
+  // the history. Falls back to all runs when no version is stamped.
+  const currentVersion = runs[0]?.catalogue_version ?? null;
+  const currentRuns = currentVersion
+    ? runs.filter((r) => r.catalogue_version === currentVersion)
+    : runs;
+  const bestRun = currentRuns.length
+    ? currentRuns.reduce((best, r) => (r.summary.pass_rate > best.summary.pass_rate ? r : best))
     : null;
 
   // Comparison = run A (the viewed run) vs run B (user-picked via ?vs=). Both

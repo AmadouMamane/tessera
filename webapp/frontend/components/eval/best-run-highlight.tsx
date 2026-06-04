@@ -37,6 +37,11 @@ export async function BestRunHighlight({ run, locale }: { run: RunMeta; locale: 
                 <Cpu className="h-3.5 w-3.5 text-gold-500" />
                 {model}
               </span>
+              {run.catalogue_version ? (
+                <span className="text-[0.65rem] text-[var(--muted-foreground)]">
+                  catalogue {run.catalogue_version}
+                </span>
+              ) : null}
             </div>
           </div>
           <div className="flex items-center gap-4">
