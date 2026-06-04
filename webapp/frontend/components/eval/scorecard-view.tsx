@@ -1,11 +1,13 @@
 import { Check, FileSearch, X } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 
 import { OperatorLocked } from "@/components/auth/operator-locked";
 import { BestRunHighlight } from "@/components/eval/best-run-highlight";
 import { CompareControls } from "@/components/eval/compare-controls";
 import { EvalTabs } from "@/components/eval/eval-tabs";
 import { ModelComparison } from "@/components/eval/model-comparison";
+import { RunDetailScroller } from "@/components/eval/run-detail-scroller";
 import { RunHistoryPanel } from "@/components/eval/run-history-panel";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -102,46 +104,52 @@ export async function ScorecardView({ locale, filename, vs }: ScorecardViewProps
       {/* Evolution history (per-run model badges) */}
       {runs.length > 0 && <RunHistoryPanel runs={runs} currentFile={aFile} />}
 
-      {!scorecard ? (
-        <Card>
-          <CardContent className="p-6">
-            <EmptyState icon={<FileSearch />} title={t("title")} description={t("description")} />
-            <div className="mt-6 rounded-md bg-[var(--muted)]/40 p-4 font-mono text-xs leading-relaxed text-[var(--muted-foreground)]">
-              $ uv run python scripts/run_eval.py
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <>
-          {/* Summary tiles */}
-          <SummaryRow
-            scorecard={scorecard}
-            labels={{
-              total: t("summary.total"),
-              passed: t("summary.passed"),
-              failed: t("summary.failed"),
-              rate: t("summary.rate"),
-            }}
-          />
-          {/* Results by category — operator surface (failure reasons) */}
-          {operator ? (
-            <ResultsByCategory
-              results={scorecard.results}
-              columns={{
-                case: t("columns.case"),
-                language: t("columns.language"),
-                result: t("columns.result"),
-                expected: t("columns.expected"),
-                failureReason: t("columns.failureReason"),
+      {/* Selecting a run (history row or the best-run banner) scrolls here. */}
+      <Suspense fallback={null}>
+        <RunDetailScroller />
+      </Suspense>
+      <div id="run-detail" className="flex scroll-mt-4 flex-col gap-6">
+        {!scorecard ? (
+          <Card>
+            <CardContent className="p-6">
+              <EmptyState icon={<FileSearch />} title={t("title")} description={t("description")} />
+              <div className="mt-6 rounded-md bg-[var(--muted)]/40 p-4 font-mono text-xs leading-relaxed text-[var(--muted-foreground)]">
+                $ uv run python scripts/run_eval.py
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Summary tiles */}
+            <SummaryRow
+              scorecard={scorecard}
+              labels={{
+                total: t("summary.total"),
+                passed: t("summary.passed"),
+                failed: t("summary.failed"),
+                rate: t("summary.rate"),
               }}
-              passLabel={t("passed")}
-              failLabel={t("failed")}
             />
-          ) : (
-            <OperatorLocked locale={locale} />
-          )}
-        </>
-      )}
+            {/* Results by category — operator surface (failure reasons) */}
+            {operator ? (
+              <ResultsByCategory
+                results={scorecard.results}
+                columns={{
+                  case: t("columns.case"),
+                  language: t("columns.language"),
+                  result: t("columns.result"),
+                  expected: t("columns.expected"),
+                  failureReason: t("columns.failureReason"),
+                }}
+                passLabel={t("passed")}
+                failLabel={t("failed")}
+              />
+            ) : (
+              <OperatorLocked locale={locale} />
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 
