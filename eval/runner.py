@@ -171,7 +171,21 @@ async def _run_case(case: dict[str, object], language: str) -> CaseResult:
         language_confidence=1.0,
     )
     graph = compile_graph()
-    final_state = await graph.ainvoke(initial)
+    try:
+        final_state = await graph.ainvoke(initial)
+    except Exception as exc:  # one case must never crash the whole language run
+        return CaseResult(
+            case_id=str(case["id"]),
+            language=language,
+            passed=False,
+            reasons=[f"agent error: {type(exc).__name__}: {exc}"],
+            final_response="",
+            needs_escalation=False,
+            invoked_tools=[],
+            category=str(case.get("category", "")),
+            title=str(case.get("title", "")),
+            expected_behavior=str(case.get("expected_behavior", "")),
+        )
     passed, reasons = _evaluate(case, language, final_state)
     return CaseResult(
         case_id=str(case["id"]),

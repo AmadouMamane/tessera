@@ -27,7 +27,11 @@ class OllamaBackend:
         self._host = str(settings.host)
         self._timeout = settings.timeout_seconds
         self._keep_alive = f"{settings.keep_alive_seconds}s"
-        self._client = ollama.AsyncClient(host=self._host)
+        # Pass the timeout through to the underlying httpx client. Without it a
+        # stalled daemon (e.g. a model being unloaded mid-request) hangs forever.
+        # For streaming this is the inter-chunk read timeout, so a slow-but-
+        # progressing model (e.g. Llama 3.3 70B) is not killed — only true stalls.
+        self._client = ollama.AsyncClient(host=self._host, timeout=self._timeout)
 
     async def stream_chat(
         self,
