@@ -27,7 +27,9 @@ import {
 import type { RunMeta } from "@/lib/api/schemas";
 import { findModel } from "@/lib/models";
 
-const PAGE_SIZE = 5;
+// 4 per page so the prev/next pager stays available once there are 5+ runs
+// (one report per model), instead of collapsing into a single static page.
+const PAGE_SIZE = 4;
 
 type SortKey = "date" | "cases" | "passed" | "pass_rate";
 type SortDir = "asc" | "desc";
