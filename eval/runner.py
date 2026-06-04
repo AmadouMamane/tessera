@@ -211,6 +211,13 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         help="Chat-model override (e.g. gpt-5.5); routes via backend_for_model.",
     )
     parser.add_argument(
+        "--synthesis-model",
+        help=(
+            "If set, a capable model (e.g. gpt-5.5) generates a qualitative "
+            "failure synthesis stored in the report (superadmin-only in the UI)."
+        ),
+    )
+    parser.add_argument(
         "--report",
         type=Path,
         default=REPORTS_DIR / "latest.json",
@@ -248,6 +255,14 @@ async def _run_all(args: argparse.Namespace) -> int:
         if settings.resolved_llm_profile() is LLMProfile.ON_PREM
         else settings.vertex.chat_model
     )
+    synthesis = None
+    if args.synthesis_model:
+        from eval.synthesis import generate_synthesis
+
+        synthesis = await generate_synthesis(
+            results, model=args.synthesis_model, language=args.lang or "fr"
+        )
+
     payload = json.dumps(
         {
             "run_at": run_ts,
@@ -256,6 +271,7 @@ async def _run_all(args: argparse.Namespace) -> int:
             "catalogue_version": catalogue_version,
             "summary": asdict(scorecard.summary),
             "results": [asdict(r) for r in results],
+            "synthesis": synthesis,
         },
         indent=2,
         ensure_ascii=False,

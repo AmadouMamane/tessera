@@ -134,7 +134,13 @@ export async function ScorecardView({ locale, filename, vs }: ScorecardViewProps
               }}
             />
             {/* Failure synthesis — superadmin-only weakness map (above the table) */}
-            {superadmin ? <FailureSynthesis results={scorecard.results} locale={locale} /> : null}
+            {superadmin ? (
+              <FailureSynthesis
+                synthesis={scorecard.synthesis}
+                results={scorecard.results}
+                locale={locale}
+              />
+            ) : null}
             {/* Results by category — operator surface (failure reasons) */}
             {operator ? (
               <ResultsByCategory
@@ -230,7 +236,13 @@ function ResultsByCategory({
   const byCategory = groupBy(results, (r) => r.category || "other");
   return (
     <div className="flex flex-col gap-4">
-      {Object.entries(byCategory).map(([category, items]) => {
+      {Object.entries(byCategory).map(([category, group]) => {
+        // Within a category, surface failures first (❌ before ✅), then sort by
+        // case id — so the eye lands on what broke without a click, and pass/fail
+        // form two contiguous blocks per category.
+        const items = [...group].sort(
+          (a, b) => Number(a.passed) - Number(b.passed) || a.case_id.localeCompare(b.case_id),
+        );
         const passed = items.filter((r) => r.passed).length;
         const total = items.length;
         const rate = total ? passed / total : 0;

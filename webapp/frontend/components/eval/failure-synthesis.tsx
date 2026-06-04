@@ -1,9 +1,9 @@
-import { AlertTriangle, ShieldCheck } from "lucide-react";
+import { AlertTriangle, ShieldCheck, Sparkles } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import type { ScorecardResult } from "@/lib/api/schemas";
+import type { ScorecardResult, Synthesis } from "@/lib/api/schemas";
 
 const KNOWN = new Set([
   "prompt_injection",
@@ -31,38 +31,54 @@ const TONE: Record<string, "danger" | "warning" | "navy" | "info"> = {
   escalation_failure: "danger",
 };
 
+/** Short, scannable case chip: the numeric prefix, full id on hover. */
+function CaseChip({ caseId }: { caseId: string }) {
+  const short = caseId.split("_")[0] ?? caseId;
+  return (
+    <code
+      title={caseId}
+      className="rounded bg-[var(--muted)]/60 px-1.5 py-0.5 font-mono text-[0.7rem] text-[var(--foreground)]"
+    >
+      {short}
+    </code>
+  );
+}
+
 /**
- * Superadmin-only weakness map: the selected run's failures grouped by family,
- * each with its failing cases and the grader's reason. This is the most
- * sensitive eval surface (a precise list of the deployment's weak spots), so it
- * sits above the operator per-case table and is gated one level higher.
+ * Superadmin-only weakness map. Preferred form is the qualitative `synthesis`
+ * (failures grouped into interpretive families with a root-cause note) — hand
+ * authored or generated at run time by a capable model. When a run carries no
+ * synthesis (older runs), we fall back to a mechanical grouping by category so
+ * the panel is never empty.
  */
 export async function FailureSynthesis({
+  synthesis,
   results,
   locale,
 }: {
+  synthesis?: Synthesis | null;
   results: ScorecardResult[];
   locale: string;
 }) {
   const t = await getTranslations({ locale, namespace: "eval" });
   const failed = results.filter((r) => !r.passed);
-
-  const groups = new Map<string, ScorecardResult[]>();
-  for (const r of failed) {
-    const key = KNOWN.has(r.category) ? r.category : "unknown";
-    const bucket = groups.get(key);
-    if (bucket) bucket.push(r);
-    else groups.set(key, [r]);
-  }
-  const ordered = [...groups.entries()].sort((a, b) => b[1].length - a[1].length);
+  const hasSynthesis = (synthesis?.families.length ?? 0) > 0;
 
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <AlertTriangle className="h-4 w-4 text-gold-500" />
           <CardTitle>{t("failureSynthesis.title")}</CardTitle>
           <Badge tone="navy">{t("failureSynthesis.badge")}</Badge>
+          {hasSynthesis ? (
+            <span className="ml-auto flex items-center gap-1 text-[0.7rem] text-[var(--muted-foreground)]">
+              <Sparkles className="h-3 w-3 text-gold-500" />
+              {synthesis?.model && synthesis.model !== "manual"
+                ? t("failureSynthesis.generatedBy", { model: synthesis.model })
+                : t("failureSynthesis.manual")}
+            </span>
+          ) : null}
         </div>
         <CardDescription>{t("failureSynthesis.subtitle")}</CardDescription>
       </CardHeader>
@@ -72,36 +88,71 @@ export async function FailureSynthesis({
             <ShieldCheck className="h-4 w-4 text-green-600" />
             {t("failureSynthesis.none")}
           </div>
-        ) : (
-          <div className="flex flex-col gap-4">
-            {ordered.map(([category, items]) => (
-              <div key={category} className="flex flex-col gap-1.5">
-                <div className="flex items-center gap-2">
-                  <Badge tone={TONE[category] ?? "neutral"}>{t(`categories.${category}`)}</Badge>
-                  <span className="text-xs font-medium tabular-nums text-[var(--muted-foreground)]">
-                    {items.length} {t("failureSynthesis.casesLabel")}
+        ) : hasSynthesis ? (
+          // Preferred: the qualitative, interpretive synthesis.
+          <ul className="flex flex-col gap-3">
+            {synthesis?.families.map((fam) => (
+              <li
+                key={fam.label}
+                className="flex flex-col gap-1.5 border-[var(--border)] border-l-2 pl-3"
+              >
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium text-sm text-[var(--foreground)]">{fam.label}</span>
+                  <span className="flex flex-wrap items-center gap-1">
+                    {fam.case_ids.map((id) => (
+                      <CaseChip key={id} caseId={id} />
+                    ))}
                   </span>
                 </div>
-                <ul className="flex flex-col gap-1 pl-1">
-                  {items.map((r) => (
-                    <li key={r.case_id} className="text-xs leading-relaxed">
-                      <code className="rounded bg-[var(--muted)]/50 px-1 py-0.5 text-[var(--foreground)]">
-                        {r.case_id}
-                      </code>
-                      {r.reasons.length > 0 ? (
-                        <span className="text-[var(--muted-foreground)]">
-                          {" "}
-                          — {r.reasons.join(" ; ")}
-                        </span>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                {fam.note ? (
+                  <p className="text-xs leading-relaxed text-[var(--muted-foreground)]">
+                    {fam.note}
+                  </p>
+                ) : null}
+              </li>
             ))}
-          </div>
+          </ul>
+        ) : (
+          // Fallback: mechanical grouping by category (runs with no synthesis).
+          <FallbackByCategory failed={failed} t={t} />
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function FallbackByCategory({
+  failed,
+  t,
+}: {
+  failed: ScorecardResult[];
+  t: Awaited<ReturnType<typeof getTranslations>>;
+}) {
+  const groups = new Map<string, ScorecardResult[]>();
+  for (const r of failed) {
+    const key = KNOWN.has(r.category) ? r.category : "unknown";
+    const bucket = groups.get(key);
+    if (bucket) bucket.push(r);
+    else groups.set(key, [r]);
+  }
+  const ordered = [...groups.entries()].sort((a, b) => b[1].length - a[1].length);
+  return (
+    <div className="flex flex-col gap-4">
+      {ordered.map(([category, items]) => (
+        <div key={category} className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
+            <Badge tone={TONE[category] ?? "neutral"}>{t(`categories.${category}`)}</Badge>
+            <span className="font-medium text-[var(--muted-foreground)] text-xs tabular-nums">
+              {items.length} {t("failureSynthesis.casesLabel")}
+            </span>
+          </div>
+          <span className="flex flex-wrap items-center gap-1 pl-1">
+            {items.map((r) => (
+              <CaseChip key={r.case_id} caseId={r.case_id} />
+            ))}
+          </span>
+        </div>
+      ))}
+    </div>
   );
 }

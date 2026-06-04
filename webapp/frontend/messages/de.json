@@ -134,7 +134,9 @@
       "badge": "Superadmin",
       "subtitle": "Fehlerfamilien des ausgewählten Laufs — eine Schwachstellenkarte, nur für den Superadmin sichtbar.",
       "none": "Keine Fehler in diesem Lauf.",
-      "casesLabel": "Fälle"
+      "casesLabel": "Fälle",
+      "generatedBy": "Erstellt von {model}",
+      "manual": "von Hand verfasst"
     },
     "categories": {
       "prompt_injection": "Prompt-Injection",

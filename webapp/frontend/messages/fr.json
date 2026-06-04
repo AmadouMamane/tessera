@@ -134,7 +134,9 @@
       "badge": "super-admin",
       "subtitle": "Familles d'échecs du run sélectionné — carte des faiblesses, visible super-admin uniquement.",
       "none": "Aucun échec sur ce run.",
-      "casesLabel": "cas"
+      "casesLabel": "cas",
+      "generatedBy": "Généré par {model}",
+      "manual": "rédigé à la main"
     },
     "categories": {
       "prompt_injection": "Injection de prompt",
