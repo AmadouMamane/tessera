@@ -97,6 +97,7 @@ export async function loadAllRuns(): Promise<RunMeta[]> {
             run_at: doc.run_at ?? file.replace(".json", ""),
             lang: doc.lang ?? null,
             model: doc.model ?? null,
+            catalogue_version: doc.catalogue_version ?? null,
             summary: doc.summary,
           }),
         );

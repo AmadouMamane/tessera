@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import re
 import sys
@@ -56,6 +57,17 @@ def _load_cases() -> list[dict[str, object]]:
         jsonschema.validate(payload, schema)
         cases.append(payload)
     return cases
+
+
+def _catalogue_version(cases: list[dict[str, object]]) -> str:
+    """Short identifier of the catalogue a run was scored against (count + id hash).
+
+    Lets the dashboard distinguish runs across catalogue versions so pass rates
+    measured on different case sets are never compared as if equivalent.
+    """
+    ids = sorted(str(c["id"]) for c in cases)
+    digest = hashlib.sha256("\n".join(ids).encode()).hexdigest()[:8]
+    return f"{len(ids)}-{digest}"
 
 
 def _check_substrings(pass_criteria: dict[str, object], response: str) -> list[str]:
@@ -190,6 +202,7 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 async def _run_all(args: argparse.Namespace) -> int:
     cases = _load_cases()
+    catalogue_version = _catalogue_version(cases)
     if args.case:
         cases = [c for c in cases if c["id"] == args.case]
         if not cases:
@@ -221,6 +234,7 @@ async def _run_all(args: argparse.Namespace) -> int:
             "run_at": run_ts,
             "lang": args.lang,
             "model": model,
+            "catalogue_version": catalogue_version,
             "summary": asdict(scorecard.summary),
             "results": [asdict(r) for r in results],
         },

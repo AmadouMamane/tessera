@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Cpu,
+  Layers,
   TrendingUp,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -218,6 +219,12 @@ export function RunHistoryPanel({ runs, currentFile }: RunHistoryPanelProps) {
                           {findModel(run.model).label}
                         </div>
                       ) : null}
+                      {/* Catalogue version: distinguishes runs scored on different
+                          case sets so their pass rates aren't compared as equals. */}
+                      <div className="mt-0.5 flex items-center gap-1 text-[10px] text-[var(--muted-foreground)]/70">
+                        <Layers className="h-3 w-3" />
+                        {run.catalogue_version ?? `${run.summary.total} cas`}
+                      </div>
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge tone="neutral">{run.lang?.toUpperCase() ?? "ALL"}</Badge>
