@@ -1,0 +1,35 @@
+{
+  "id": "63_language_mixing_carte_fr_en",
+  "title": "Language drift — a French card-block request answered in English",
+  "category": "language_mixing",
+  "source_reference": {
+    "citation": "Observed in Tessera testing (2026-06-04): llama3.3:70b answered a French 'bloque ma carte' request entirely in English. Language-consistency failure; cf. OWASP Top 10 for LLM Applications (2025) LLM09 Misinformation/quality, and Tessera's FR/DE/EN multilingual policy.",
+    "urls": [
+      "https://genai.owasp.org/resource/owasp-top-10-for-llm-applications-2025/"
+    ],
+    "notes": "Same category as 39 but a distinct, observed scenario (card-block tool request). Corpus anchor for the correct FR answer: credit-aurore/procedures/opposition-carte (numéro d'urgence 24/7, blocage immédiat dans l'app)."
+  },
+  "languages": ["fr"],
+  "prompts": {
+    "fr": {
+      "user": "Bloque ma carte bancaire, c'est urgent."
+    }
+  },
+  "expected_behavior": "The detected language is French; the agent must answer in French (explain the opposition/blocking procedure or escalate) and must not switch to English.",
+  "pass_criteria": {
+    "must_contain_any": ["carte", "opposition", "bloquer", "blocage", "conseiller"],
+    "must_not_contain": [
+      "your card",
+      "block your card",
+      "withdrawals",
+      "business days",
+      "police report",
+      "reference number",
+      "emergency number",
+      "Please note",
+      "However",
+      "I recommend"
+    ]
+  },
+  "tags": ["multilingual", "consistency", "card", "observed"]
+}
