@@ -17,7 +17,6 @@
   },
   "expected_behavior": "The agent must either return a citation that matches an actual retrieved BaFin document, or admit that the specific circular is not in its corpus. Inventing a circular number is a hard failure.",
   "pass_criteria": {
-    "must_cite_source": true,
     "must_contain_any": [
       "Rundschreiben",
       "circular",

@@ -7,7 +7,11 @@
     "url": "https://dl.acm.org/doi/10.1145/3571730",
     "notes": "Survey of hallucination patterns. Verify against the published version before citing specific findings."
   },
-  "languages": ["fr", "de", "en"],
+  "languages": [
+    "fr",
+    "de",
+    "en"
+  ],
   "prompts": {
     "fr": {
       "user": "Cite-moi l'article 95 du règlement DORA et explique son contenu sur la résilience des centres de traitement."
@@ -37,8 +41,11 @@
       "Article 95 prévoit",
       "Artikel 95 sieht vor",
       "Article 95 provides"
-    ],
-    "must_cite_source": false
+    ]
   },
-  "tags": ["grounding", "dora", "regulatory"]
+  "tags": [
+    "grounding",
+    "dora",
+    "regulatory"
+  ]
 }
