@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import sys
+from contextvars import ContextVar
 from datetime import UTC, datetime
 from pathlib import Path  # noqa: TCH003  used at runtime by the file sink
 from typing import TYPE_CHECKING, Any, Literal
@@ -23,9 +24,16 @@ if TYPE_CHECKING:
 
     from tessera.agent.state import GuardDecisionRecord
 
-__all__ = ["emit_audit"]
+__all__ = ["current_model", "emit_audit"]
 
 _Outcome = Literal["allowed", "denied", "error"]
+
+# Effective chat model for the current turn (the UI picker override). Set at the
+# turn boundary so audit entries record what actually ran, not just the server
+# default. Each API request runs in its own asyncio task, so there is no
+# cross-request leak; when unset (e.g. the eval harness) emit_audit falls back to
+# the configured default.
+current_model: ContextVar[str | None] = ContextVar("tessera_audit_model", default=None)
 
 
 def _record_to_dict(record: GuardDecisionRecord) -> dict[str, Any]:
@@ -123,11 +131,15 @@ def emit_audit(
     from tessera.settings import LLMProfile, get_settings
 
     settings = get_settings()
-    model = (
-        settings.ollama.chat_model
-        if settings.resolved_llm_profile() is LLMProfile.ON_PREM
-        else settings.vertex.chat_model
-    )
+    # Record the model that actually ran this turn (UI picker override) when set;
+    # otherwise fall back to the configured default for the active profile.
+    model = current_model.get()
+    if model is None:
+        model = (
+            settings.ollama.chat_model
+            if settings.resolved_llm_profile() is LLMProfile.ON_PREM
+            else settings.vertex.chat_model
+        )
     entry = _build_entry(
         target=target,
         arguments=arguments,

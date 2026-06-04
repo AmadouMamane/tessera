@@ -21,6 +21,7 @@ from starlette.responses import StreamingResponse
 
 from tessera.agent import build_graph, reporter as reporter_module
 from tessera.agent.state import ConversationMessage, NodeName, new_state
+from tessera.guard.audit import current_model
 from tessera.memory import get_memory_backend, scope_for
 from tessera.memory.protocol import TurnRecord
 from tessera.memory.transcript import append_messages, load_transcript
@@ -161,6 +162,9 @@ async def _stream_turn(request: ChatRequest) -> AsyncIterator[bytes]:
         subject_id=request.subject_id,
         model=request.model,
     )
+    # Record the effective model on audit entries emitted during this turn
+    # (memory governance, guard) — not just the server default.
+    current_model.set(request.model)
 
     graph = _streaming_graph()
     config: dict[str, object] = {"configurable": {"thread_id": str(turn_id)}}
