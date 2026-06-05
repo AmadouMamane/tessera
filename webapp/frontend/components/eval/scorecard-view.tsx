@@ -1,4 +1,4 @@
-import { Check, FileSearch, X } from "lucide-react";
+import { FileSearch } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { OperatorLocked } from "@/components/auth/operator-locked";
@@ -7,47 +7,13 @@ import { CompareControls } from "@/components/eval/compare-controls";
 import { EvalTabs } from "@/components/eval/eval-tabs";
 import { FailureSynthesis } from "@/components/eval/failure-synthesis";
 import { ModelComparison } from "@/components/eval/model-comparison";
+import { ResultsByCategory } from "@/components/eval/results-by-category";
 import { RunHistoryPanel } from "@/components/eval/run-history-panel";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import type { ScorecardDocument, ScorecardResult } from "@/lib/api/schemas";
+import type { ScorecardDocument } from "@/lib/api/schemas";
 import { currentRole, isOperator, isSuperadmin } from "@/lib/auth/session";
 import { loadAllRuns, loadScorecard } from "@/lib/eval";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  prompt_injection: "Prompt Injection",
-  pii_leak: "PII Leak",
-  hallucination: "Hallucination",
-  overconfidence: "Overconfidence",
-  citation_fabrication: "Citation Fabrication",
-  tool_misuse: "Tool Misuse",
-  policy_violation: "Policy Violation",
-  regulatory_misstatement: "Regulatory Misstatement",
-  language_mixing: "Language Mixing",
-  escalation_failure: "Escalation Failure",
-};
-
-const CATEGORY_TONE: Record<string, string> = {
-  prompt_injection: "danger",
-  pii_leak: "danger",
-  hallucination: "warning",
-  overconfidence: "warning",
-  citation_fabrication: "warning",
-  tool_misuse: "danger",
-  policy_violation: "navy",
-  regulatory_misstatement: "navy",
-  language_mixing: "info",
-  escalation_failure: "danger",
-};
 
 interface ScorecardViewProps {
   locale: string;
@@ -154,6 +120,12 @@ export async function ScorecardView({ locale, filename, vs }: ScorecardViewProps
                 }}
                 passLabel={t("passed")}
                 failLabel={t("failed")}
+                filterLabels={{
+                  all: t("resultFilter.all"),
+                  failed: t("resultFilter.failed"),
+                  passed: t("resultFilter.passed"),
+                  empty: t("resultFilter.empty"),
+                }}
               />
             ) : (
               <OperatorLocked locale={locale} />
@@ -214,174 +186,6 @@ function SummaryRow({
   );
 }
 
-interface CategoryColumns {
-  case: string;
-  language: string;
-  result: string;
-  expected: string;
-  failureReason: string;
-}
-
-function ResultsByCategory({
-  results,
-  columns,
-  passLabel,
-  failLabel,
-}: {
-  results: ScorecardResult[];
-  columns: CategoryColumns;
-  passLabel: string;
-  failLabel: string;
-}) {
-  const byCategory = groupBy(results, (r) => r.category || "other");
-  return (
-    <div className="flex flex-col gap-4">
-      {Object.entries(byCategory).map(([category, group]) => {
-        // Within a category, surface failures first (❌ before ✅), then sort by
-        // case id — so the eye lands on what broke without a click, and pass/fail
-        // form two contiguous blocks per category.
-        const items = [...group].sort(
-          (a, b) => Number(a.passed) - Number(b.passed) || a.case_id.localeCompare(b.case_id),
-        );
-        const passed = items.filter((r) => r.passed).length;
-        const total = items.length;
-        const rate = total ? passed / total : 0;
-        return (
-          <Card key={category} className="overflow-hidden">
-            <CardContent className="p-0">
-              {/* Category header */}
-              <div className="flex items-center justify-between border-b border-[var(--border)] bg-gradient-to-b from-[var(--muted)]/40 to-transparent px-5 py-3.5">
-                <div className="flex items-center gap-3">
-                  <Badge
-                    tone={
-                      (CATEGORY_TONE[category] as "danger" | "warning" | "navy" | "info") ??
-                      "neutral"
-                    }
-                  >
-                    {CATEGORY_LABELS[category] ?? category}
-                  </Badge>
-                  <span className="text-sm text-[var(--muted-foreground)]">
-                    {passed}/{total}
-                  </span>
-                </div>
-                <PassRateBar rate={rate} />
-              </div>
-              {/* Cases */}
-              <Table className="table-fixed">
-                <colgroup>
-                  <col className="w-[22%]" />
-                  <col className="w-[7%]" />
-                  <col className="w-[8%]" />
-                  <col className="w-[35%]" />
-                  <col className="w-[28%]" />
-                </colgroup>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{columns.case}</TableHead>
-                    <TableHead className="text-center">{columns.language}</TableHead>
-                    <TableHead className="text-center">{columns.result}</TableHead>
-                    <TableHead>{columns.expected}</TableHead>
-                    <TableHead>{columns.failureReason}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {items.map((result) => (
-                    <TableRow key={`${result.case_id}-${result.language}`}>
-                      <TableCell className="max-w-0 overflow-hidden align-top">
-                        <div className="w-full font-mono text-xs leading-[18px]">
-                          {result.case_id.replace(/_/g, "_​")}
-                        </div>
-                        {result.title && (
-                          <div className="mt-0.5 w-full break-words text-xs leading-[18px] text-[var(--muted-foreground)]">
-                            {result.title}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="align-top text-center">
-                        <Badge
-                          tone={
-                            result.language === "fr"
-                              ? "navy"
-                              : result.language === "de"
-                                ? "gold"
-                                : "info"
-                          }
-                        >
-                          {result.language.toUpperCase()}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="align-top text-center">
-                        {result.passed ? (
-                          <Badge tone="success" className="gap-1">
-                            <Check className="h-3 w-3" /> {passLabel}
-                          </Badge>
-                        ) : (
-                          <Badge tone="danger" className="gap-1">
-                            <X className="h-3 w-3" /> {failLabel}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="max-w-0 overflow-hidden align-top text-xs text-[var(--muted-foreground)]">
-                        <div className="w-full break-words leading-[18px] text-justify">
-                          {result.expected_behavior ?? "—"}
-                        </div>
-                      </TableCell>
-                      <TableCell className="max-w-0 overflow-hidden align-top">
-                        {result.reasons.length > 0 ? (
-                          <ul className="w-full space-y-1">
-                            {result.reasons.map((r, i) => (
-                              <li
-                                // biome-ignore lint/suspicious/noArrayIndexKey: failure reasons are render-once and never reorder
-                                key={i}
-                                className="break-words text-xs leading-[18px] text-justify text-red-600 dark:text-red-400"
-                              >
-                                {r}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <span className="text-xs text-[var(--muted-foreground)]">—</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
-  );
-}
-
-function PassRateBar({ rate }: { rate: number }) {
-  const pct = Math.round(rate * 100);
-  const gradient =
-    pct >= 80
-      ? "bg-gradient-to-r from-green-600 to-green-400"
-      : pct >= 50
-        ? "bg-gradient-to-r from-amber-600 to-amber-400"
-        : "bg-gradient-to-r from-red-600 to-red-400";
-  const text =
-    pct >= 80
-      ? "text-green-700 dark:text-green-400"
-      : pct >= 50
-        ? "text-amber-700 dark:text-amber-400"
-        : "text-red-700 dark:text-red-400";
-  return (
-    <div className="flex items-center gap-2">
-      <div className="h-1.5 w-24 overflow-hidden rounded-full bg-[var(--muted)]">
-        <div
-          className={`h-full ${gradient} transition-all duration-500`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <span className={`w-8 text-right text-xs font-semibold tabular-nums ${text}`}>{pct}%</span>
-    </div>
-  );
-}
-
 interface SummaryTileProps {
   label: string;
   value: number | string;
@@ -431,14 +235,4 @@ function SummaryTile({ label, value, tone }: SummaryTileProps) {
       </CardContent>
     </Card>
   );
-}
-
-function groupBy<T>(arr: T[], key: (item: T) => string): Record<string, T[]> {
-  return arr.reduce<Record<string, T[]>>((acc, item) => {
-    const k = key(item);
-    const bucket = acc[k] ?? [];
-    bucket.push(item);
-    acc[k] = bucket;
-    return acc;
-  }, {});
 }

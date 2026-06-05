@@ -33,10 +33,13 @@ title, reasons). Group them into a small number of *interpretive* families \
 - "label": a short human title (in {language}), optionally flagging the biggest one;
 - "case_ids": the exact case_ids from the input that belong to the family;
 - "note": ONE sentence (in {language}) naming the root cause or pattern, \
-distinguishing model behaviour from infrastructure/RAG issues where relevant.
+distinguishing model behaviour from infrastructure/RAG issues where relevant;
+- "fix": ONE sentence (in {language}) giving the concrete remediation — name the \
+layer to act on (RAG/grounding, guard policy, PII masking, confidence threshold, \
+human escalation) rather than vague advice.
 
 Every input case_id must appear in exactly one family. Reply with STRICT JSON \
-only: an array of objects with keys label, case_ids, note. No prose, no code fence."""
+only: an array of objects with keys label, case_ids, note, fix. No prose, no code fence."""
 
 
 def _parse(content: str) -> list[dict[str, Any]]:
@@ -61,6 +64,7 @@ def _parse(content: str) -> list[dict[str, Any]]:
                 "label": str(item.get("label", "")),
                 "case_ids": [str(c) for c in item.get("case_ids", []) if isinstance(c, str)],
                 "note": str(item.get("note", "")),
+                "fix": str(item.get("fix", "")),
             }
         )
     return families

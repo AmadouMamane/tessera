@@ -3,6 +3,14 @@ import { getTranslations } from "next-intl/server";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { ScorecardResult, Synthesis } from "@/lib/api/schemas";
 
 const KNOWN = new Set([
@@ -44,12 +52,48 @@ function CaseChip({ caseId }: { caseId: string }) {
   );
 }
 
+/** A unified row of the weakness table — one interpretive family or, on runs
+ *  with no synthesis, one failing category. `note` (root cause) and `fix` are
+ *  the model's when present; `category` is the family's dominant category, used
+ *  for the static remediation baseline and the tone badge. */
+interface Row {
+  key: string;
+  label: string;
+  category: string;
+  caseIds: string[];
+  note: string;
+  fix: string;
+  isFamily: boolean;
+}
+
+/** Pick the category most of a family's cases belong to (for the static fix
+ *  baseline + tone). Falls back to "unknown" when none is known. */
+function dominantCategory(caseIds: string[], catOf: Map<string, string>): string {
+  const counts = new Map<string, number>();
+  for (const id of caseIds) {
+    const cat = catOf.get(id);
+    const key = cat && KNOWN.has(cat) ? cat : "unknown";
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  let best = "unknown";
+  let bestN = -1;
+  for (const [cat, n] of counts) {
+    if (n > bestN) {
+      best = cat;
+      bestN = n;
+    }
+  }
+  return best;
+}
+
 /**
- * Superadmin-only weakness map. Preferred form is the qualitative `synthesis`
- * (failures grouped into interpretive families with a root-cause note) — hand
- * authored or generated at run time by a capable model. When a run carries no
- * synthesis (older runs), we fall back to a mechanical grouping by category so
- * the panel is never empty.
+ * Superadmin-only weakness map, rendered as ONE table whatever the run carries
+ * — so the panel looks the same across runs (it used to switch between a family
+ * list and a by-category fallback). Rows are the qualitative `synthesis`
+ * families when present (a capable model groups failures by shared root cause,
+ * across raw categories), otherwise one row per failing category. The
+ * "Recommended fix" column is hybrid: the model's per-family `fix` when present,
+ * else a static per-category remediation baseline — so it is never empty.
  */
 export async function FailureSynthesis({
   synthesis,
@@ -63,6 +107,47 @@ export async function FailureSynthesis({
   const t = await getTranslations({ locale, namespace: "eval" });
   const failed = results.filter((r) => !r.passed);
   const hasSynthesis = (synthesis?.families.length ?? 0) > 0;
+  const catOf = new Map(results.map((r) => [r.case_id, r.category]));
+
+  const fixFor = (category: string, modelFix: string) =>
+    modelFix.trim()
+      ? modelFix
+      : t(`failureSynthesis.fixes.${KNOWN.has(category) ? category : "unknown"}`);
+
+  let rows: Row[];
+  if (hasSynthesis) {
+    rows = (synthesis?.families ?? []).map((fam) => {
+      const category = dominantCategory(fam.case_ids, catOf);
+      return {
+        key: fam.label,
+        label: fam.label,
+        category,
+        caseIds: fam.case_ids,
+        note: fam.note,
+        fix: fixFor(category, fam.fix),
+        isFamily: true,
+      };
+    });
+  } else {
+    const groups = new Map<string, string[]>();
+    for (const r of failed) {
+      const key = KNOWN.has(r.category) ? r.category : "unknown";
+      const bucket = groups.get(key);
+      if (bucket) bucket.push(r.case_id);
+      else groups.set(key, [r.case_id]);
+    }
+    rows = [...groups.entries()]
+      .sort((a, b) => b[1].length - a[1].length)
+      .map(([category, caseIds]) => ({
+        key: category,
+        label: t(`categories.${category}`),
+        category,
+        caseIds,
+        note: "",
+        fix: t(`failureSynthesis.fixes.${category}`),
+        isFamily: false,
+      }));
+  }
 
   return (
     <Card>
@@ -88,71 +173,59 @@ export async function FailureSynthesis({
             <ShieldCheck className="h-4 w-4 text-green-600" />
             {t("failureSynthesis.none")}
           </div>
-        ) : hasSynthesis ? (
-          // Preferred: the qualitative, interpretive synthesis.
-          <ul className="flex flex-col gap-3">
-            {synthesis?.families.map((fam) => (
-              <li
-                key={fam.label}
-                className="flex flex-col gap-1.5 border-[var(--border)] border-l-2 pl-3"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium text-sm text-[var(--foreground)]">{fam.label}</span>
-                  <span className="flex flex-wrap items-center gap-1">
-                    {fam.case_ids.map((id) => (
-                      <CaseChip key={id} caseId={id} />
-                    ))}
-                  </span>
-                </div>
-                {fam.note ? (
-                  <p className="text-xs leading-relaxed text-[var(--muted-foreground)]">
-                    {fam.note}
-                  </p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
         ) : (
-          // Fallback: mechanical grouping by category (runs with no synthesis).
-          <FallbackByCategory failed={failed} t={t} />
+          <div className="overflow-x-auto">
+            <Table className="table-fixed">
+              <colgroup>
+                <col className="w-[26%]" />
+                <col className="w-[16%]" />
+                <col className="w-[31%]" />
+                <col className="w-[27%]" />
+              </colgroup>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>{t("failureSynthesis.columns.pattern")}</TableHead>
+                  <TableHead>{t("failureSynthesis.columns.cases")}</TableHead>
+                  <TableHead>{t("failureSynthesis.columns.rootCause")}</TableHead>
+                  <TableHead>{t("failureSynthesis.columns.fix")}</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {rows.map((row) => (
+                  <TableRow key={row.key}>
+                    <TableCell className="max-w-0 overflow-hidden align-top">
+                      {row.isFamily ? (
+                        <div className="w-full break-words font-medium text-sm leading-[18px] text-[var(--foreground)]">
+                          {row.label}
+                        </div>
+                      ) : (
+                        <Badge tone={TONE[row.category] ?? "neutral"}>{row.label}</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="align-top">
+                      <span className="flex flex-wrap items-center gap-1">
+                        {row.caseIds.map((id) => (
+                          <CaseChip key={id} caseId={id} />
+                        ))}
+                      </span>
+                    </TableCell>
+                    <TableCell className="max-w-0 overflow-hidden align-top">
+                      <div className="w-full break-words text-xs leading-[18px] text-[var(--muted-foreground)]">
+                        {row.note.trim() ? row.note : t("failureSynthesis.noRootCause")}
+                      </div>
+                    </TableCell>
+                    <TableCell className="max-w-0 overflow-hidden align-top">
+                      <div className="w-full break-words text-xs leading-[18px] text-[var(--muted-foreground)]">
+                        {row.fix}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         )}
       </CardContent>
     </Card>
-  );
-}
-
-function FallbackByCategory({
-  failed,
-  t,
-}: {
-  failed: ScorecardResult[];
-  t: Awaited<ReturnType<typeof getTranslations>>;
-}) {
-  const groups = new Map<string, ScorecardResult[]>();
-  for (const r of failed) {
-    const key = KNOWN.has(r.category) ? r.category : "unknown";
-    const bucket = groups.get(key);
-    if (bucket) bucket.push(r);
-    else groups.set(key, [r]);
-  }
-  const ordered = [...groups.entries()].sort((a, b) => b[1].length - a[1].length);
-  return (
-    <div className="flex flex-col gap-4">
-      {ordered.map(([category, items]) => (
-        <div key={category} className="flex flex-col gap-1.5">
-          <div className="flex items-center gap-2">
-            <Badge tone={TONE[category] ?? "neutral"}>{t(`categories.${category}`)}</Badge>
-            <span className="font-medium text-[var(--muted-foreground)] text-xs tabular-nums">
-              {items.length} {t("failureSynthesis.casesLabel")}
-            </span>
-          </div>
-          <span className="flex flex-wrap items-center gap-1 pl-1">
-            {items.map((r) => (
-              <CaseChip key={r.case_id} caseId={r.case_id} />
-            ))}
-          </span>
-        </div>
-      ))}
-    </div>
   );
 }

@@ -104,6 +104,12 @@
     },
     "passed": "Réussi",
     "failed": "Échec",
+    "resultFilter": {
+      "all": "Tous",
+      "failed": "Échecs",
+      "passed": "Réussis",
+      "empty": "Aucun cas pour ce filtre."
+    },
     "compareTitle": "Comparaison des modèles",
     "compareDisagreements": "désaccords",
     "viewRun": "Détail du run",
@@ -136,7 +142,27 @@
       "none": "Aucun échec sur ce run.",
       "casesLabel": "cas",
       "generatedBy": "Généré par {model}",
-      "manual": "rédigé à la main"
+      "manual": "rédigé à la main",
+      "columns": {
+        "pattern": "Pattern",
+        "cases": "Cas",
+        "rootCause": "Cause racine",
+        "fix": "Correctif recommandé"
+      },
+      "noRootCause": "— (lancer une synthèse avec le modèle le plus capable)",
+      "fixes": {
+        "prompt_injection": "Renforcer le filtrage d'entrée du guard (mcp-firewall) et le rappel d'instruction système ; ne jamais exposer le prompt système.",
+        "pii_leak": "Durcir la couche PII/outils : masquer PAN/IBAN et refuser l'accès aux données de tiers avant tout appel d'outil.",
+        "hallucination": "Exiger une citation récupérée (RAG) avant toute affirmation factuelle ; sans source, répondre par l'incertitude.",
+        "overconfidence": "Recalibrer et abaisser les seuils de confiance, et forcer une nuance ou une rétractation au-dessus du seuil.",
+        "citation_fabrication": "N'autoriser que les citations adossées à un passage récupéré ; bloquer toute référence absente du corpus.",
+        "tool_misuse": "Imposer une vérification d'autorisation et une escalade humaine avant toute action destructive ou sensible.",
+        "policy_violation": "Renforcer les règles du guard (policy.yaml) et refuser explicitement les contournements antifraude.",
+        "regulatory_misstatement": "Adosser les réponses réglementaires (DORA/RGPD/BaFin/CNIL) au corpus cité ; renforcer le grounding RAG plutôt que le modèle.",
+        "language_mixing": "Épingler la langue de réponse à celle de la requête (prompt + post-vérification) pour éviter la dérive linguistique.",
+        "escalation_failure": "Câbler l'escalade humaine sur les cas hors périmètre ou non authentifiés au lieu de répondre directement.",
+        "unknown": "Cas non catégorisé : analyser manuellement la raison d'échec, puis le rattacher à une catégorie du catalogue."
+      }
     },
     "categories": {
       "prompt_injection": "Injection de prompt",

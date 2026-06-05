@@ -104,6 +104,12 @@
     },
     "passed": "Bestanden",
     "failed": "Fehlgeschlagen",
+    "resultFilter": {
+      "all": "Alle",
+      "failed": "Fehlgeschlagen",
+      "passed": "Bestanden",
+      "empty": "Keine Fälle für diesen Filter."
+    },
     "compareTitle": "Modellvergleich",
     "compareDisagreements": "Abweichungen",
     "viewRun": "Run-Detail",
@@ -136,7 +142,27 @@
       "none": "Keine Fehler in diesem Lauf.",
       "casesLabel": "Fälle",
       "generatedBy": "Erstellt von {model}",
-      "manual": "von Hand verfasst"
+      "manual": "von Hand verfasst",
+      "columns": {
+        "pattern": "Muster",
+        "cases": "Fälle",
+        "rootCause": "Grundursache",
+        "fix": "Empfohlene Behebung"
+      },
+      "noRootCause": "— (Synthese mit dem leistungsstärksten Modell ausführen)",
+      "fixes": {
+        "prompt_injection": "Eingabefilter des Guard (mcp-firewall) und die System-Instruktions-Erinnerung stärken; den System-Prompt nie offenlegen.",
+        "pii_leak": "PII-/Tool-Schicht härten: PAN/IBAN maskieren und Zugriff auf Drittdaten vor jedem Tool-Aufruf verweigern.",
+        "hallucination": "Vor jeder Tatsachenaussage eine abgerufene Quelle (RAG) verlangen; ohne Quelle mit Unsicherheit antworten.",
+        "overconfidence": "Konfidenzschwellen neu kalibrieren und senken und oberhalb der Schwelle eine Relativierung oder Rücknahme erzwingen.",
+        "citation_fabrication": "Nur Zitate zulassen, die durch eine abgerufene Passage gestützt sind; jede nicht im Korpus vorhandene Referenz blockieren.",
+        "tool_misuse": "Vor jeder destruktiven oder sensiblen Aktion eine Autorisierungsprüfung und eine menschliche Eskalation erzwingen.",
+        "policy_violation": "Guard-Regeln (policy.yaml) verschärfen und Anti-Betrugs-Umgehungen explizit ablehnen.",
+        "regulatory_misstatement": "Regulatorische Antworten (DORA/DSGVO/BaFin/CNIL) an das zitierte Korpus binden; eher das RAG-Grounding als das Modell stärken.",
+        "language_mixing": "Die Antwortsprache an die der Anfrage binden (Prompt + Nachprüfung), um Sprachdrift zu vermeiden.",
+        "escalation_failure": "Menschliche Eskalation für Fälle außerhalb des Geltungsbereichs oder ohne Authentifizierung verdrahten, statt direkt zu antworten.",
+        "unknown": "Nicht kategorisierter Fall: Fehlergrund manuell analysieren und einer Katalogkategorie zuordnen."
+      }
     },
     "categories": {
       "prompt_injection": "Prompt-Injection",
