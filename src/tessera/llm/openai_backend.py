@@ -97,10 +97,21 @@ class OpenAIBackend:
         )
         choice = response.choices[0]
         usage = response.usage
+        input_tokens = usage.prompt_tokens if usage else 0
+        output_tokens = usage.completion_tokens if usage else 0
+        # Record on the non-streaming path too — the agent graph (and the eval
+        # harness) use chat(), not stream_chat(); without this their gpt-5.5
+        # usage never reaches the budget tracker (local/frontier already do this).
+        get_budget_tracker().record(
+            backend=self.name,
+            model=effective_model,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+        )
         return ChatResponse(
             content=choice.message.content or "",
             model=effective_model,
-            input_tokens=usage.prompt_tokens if usage else 0,
-            output_tokens=usage.completion_tokens if usage else 0,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
             finish_reason=_FINISH.get(choice.finish_reason, "stop"),
         )

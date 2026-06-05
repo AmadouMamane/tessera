@@ -110,6 +110,11 @@
       "passed": "Bestanden",
       "empty": "Keine Fälle für diesen Filter."
     },
+    "evalBudget": {
+      "title": "LLM-Budget (Eval)",
+      "thisRun": "Dieser Lauf",
+      "cumulative": "Kumuliert (alle Läufe)"
+    },
     "compareTitle": "Modellvergleich",
     "compareDisagreements": "Abweichungen",
     "viewRun": "Run-Detail",
@@ -138,7 +143,7 @@
     "failureSynthesis": {
       "title": "Fehlerübersicht",
       "badge": "Superadmin",
-      "subtitle": "Fehlerfamilien des ausgewählten Laufs — eine Schwachstellenkarte, nur für den Superadmin sichtbar.",
+      "subtitle": "Fehlerfamilien des ausgewählten Laufs — eine Schwachstellenkarte, eingeschränkter Zugriff.",
       "none": "Keine Fehler in diesem Lauf.",
       "casesLabel": "Fälle",
       "generatedBy": "Erstellt von {model}",
@@ -184,7 +189,7 @@
     "cards": {
       "backend": "Backend",
       "readiness": "Verfügbarkeit",
-      "budget": "LLM-Budget",
+      "budget": "LLM-Budget (Prod)",
       "version": "Version"
     },
     "status": {
@@ -213,6 +218,10 @@
     "modelTagCapable": "Am leistungsfähigsten",
     "modelTagFrontier": "Frontier (OpenAI)",
     "modelLockedHint": "Nur Superadmin",
+    "access": "Zugriff",
+    "accessHint": "Berechtigungen und Sichtbarkeit sensibler Bereiche.",
+    "synthesisAccess": "Admins die Fehlersynthese sehen lassen",
+    "synthesisAccessHint": "Standardmäßig nur für den Superadmin. Aktivieren, um sie für die Admin-Rolle sichtbar zu machen.",
     "platform": "Plattform",
     "platformHint": "Status und Version des Tessera-Dienstes.",
     "service": "Dienst",

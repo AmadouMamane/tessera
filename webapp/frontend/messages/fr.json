@@ -110,6 +110,11 @@
       "passed": "Réussis",
       "empty": "Aucun cas pour ce filtre."
     },
+    "evalBudget": {
+      "title": "Budget LLM (eval)",
+      "thisRun": "Ce run",
+      "cumulative": "Cumulé (tous runs)"
+    },
     "compareTitle": "Comparaison des modèles",
     "compareDisagreements": "désaccords",
     "viewRun": "Détail du run",
@@ -138,7 +143,7 @@
     "failureSynthesis": {
       "title": "Synthèse des échecs",
       "badge": "super-admin",
-      "subtitle": "Familles d'échecs du run sélectionné — carte des faiblesses, visible super-admin uniquement.",
+      "subtitle": "Familles d'échecs du run sélectionné — carte des faiblesses, accès restreint.",
       "none": "Aucun échec sur ce run.",
       "casesLabel": "cas",
       "generatedBy": "Généré par {model}",
@@ -184,7 +189,7 @@
     "cards": {
       "backend": "Backend",
       "readiness": "Disponibilité",
-      "budget": "Budget LLM",
+      "budget": "Budget LLM (prod)",
       "version": "Version"
     },
     "status": {
@@ -213,6 +218,10 @@
     "modelTagCapable": "Le plus capable",
     "modelTagFrontier": "Frontier (OpenAI)",
     "modelLockedHint": "Réservé au super-admin",
+    "access": "Accès",
+    "accessHint": "Permissions et visibilité des surfaces sensibles.",
+    "synthesisAccess": "Autoriser les admins à voir la synthèse des échecs",
+    "synthesisAccessHint": "Réservée au super-admin par défaut. Activez pour la rendre visible au rôle admin.",
     "platform": "Plateforme",
     "platformHint": "État et version du service Tessera.",
     "service": "Service",

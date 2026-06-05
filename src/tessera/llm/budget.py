@@ -13,6 +13,7 @@ the place to extend when new models come on-stream.
 from __future__ import annotations
 
 import json
+import os
 import threading
 from dataclasses import dataclass
 from decimal import Decimal
@@ -162,5 +163,12 @@ class BudgetTracker:
 
 @lru_cache(maxsize=1)
 def get_budget_tracker() -> BudgetTracker:
-    """Return the process-wide singleton tracker."""
-    return BudgetTracker()
+    """Return the process-wide singleton tracker.
+
+    Honours ``TESSERA_BUDGET_FILE`` for the persistence path, so a separate
+    process — notably the offline eval runner — can keep its own *eval* budget
+    instead of polluting the live agent's *prod* counters. Unset → the default
+    file (the agent's prod budget).
+    """
+    env_path = os.environ.get("TESSERA_BUDGET_FILE")
+    return BudgetTracker(persist_path=Path(env_path) if env_path else _BUDGET_FILE)

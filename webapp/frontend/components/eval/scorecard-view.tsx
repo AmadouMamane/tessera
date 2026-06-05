@@ -1,4 +1,4 @@
-import { FileSearch } from "lucide-react";
+import { CircleDollarSign, FileSearch } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { OperatorLocked } from "@/components/auth/operator-locked";
@@ -11,9 +11,10 @@ import { ResultsByCategory } from "@/components/eval/results-by-category";
 import { RunHistoryPanel } from "@/components/eval/run-history-panel";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import type { ScorecardDocument } from "@/lib/api/schemas";
-import { currentRole, isOperator, isSuperadmin } from "@/lib/auth/session";
+import type { RunCost, ScorecardDocument } from "@/lib/api/schemas";
+import { currentRole, isAdmin, isOperator, isSuperadmin } from "@/lib/auth/session";
 import { loadAllRuns, loadScorecard } from "@/lib/eval";
+import { getSynthesisAdminFlag } from "@/lib/server/settings";
 
 interface ScorecardViewProps {
   locale: string;
@@ -33,6 +34,13 @@ export async function ScorecardView({ locale, filename, vs }: ScorecardViewProps
   const role = await currentRole();
   const operator = isOperator(role);
   const superadmin = isSuperadmin(role);
+  const admin = isAdmin(role);
+
+  // The synthesis is superadmin-only by default; the superadmin can grant the
+  // admin role visibility via a DB-persisted toggle. Only fetch the flag when it
+  // could matter (superadmin sees the toggle; admin's visibility depends on it).
+  const synthesisForAdmin = superadmin || admin ? await getSynthesisAdminFlag() : false;
+  const showSynthesis = superadmin || (admin && synthesisForAdmin);
 
   // Default the landing to the best-scoring run of the CURRENT catalogue (the
   // version of the most recent run), so the headline isn't a high score from a
@@ -45,6 +53,10 @@ export async function ScorecardView({ locale, filename, vs }: ScorecardViewProps
   const bestRun = currentRuns.length
     ? currentRuns.reduce((best, r) => (r.summary.pass_rate > best.summary.pass_rate ? r : best))
     : null;
+
+  // Cumulative *eval* budget across all runs (the report is the system of record;
+  // distinct from the live agent's *prod* /budget). Admin-only.
+  const evalCostCumulativeEur = runs.reduce((s, r) => s + (r.cost?.estimated_cost_eur ?? 0), 0);
 
   // Comparison = run A (the viewed run) vs run B (user-picked via ?vs=). Both
   // are selectable; B defaults to the latest run of a different model.
@@ -99,8 +111,21 @@ export async function ScorecardView({ locale, filename, vs }: ScorecardViewProps
                 rate: t("summary.rate"),
               }}
             />
-            {/* Failure synthesis — superadmin-only weakness map (above the table) */}
-            {superadmin ? (
+            {/* Eval LLM budget — admin-only, distinct from the prod /budget */}
+            {admin && scorecard.cost ? (
+              <EvalBudgetCard
+                cost={scorecard.cost}
+                cumulativeEur={evalCostCumulativeEur}
+                labels={{
+                  title: t("evalBudget.title"),
+                  thisRun: t("evalBudget.thisRun"),
+                  cumulative: t("evalBudget.cumulative"),
+                }}
+              />
+            ) : null}
+            {/* Failure synthesis — superadmin by default; the superadmin can
+                grant the admin role visibility from Settings (DB-persisted). */}
+            {showSynthesis ? (
               <FailureSynthesis
                 synthesis={scorecard.synthesis}
                 results={scorecard.results}
@@ -183,6 +208,52 @@ function SummaryRow({
       <SummaryTile label={labels.failed} value={summary.failed} tone="danger" />
       <SummaryTile label={labels.rate} value={passRate} tone="navy" />
     </div>
+  );
+}
+
+function EvalBudgetCard({
+  cost,
+  cumulativeEur,
+  labels,
+}: {
+  cost: RunCost;
+  cumulativeEur: number;
+  labels: { title: string; thisRun: string; cumulative: string };
+}) {
+  const recorded = cost.input_tokens > 0 || cost.output_tokens > 0;
+  return (
+    <Card>
+      <CardContent className="flex flex-wrap items-center gap-x-10 gap-y-3 py-4">
+        <div className="flex items-center gap-2">
+          <CircleDollarSign className="h-4 w-4 text-gold-500" />
+          <span className="font-medium text-sm">{labels.title}</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-xs text-[var(--muted-foreground)]">{labels.thisRun}</span>
+          {recorded ? (
+            <>
+              <span className="font-serif font-semibold text-xl tabular-nums">
+                € {cost.estimated_cost_eur.toFixed(4)}
+              </span>
+              <span className="text-[11px] text-[var(--muted-foreground)] tabular-nums">
+                {cost.input_tokens.toLocaleString()} in · {cost.output_tokens.toLocaleString()} out
+              </span>
+            </>
+          ) : (
+            // Runs scored before per-run cost was recorded carry no usage.
+            <span className="font-serif font-semibold text-xl text-[var(--muted-foreground)]">
+              —
+            </span>
+          )}
+        </div>
+        <div className="flex flex-col">
+          <span className="text-xs text-[var(--muted-foreground)]">{labels.cumulative}</span>
+          <span className="font-serif font-semibold text-xl tabular-nums">
+            € {cumulativeEur.toFixed(4)}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

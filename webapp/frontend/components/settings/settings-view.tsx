@@ -178,6 +178,38 @@ export function SettingsView() {
   });
   const serviceUp = !health.isError && health.data?.status !== "down";
 
+  // Superadmin-only: grant the `admin` role visibility of the failure synthesis.
+  // Persisted server-side (DB) via the superadmin-gated settings route.
+  const synthesisAccess = useQuery({
+    queryKey: ["synthesis-access"],
+    queryFn: async ({ signal }) => {
+      const res = await fetch("/api/settings/synthesis-access", { signal });
+      if (!res.ok) throw new Error("failed");
+      return (await res.json()) as { enabled: boolean };
+    },
+    enabled: role === "superadmin",
+    staleTime: 30_000,
+    retry: 1,
+  });
+  const [synthAdmin, setSynthAdmin] = useState(false);
+  useEffect(() => {
+    if (synthesisAccess.data) setSynthAdmin(Boolean(synthesisAccess.data.enabled));
+  }, [synthesisAccess.data]);
+
+  async function changeSynthAdmin(next: boolean) {
+    setSynthAdmin(next); // optimistic
+    try {
+      const res = await fetch("/api/settings/synthesis-access", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: next }),
+      });
+      if (!res.ok) setSynthAdmin(!next); // revert on failure
+    } catch {
+      setSynthAdmin(!next);
+    }
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <Card>
@@ -273,6 +305,24 @@ export function SettingsView() {
           </div>
         </CardContent>
       </Card>
+
+      {role === "superadmin" ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("access")}</CardTitle>
+            <CardDescription>{t("accessHint")}</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <Row title={t("synthesisAccess")} hint={t("synthesisAccessHint")}>
+              <Toggle
+                checked={synthAdmin}
+                onChange={changeSynthAdmin}
+                label={t("synthesisAccess")}
+              />
+            </Row>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>

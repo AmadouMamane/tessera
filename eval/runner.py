@@ -10,8 +10,10 @@ import argparse
 import asyncio
 import hashlib
 import json
+import os
 import re
 import sys
+import tempfile
 import uuid
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
@@ -22,6 +24,7 @@ import jsonschema
 from eval.scorecard import build_scorecard
 from tessera.agent import compile_graph
 from tessera.agent.state import new_state
+from tessera.llm.budget import get_budget_tracker
 from tessera.settings import LanguageCode, LLMProfile, get_settings
 
 FAILURES_DIR = Path(__file__).parent / "failures"
@@ -227,6 +230,15 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 
 async def _run_all(args: argparse.Namespace) -> int:
+    # Isolate this run's LLM budget from the live agent's *prod* counters and
+    # start from zero, so the report records THIS run's *eval* cost. The backends
+    # read the tracker lazily, so setting the env (and clearing the cached
+    # singleton) before any model call is enough.
+    os.environ["TESSERA_BUDGET_FILE"] = str(
+        Path(tempfile.mkdtemp(prefix="tessera-eval-budget-")) / "budget.json"
+    )
+    get_budget_tracker.cache_clear()
+
     cases = _load_cases()
     catalogue_version = _catalogue_version(cases)
     if args.case:
@@ -263,6 +275,15 @@ async def _run_all(args: argparse.Namespace) -> int:
             results, model=args.synthesis_model, language=args.lang or "fr"
         )
 
+    # The eval budget for this run (cases + synthesis), recorded into the report
+    # so the dashboard can show it separately from the live agent's prod budget.
+    budget = get_budget_tracker().snapshot()
+    cost = {
+        "input_tokens": budget.input_tokens,
+        "output_tokens": budget.output_tokens,
+        "estimated_cost_eur": float(budget.estimated_cost_eur),
+    }
+
     payload = json.dumps(
         {
             "run_at": run_ts,
@@ -272,6 +293,7 @@ async def _run_all(args: argparse.Namespace) -> int:
             "summary": asdict(scorecard.summary),
             "results": [asdict(r) for r in results],
             "synthesis": synthesis,
+            "cost": cost,
         },
         indent=2,
         ensure_ascii=False,

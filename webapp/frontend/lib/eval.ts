@@ -99,6 +99,7 @@ export async function loadAllRuns(): Promise<RunMeta[]> {
             model: doc.model ?? null,
             catalogue_version: doc.catalogue_version ?? null,
             summary: doc.summary,
+            cost: doc.cost ?? null,
           }),
         );
       } catch {

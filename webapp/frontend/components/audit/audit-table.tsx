@@ -106,7 +106,7 @@ export function AuditTable() {
                   <TableHead>{t("columns.occurredAt")}</TableHead>
                   <TableHead>{t("columns.target")}</TableHead>
                   <TableHead>{t("columns.outcome")}</TableHead>
-                  <TableHead className="text-right">{t("columns.decisions")}</TableHead>
+                  <TableHead className="text-center">{t("columns.decisions")}</TableHead>
                   <TableHead aria-label="actions" />
                 </TableRow>
               </TableHeader>
@@ -145,7 +145,7 @@ export function AuditTable() {
                     <TableCell>
                       <OutcomeBadge outcome={entry.outcome} />
                     </TableCell>
-                    <TableCell className="text-right text-xs text-[var(--muted-foreground)]">
+                    <TableCell className="text-center text-xs text-[var(--muted-foreground)]">
                       {entry.decisions.length}
                     </TableCell>
                     <TableCell className="w-8 text-right">

@@ -149,6 +149,16 @@ export const SynthesisSchema = z.object({
 });
 export type Synthesis = z.infer<typeof SynthesisSchema>;
 
+// Eval-run LLM cost (tokens + indicative EUR), recorded by the runner from an
+// isolated budget tracker. Distinct from the live agent's *prod* /budget — this
+// is the *eval* budget, persisted in the report. Admin-only in the UI.
+export const RunCostSchema = z.object({
+  input_tokens: z.number().default(0),
+  output_tokens: z.number().default(0),
+  estimated_cost_eur: z.number().default(0),
+});
+export type RunCost = z.infer<typeof RunCostSchema>;
+
 export const ScorecardDocumentSchema = z.object({
   run_at: z.string().optional(),
   lang: z.string().nullable().optional(),
@@ -157,6 +167,7 @@ export const ScorecardDocumentSchema = z.object({
   summary: ScorecardSummarySchema,
   results: z.array(ScorecardResultSchema),
   synthesis: SynthesisSchema.nullable().optional(),
+  cost: RunCostSchema.nullable().optional(),
 });
 export type ScorecardDocument = z.infer<typeof ScorecardDocumentSchema>;
 
@@ -167,5 +178,6 @@ export const RunMetaSchema = z.object({
   model: z.string().nullable().optional(),
   catalogue_version: z.string().nullable().optional(),
   summary: ScorecardSummarySchema,
+  cost: RunCostSchema.nullable().optional(),
 });
 export type RunMeta = z.infer<typeof RunMetaSchema>;
